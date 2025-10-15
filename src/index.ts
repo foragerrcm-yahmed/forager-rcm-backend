@@ -2,6 +2,11 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
+import organizationRoutes from './routes/organizationRoutes';
+import patientRoutes from './routes/patientRoutes';
+import providerRoutes from './routes/providerRoutes';
+import payorRoutes from './routes/payorRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +21,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/organizations', organizationRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/providers', providerRoutes);
+app.use('/api/payors', payorRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

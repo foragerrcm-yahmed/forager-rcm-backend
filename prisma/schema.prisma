@@ -79,78 +79,164 @@ enum UserRole {
   FrontDesk
 }
 
+enum ProviderLicenseType {
+  MD
+  DO
+  NP
+  PA_C
+  RN
+  LPN
+  PT
+  OT
+  DC
+  DPM
+  DDS
+  DMD
+  PharmD
+  PsyD
+  PhD
+  LCSW
+  LMFT
+  Other
+}
+
+enum PlanType {
+  PPO
+  HMO
+  EPO
+  POS
+  HDHP
+  Medicaid
+  Medicare
+  Other
+}
+
+enum InsuredType {
+  Subscriber
+  Dependent
+}
+
 // Models
 model Organization {
-  id        String     @id @default(uuid())
-  name      String
-  address   Json?
-  phone     String?
-  email     String?
-  npi       String?
-  taxId     String?
-  createdAt BigInt     @default(0)
-  updatedAt BigInt     @default(0)
+  id                    String         @id @default(uuid())
+  name                  String
+  addresses             Json?          // Array of address objects
+  phone                 String?
+  email                 String?
+  npi                   String?
+  parentOrganizationId  String?
+  parentOrganization    Organization?  @relation("OrganizationHierarchy", fields: [parentOrganizationId], references: [id])
+  childOrganizations    Organization[] @relation("OrganizationHierarchy")
+  createdById           String
+  createdBy             User           @relation("OrganizationCreatedBy", fields: [createdById], references: [id])
+  updatedById           String?
+  updatedBy             User?          @relation("OrganizationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt             BigInt         @default(0)
+  updatedAt             BigInt         @default(0)
 
-  users     User[]
-  patients  Patient[]
-  providers Provider[]
-  visits    Visit[]
-  claims    Claim[]
-  rules     Rule[]
+  users                 User[]         @relation("OrganizationUsers")
+  patients              Patient[]
+  providers             Provider[]
+  visits                Visit[]
+  claims                Claim[]
+  rules                 Rule[]
+  payors                Payor[]
 
   @@map("organizations")
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
+  id            String       @id @default(uuid())
+  email         String       @unique
   passwordHash  String
   firstName     String
   lastName      String
   role          UserRole
-  organization  Organization @relation(fields: [organizationId], references: [id])
+  organization  Organization @relation("OrganizationUsers", fields: [organizationId], references: [id])
   organizationId String
-  createdAt     BigInt    @default(0)
-  updatedAt     BigInt    @default(0)
+  createdAt     BigInt       @default(0)
+  updatedAt     BigInt       @default(0)
 
-  claimTimelines ClaimTimeline[]
-  attachments   Attachment[]
+  claimTimelines           ClaimTimeline[]
+  attachments              Attachment[]
+  createdOrganizations     Organization[] @relation("OrganizationCreatedBy")
+  updatedOrganizations     Organization[] @relation("OrganizationUpdatedBy")
+  createdPatients          Patient[]      @relation("PatientCreatedBy")
+  updatedPatients          Patient[]      @relation("PatientUpdatedBy")
+  createdProviders         Provider[]     @relation("ProviderCreatedBy")
+  updatedProviders         Provider[]     @relation("ProviderUpdatedBy")
+  createdPayors            Payor[]        @relation("PayorCreatedBy")
+  updatedPayors            Payor[]        @relation("PayorUpdatedBy")
 
   @@map("users")
 }
 
 model Patient {
-  id             String     @id @default(uuid())
-  firstName      String
-  lastName       String
-  dateOfBirth    BigInt
-  gender         String?
-  ssn            String?    // Encrypted
-  phone          String?
-  email          String?
-  address        Json?
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  organizationId String
-  source         DataSource @default(Forager)
-  createdAt      BigInt     @default(0)
-  updatedAt      BigInt     @default(0)
-  visits         Visit[]
-  claims         Claim[]
-  insurancePolicies InsurancePolicy[]
+  id                String              @id @default(uuid())
+  firstName         String
+  middleName        String?
+  lastName          String
+  suffix            String?
+  prefix            String?
+  dateOfBirth       BigInt
+  gender            String?
+  ssn               String?             // Encrypted
+  phone             String?
+  email             String?
+  address           Json?
+  organization      Organization        @relation(fields: [organizationId], references: [id])
+  organizationId    String
+  source            DataSource
+  createdById       String
+  createdBy         User                @relation("PatientCreatedBy", fields: [createdById], references: [id])
+  updatedById       String?
+  updatedBy         User?               @relation("PatientUpdatedBy", fields: [updatedById], references: [id])
+  createdAt         BigInt              @default(0)
+  updatedAt         BigInt              @default(0)
+
+  visits            Visit[]
+  claims            Claim[]
+  insurancePolicies PatientInsurance[]
 
   @@map("patients")
 }
 
+model PatientInsurance {
+  id                String       @id @default(uuid())
+  patient           Patient      @relation(fields: [patientId], references: [id])
+  patientId         String
+  plan              PayorPlan    @relation(fields: [planId], references: [id])
+  planId            String
+  isPrimary         Boolean
+  insuredType       InsuredType
+  subscriberName    String?
+  subscriberDob     BigInt?
+  memberId          String
+  insuranceCardPath String?      // Path to uploaded insurance card image
+  createdAt         BigInt       @default(0)
+  updatedAt         BigInt       @default(0)
+
+  @@map("patient_insurances")
+}
+
 model Provider {
-  id             String     @id @default(uuid())
-  name           String
+  id             String               @id @default(uuid())
+  firstName      String
+  middleName     String?
+  lastName       String
   npi            String?
   specialty      String?
-  organization   Organization @relation(fields: [organizationId], references: [id])
+  licenseType    ProviderLicenseType
+  organization   Organization         @relation(fields: [organizationId], references: [id])
   organizationId String
-  source         DataSource @default(Forager)
-  createdAt      BigInt     @default(0)
-  updatedAt      BigInt     @default(0)
+  source         DataSource
+  createdById    String
+  createdBy      User                 @relation("ProviderCreatedBy", fields: [createdById], references: [id])
+  updatedById    String?
+  updatedBy      User?                @relation("ProviderUpdatedBy", fields: [updatedById], references: [id])
+  createdAt      BigInt               @default(0)
+  updatedAt      BigInt               @default(0)
+
   visits         Visit[]
   claims         Claim[]
 
@@ -158,19 +244,42 @@ model Provider {
 }
 
 model Payor {
-  id        String     @id @default(uuid())
-  name      String
-  payorId   String     @unique
-  planType  String?
-  address   Json?
-  phone     String?
-  createdAt BigInt     @default(0)
-  updatedAt BigInt     @default(0)
+  id                String         @id @default(uuid())
+  name              String
+  externalPayorId   String         @unique
+  payorCategory     String
+  billingTaxonomy   String
+  address           Json?
+  phone             String?
+  portalUrl         String?
+  organization      Organization   @relation(fields: [organizationId], references: [id])
+  organizationId    String
+  createdById       String
+  createdBy         User           @relation("PayorCreatedBy", fields: [createdById], references: [id])
+  updatedById       String?
+  updatedBy         User?          @relation("PayorUpdatedBy", fields: [updatedById], references: [id])
+  createdAt         BigInt         @default(0)
+  updatedAt         BigInt         @default(0)
 
-  claims    Claim[]
-  insurancePolicies InsurancePolicy[]
+  plans             PayorPlan[]
+  claims            Claim[]
 
   @@map("payors")
+}
+
+model PayorPlan {
+  id                String             @id @default(uuid())
+  payor             Payor              @relation(fields: [payorId], references: [id])
+  payorId           String
+  planName          String
+  planType          PlanType
+  isInNetwork       Boolean
+  createdAt         BigInt             @default(0)
+  updatedAt         BigInt             @default(0)
+
+  patientInsurances PatientInsurance[]
+
+  @@map("payor_plans")
 }
 
 model Visit {
@@ -190,7 +299,7 @@ model Visit {
   followUpPlan   String?
   organization   Organization  @relation(fields: [organizationId], references: [id])
   organizationId String
-  source         DataSource @default(Forager)
+  source         DataSource    @default(Forager)
   createdAt      BigInt        @default(0)
   updatedAt      BigInt        @default(0)
   claims         Claim[]
@@ -199,53 +308,34 @@ model Visit {
   @@map("visits")
 }
 
-model InsurancePolicy {
-  id             String     @id @default(uuid())
-  patient        Patient    @relation(fields: [patientId], references: [id])
-  patientId      String
-  payor          Payor      @relation(fields: [payorId], references: [id])
-  payorId        String
-  memberId       String
-  groupNumber    String?
-  policyType     PolicyType
-  isActive       Boolean    @default(true)
-  effectiveDate  BigInt
-  terminationDate BigInt?
-  createdAt      BigInt     @default(0)
-  updatedAt      BigInt     @default(0)
-
-
-  @@map("insurance_policies")
-}
-
 model Claim {
-  id                   String      @id @default(uuid())
-  claimNumber          String      @unique
-  visit                Visit?      @relation(fields: [visitId], references: [id])
+  id                   String        @id @default(uuid())
+  claimNumber          String        @unique
+  visit                Visit?        @relation(fields: [visitId], references: [id])
   visitId              String?
-  patient              Patient     @relation(fields: [patientId], references: [id])
+  patient              Patient       @relation(fields: [patientId], references: [id])
   patientId            String
-  provider             Provider    @relation(fields: [providerId], references: [id])
+  provider             Provider      @relation(fields: [providerId], references: [id])
   providerId           String
-  payor                Payor       @relation(fields: [payorId], references: [id])
+  payor                Payor         @relation(fields: [payorId], references: [id])
   payorId              String
   serviceDate          BigInt
   submissionDate       BigInt? 
-  creationDate         BigInt      @default(0)
-  billedAmount         Decimal     @db.Decimal(10, 2)
-  allowedAmount        Decimal?    @db.Decimal(10, 2)
-  paidAmount           Decimal?    @db.Decimal(10, 2)
-  adjustmentAmount     Decimal?    @db.Decimal(10, 2)
-  patientResponsibility Decimal?    @db.Decimal(10, 2)
+  creationDate         BigInt        @default(0)
+  billedAmount         Decimal       @db.Decimal(10, 2)
+  allowedAmount        Decimal?      @db.Decimal(10, 2)
+  paidAmount           Decimal?      @db.Decimal(10, 2)
+  adjustmentAmount     Decimal?      @db.Decimal(10, 2)
+  patientResponsibility Decimal?     @db.Decimal(10, 2)
   status               ClaimStatus
   denialCode           String?
   denialReason         String?
   notes                String?
-  organization         Organization @relation(fields: [organizationId], references: [id])
+  organization         Organization  @relation(fields: [organizationId], references: [id])
   organizationId       String
-  source               DataSource @default(Forager)
-  createdAt            BigInt      @default(0)
-  updatedAt            BigInt      @default(0)
+  source               DataSource    @default(Forager)
+  createdAt            BigInt        @default(0)
+  updatedAt            BigInt        @default(0)
   services             ClaimService[]
   timeline             ClaimTimeline[]
   attachments          Attachment[]
@@ -280,7 +370,6 @@ model ClaimService {
   modifiers      Json?
   createdAt      BigInt    @default(0)
 
-
   @@map("claim_services")
 }
 
@@ -292,8 +381,7 @@ model ClaimTimeline {
   user      User?    @relation(fields: [userId], references: [id])
   userId    String?
   notes     String?
-  createdAt BigInt @default(0)
-
+  createdAt BigInt   @default(0)
 
   @@map("claim_timelines")
 }
@@ -312,23 +400,22 @@ model Attachment {
   uploadedById String
   createdAt   BigInt    @default(0)
 
-
   @@map("attachments")
 }
 
 model Rule {
-  id             String     @id @default(uuid())
+  id             String       @id @default(uuid())
   name           String
   description    String?
   triggerType    String
   conditions     Json?
   actions        Json?
-  isActive       Boolean    @default(true)
+  isActive       Boolean      @default(true)
   flowData       Json?
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
-  createdAt      BigInt     @default(0)
-  updatedAt      BigInt     @default(0)
+  createdAt      BigInt       @default(0)
+  updatedAt      BigInt       @default(0)
 
   ruleExecutions RuleExecution[]
 
@@ -343,7 +430,6 @@ model RuleExecution {
   entityId    String
   result      String
   executedAt  BigInt   @default(0)
-
 
   @@map("rule_executions")
 }
