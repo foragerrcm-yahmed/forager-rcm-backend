@@ -1,0 +1,350 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum DataSource {
+  Forager
+  ForagerAPI
+  ForagerCSVUpload
+}
+
+enum VisitStatus {
+  Upcoming
+  Completed
+  Cancelled
+  NoShow
+}
+
+enum ClaimStatus {
+  Pending
+  Submitted
+  Paid
+  Denied
+  ShortPaid
+  Overpaid
+}
+
+enum EligibilityStatus {
+  passed
+  failed
+  unchecked
+}
+
+enum PaymentType {
+  Coinsurance
+  Copay
+  Deductible
+}
+
+enum PayorType {
+  Insurance
+  Patient
+}
+
+enum PaymentMethod {
+  Cash
+  CreditCard
+  Check
+  Electronic
+}
+
+enum VisitLocation {
+  InClinic
+  Telehealth
+}
+
+enum VisitType {
+  FollowUp
+  NewPatient
+}
+
+enum PolicyType {
+  Primary
+  Secondary
+}
+
+enum UserRole {
+  Admin
+  Biller
+  Provider
+  FrontDesk
+}
+
+// Models
+model Organization {
+  id        String     @id @default(uuid())
+  name      String
+  address   Json?
+  phone     String?
+  email     String?
+  npi       String?
+  taxId     String?
+  createdAt BigInt     @default(0)
+  updatedAt BigInt     @default(0)
+
+  users     User[]
+  patients  Patient[]
+  providers Provider[]
+  visits    Visit[]
+  claims    Claim[]
+  rules     Rule[]
+
+  @@map("organizations")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  role          UserRole
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  createdAt     BigInt    @default(0)
+  updatedAt     BigInt    @default(0)
+
+  claimTimelines ClaimTimeline[]
+  attachments   Attachment[]
+
+  @@map("users")
+}
+
+model Patient {
+  id             String     @id @default(uuid())
+  firstName      String
+  lastName       String
+  dateOfBirth    BigInt
+  gender         String?
+  ssn            String?    // Encrypted
+  phone          String?
+  email          String?
+  address        Json?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  source         DataSource @default(Forager)
+  createdAt      BigInt     @default(0)
+  updatedAt      BigInt     @default(0)
+  visits         Visit[]
+  claims         Claim[]
+  insurancePolicies InsurancePolicy[]
+
+  @@map("patients")
+}
+
+model Provider {
+  id             String     @id @default(uuid())
+  name           String
+  npi            String?
+  specialty      String?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  source         DataSource @default(Forager)
+  createdAt      BigInt     @default(0)
+  updatedAt      BigInt     @default(0)
+  visits         Visit[]
+  claims         Claim[]
+
+  @@map("providers")
+}
+
+model Payor {
+  id        String     @id @default(uuid())
+  name      String
+  payorId   String     @unique
+  planType  String?
+  address   Json?
+  phone     String?
+  createdAt BigInt     @default(0)
+  updatedAt BigInt     @default(0)
+
+  claims    Claim[]
+  insurancePolicies InsurancePolicy[]
+
+  @@map("payors")
+}
+
+model Visit {
+  id             String        @id @default(uuid())
+  patient        Patient       @relation(fields: [patientId], references: [id])
+  patientId      String
+  provider       Provider      @relation(fields: [providerId], references: [id])
+  providerId     String
+  visitDate      BigInt
+  visitTime      BigInt
+  duration       Int
+  visitType      VisitType
+  location       VisitLocation
+  status         VisitStatus
+  visitSource    String?
+  clinicalNotes  String?
+  followUpPlan   String?
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  organizationId String
+  source         DataSource @default(Forager)
+  createdAt      BigInt        @default(0)
+  updatedAt      BigInt        @default(0)
+  claims         Claim[]
+  attachments    Attachment[]
+
+  @@map("visits")
+}
+
+model InsurancePolicy {
+  id             String     @id @default(uuid())
+  patient        Patient    @relation(fields: [patientId], references: [id])
+  patientId      String
+  payor          Payor      @relation(fields: [payorId], references: [id])
+  payorId        String
+  memberId       String
+  groupNumber    String?
+  policyType     PolicyType
+  isActive       Boolean    @default(true)
+  effectiveDate  BigInt
+  terminationDate BigInt?
+  createdAt      BigInt     @default(0)
+  updatedAt      BigInt     @default(0)
+
+
+  @@map("insurance_policies")
+}
+
+model Claim {
+  id                   String      @id @default(uuid())
+  claimNumber          String      @unique
+  visit                Visit?      @relation(fields: [visitId], references: [id])
+  visitId              String?
+  patient              Patient     @relation(fields: [patientId], references: [id])
+  patientId            String
+  provider             Provider    @relation(fields: [providerId], references: [id])
+  providerId           String
+  payor                Payor       @relation(fields: [payorId], references: [id])
+  payorId              String
+  serviceDate          BigInt
+  submissionDate       BigInt? 
+  creationDate         BigInt      @default(0)
+  billedAmount         Decimal     @db.Decimal(10, 2)
+  allowedAmount        Decimal?    @db.Decimal(10, 2)
+  paidAmount           Decimal?    @db.Decimal(10, 2)
+  adjustmentAmount     Decimal?    @db.Decimal(10, 2)
+  patientResponsibility Decimal?    @db.Decimal(10, 2)
+  status               ClaimStatus
+  denialCode           String?
+  denialReason         String?
+  notes                String?
+  organization         Organization @relation(fields: [organizationId], references: [id])
+  organizationId       String
+  source               DataSource @default(Forager)
+  createdAt            BigInt      @default(0)
+  updatedAt            BigInt      @default(0)
+  services             ClaimService[]
+  timeline             ClaimTimeline[]
+  attachments          Attachment[]
+
+  @@map("claims")
+}
+
+model CPTCode {
+  code          String         @id @unique
+  description   String
+  category      String?
+  standardPrice Decimal        @db.Decimal(10, 2)
+  createdAt     BigInt         @default(0)
+  updatedAt     BigInt         @default(0)
+
+  claimServices ClaimService[]
+
+  @@map("cpt_codes")
+}
+
+model ClaimService {
+  id             String    @id @default(uuid())
+  claim          Claim     @relation(fields: [claimId], references: [id])
+  claimId        String
+  cptCode        CPTCode   @relation(fields: [cptCodeCode], references: [code])
+  cptCodeCode    String
+  description    String?
+  quantity       Int
+  unitPrice      Decimal   @db.Decimal(10, 2)
+  totalPrice     Decimal   @db.Decimal(10, 2)
+  contractedRate Decimal?  @db.Decimal(10, 2)
+  modifiers      Json?
+  createdAt      BigInt    @default(0)
+
+
+  @@map("claim_services")
+}
+
+model ClaimTimeline {
+  id        String   @id @default(uuid())
+  claim     Claim    @relation(fields: [claimId], references: [id])
+  claimId   String
+  action    String
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
+  notes     String?
+  createdAt BigInt @default(0)
+
+
+  @@map("claim_timelines")
+}
+
+model Attachment {
+  id          String    @id @default(uuid())
+  claim       Claim?    @relation(fields: [claimId], references: [id])
+  claimId     String?
+  visit       Visit?    @relation(fields: [visitId], references: [id])
+  visitId     String?
+  fileName    String
+  fileType    String
+  fileSize    Int
+  filePath    String
+  uploadedBy  User      @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+  createdAt   BigInt    @default(0)
+
+
+  @@map("attachments")
+}
+
+model Rule {
+  id             String     @id @default(uuid())
+  name           String
+  description    String?
+  triggerType    String
+  conditions     Json?
+  actions        Json?
+  isActive       Boolean    @default(true)
+  flowData       Json?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  createdAt      BigInt     @default(0)
+  updatedAt      BigInt     @default(0)
+
+  ruleExecutions RuleExecution[]
+
+  @@map("rules")
+}
+
+model RuleExecution {
+  id          String   @id @default(uuid())
+  rule        Rule     @relation(fields: [ruleId], references: [id])
+  ruleId      String
+  entityType  String
+  entityId    String
+  result      String
+  executedAt  BigInt   @default(0)
+
+
+  @@map("rule_executions")
+}
+
