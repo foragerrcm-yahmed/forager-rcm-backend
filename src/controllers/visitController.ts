@@ -109,9 +109,9 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
 
 export const createVisit = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { patientId, providerId, organizationId, visitDate, visitType, location, status, notes, source } = req.body;
+    const { patientId, providerId, organizationId, visitDate, visitTime, duration, visitType, location, status, notes, source } = req.body;
 
-    if (!patientId || !providerId || !organizationId || !visitDate || !visitType || !status || !source) {
+    if (!patientId || !providerId || !organizationId || !visitDate || !visitTime || duration === undefined || !visitType || !status || !source) {
       sendError(res, 400, validationError('VISIT'), 'Missing required visit fields');
       return;
     }
@@ -144,6 +144,8 @@ export const createVisit = async (req: Request, res: Response): Promise<void> =>
         provider: { connect: { id: providerId as string } },
         organization: { connect: { id: organizationId as string } },
         visitDate: BigInt(visitDate),
+        visitTime: BigInt(visitTime),
+        duration,
         visitType,
         location,
         status,

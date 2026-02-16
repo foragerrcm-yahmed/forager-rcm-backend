@@ -193,7 +193,7 @@ export const deleteCPTCode = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const serviceCount = await prisma.claimService.count({ where: { cptCode: id as string } });
+    const serviceCount = await prisma.claimService.count({ where: { cptCodeId: id as string } });
     if (serviceCount > 0) {
       sendError(res, 409, deleteFailed('CPT_CODE'), 'CPT code is used in claim services and cannot be deleted');
       return;

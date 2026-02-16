@@ -111,6 +111,7 @@ export const createRule = async (req: Request, res: Response): Promise<void> => 
       data: {
         name,
         description,
+        triggerType: 'Manual',
         organization: { connect: { id: organizationId as string } },
         isActive: isActive || false,
         flowData,

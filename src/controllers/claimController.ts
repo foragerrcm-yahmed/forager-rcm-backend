@@ -206,11 +206,10 @@ export const createClaim = async (req: Request, res: Response): Promise<void> =>
         },
         timeline: {
           create: [{
+            action: 'Created',
             status,
-            timestamp: BigInt(now),
             notes: `Claim created with status: ${status}`,
             createdAt: BigInt(now),
-            updatedAt: BigInt(now),
           }],
         },
       },
@@ -326,11 +325,10 @@ export const updateClaimStatus = async (req: Request, res: Response): Promise<vo
         updatedAt: BigInt(now),
         timeline: {
           create: {
+            action: 'Status Updated',
             status,
-            timestamp: BigInt(now),
             notes: notes || `Status updated to: ${status}`,
             createdAt: BigInt(now),
-            updatedAt: BigInt(now),
           },
         },
       },
