@@ -20,6 +20,11 @@ import { authenticateToken } from './middleware/auth';
 // Load environment variables
 dotenv.config();
 
+// Global BigInt serialization for JSON
+(BigInt.prototype as any).toJSON = function() {
+  return Number(this);
+};
+
 const app: Application = express();
 const PORT = process.env.PORT || 3001;
 
@@ -39,54 +44,51 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/providers', providerRoutes);
 app.use('/api/payors', payorRoutes);
 
-// Protected routes for remaining entities
-app.use(authenticateToken);
+// Visit routes (protected)
+app.get('/api/visits', authenticateToken, visitController.getVisits);
+app.get('/api/visits/:id', authenticateToken, visitController.getVisitById);
+app.post('/api/visits', authenticateToken, visitController.createVisit);
+app.put('/api/visits/:id', authenticateToken, visitController.updateVisit);
+app.delete('/api/visits/:id', authenticateToken, visitController.deleteVisit);
 
-// Visit routes
-app.get('/api/visits', visitController.getVisits);
-app.get('/api/visits/:id', visitController.getVisitById);
-app.post('/api/visits', visitController.createVisit);
-app.put('/api/visits/:id', visitController.updateVisit);
-app.delete('/api/visits/:id', visitController.deleteVisit);
+// Claim routes (protected)
+app.get('/api/claims', authenticateToken, claimController.getClaims);
+app.get('/api/claims/:id', authenticateToken, claimController.getClaimById);
+app.post('/api/claims', authenticateToken, claimController.createClaim);
+app.put('/api/claims/:id', authenticateToken, claimController.updateClaim);
+app.put('/api/claims/:id/status', authenticateToken, claimController.updateClaimStatus);
+app.delete('/api/claims/:id', authenticateToken, claimController.deleteClaim);
 
-// Claim routes
-app.get('/api/claims', claimController.getClaims);
-app.get('/api/claims/:id', claimController.getClaimById);
-app.post('/api/claims', claimController.createClaim);
-app.put('/api/claims/:id', claimController.updateClaim);
-app.put('/api/claims/:id/status', claimController.updateClaimStatus);
-app.delete('/api/claims/:id', claimController.deleteClaim);
+// CPT Code routes (protected)
+app.get('/api/cpt-codes', authenticateToken, cptCodeController.getCPTCodes);
+app.get('/api/cpt-codes/:id', authenticateToken, cptCodeController.getCPTCodeById);
+app.post('/api/cpt-codes', authenticateToken, cptCodeController.createCPTCode);
+app.put('/api/cpt-codes/:id', authenticateToken, cptCodeController.updateCPTCode);
+app.delete('/api/cpt-codes/:id', authenticateToken, cptCodeController.deleteCPTCode);
 
-// CPT Code routes
-app.get('/api/cpt-codes', cptCodeController.getCPTCodes);
-app.get('/api/cpt-codes/:id', cptCodeController.getCPTCodeById);
-app.post('/api/cpt-codes', cptCodeController.createCPTCode);
-app.put('/api/cpt-codes/:id', cptCodeController.updateCPTCode);
-app.delete('/api/cpt-codes/:id', cptCodeController.deleteCPTCode);
+// Rule routes (protected)
+app.get('/api/rules', authenticateToken, ruleController.getRules);
+app.get('/api/rules/:id', authenticateToken, ruleController.getRuleById);
+app.post('/api/rules', authenticateToken, ruleController.createRule);
+app.put('/api/rules/:id', authenticateToken, ruleController.updateRule);
+app.put('/api/rules/:id/toggle', authenticateToken, ruleController.toggleRuleStatus);
+app.delete('/api/rules/:id', authenticateToken, ruleController.deleteRule);
 
-// Rule routes
-app.get('/api/rules', ruleController.getRules);
-app.get('/api/rules/:id', ruleController.getRuleById);
-app.post('/api/rules', ruleController.createRule);
-app.put('/api/rules/:id', ruleController.updateRule);
-app.put('/api/rules/:id/toggle', ruleController.toggleRuleStatus);
-app.delete('/api/rules/:id', ruleController.deleteRule);
+// Rule Execution routes (protected)
+app.get('/api/rule-executions', authenticateToken, ruleExecutionController.getRuleExecutions);
+app.get('/api/rule-executions/:id', authenticateToken, ruleExecutionController.getRuleExecutionById);
 
-// Rule Execution routes
-app.get('/api/rule-executions', ruleExecutionController.getRuleExecutions);
-app.get('/api/rule-executions/:id', ruleExecutionController.getRuleExecutionById);
+// Insurance Policy routes (protected)
+app.get('/api/insurance-policies', authenticateToken, insurancePolicyController.getInsurancePolicies);
+app.get('/api/insurance-policies/:id', authenticateToken, insurancePolicyController.getInsurancePolicyById);
+app.put('/api/insurance-policies/:id', authenticateToken, insurancePolicyController.updateInsurancePolicy);
+app.delete('/api/insurance-policies/:id', authenticateToken, insurancePolicyController.deleteInsurancePolicy);
 
-// Insurance Policy routes
-app.get('/api/insurance-policies', insurancePolicyController.getInsurancePolicies);
-app.get('/api/insurance-policies/:id', insurancePolicyController.getInsurancePolicyById);
-app.put('/api/insurance-policies/:id', insurancePolicyController.updateInsurancePolicy);
-app.delete('/api/insurance-policies/:id', insurancePolicyController.deleteInsurancePolicy);
-
-// Attachment routes
-app.get('/api/attachments', attachmentController.getAttachments);
-app.post('/api/attachments', upload.single('file'), attachmentController.uploadAttachment);
-app.get('/api/attachments/:id/download', attachmentController.downloadAttachment);
-app.delete('/api/attachments/:id', attachmentController.deleteAttachment);
+// Attachment routes (protected)
+app.get('/api/attachments', authenticateToken, attachmentController.getAttachments);
+app.post('/api/attachments', authenticateToken, upload.single('file'), attachmentController.uploadAttachment);
+app.get('/api/attachments/:id/download', authenticateToken, attachmentController.downloadAttachment);
+app.delete('/api/attachments/:id', authenticateToken, attachmentController.deleteAttachment);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {

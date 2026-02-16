@@ -2,7 +2,7 @@
 > forager-rcm-backend@1.0.0 dev
 > ts-node src/index.ts
 
-[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
 🚀 Server is running on http://localhost:3001
 📋 Health check: http://localhost:3001/health
 🔐 Auth endpoints: http://localhost:3001/api/auth

@@ -82,13 +82,7 @@ export const getClaims = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       success: true,
-      data: claims.map(c => ({
-        ...c,
-        serviceDate: Number(c.serviceDate),
-        submissionDate: c.submissionDate ? Number(c.submissionDate) : null,
-        createdAt: Number(c.createdAt),
-        updatedAt: Number(c.updatedAt),
-      })),
+      data: claims,
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
