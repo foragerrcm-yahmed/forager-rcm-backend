@@ -170,6 +170,10 @@ model User {
   updatedPayors            Payor[]        @relation("PayorUpdatedBy")
   createdClaims            Claim[]        @relation("ClaimCreatedBy")
   updatedClaims            Claim[]        @relation("ClaimUpdatedBy")
+  createdRules             Rule[]         @relation("RuleCreatedBy")
+  updatedRules             Rule[]         @relation("RuleUpdatedBy")
+  createdVisits            Visit[]        @relation("VisitCreatedBy")
+  updatedVisits            Visit[]        @relation("VisitUpdatedBy")
 
   @@map("users")
 }
@@ -305,6 +309,10 @@ model Visit {
   organization   Organization  @relation(fields: [organizationId], references: [id])
   organizationId String
   source         DataSource    @default(Forager)
+  createdById    String?
+  createdBy      User?         @relation("VisitCreatedBy", fields: [createdById], references: [id])
+  updatedById    String?
+  updatedBy      User?         @relation("VisitUpdatedBy", fields: [updatedById], references: [id])
   createdAt      BigInt        @default(0)
   updatedAt      BigInt        @default(0)
   claims         Claim[]
@@ -429,6 +437,10 @@ model Rule {
   flowData       Json?
   organization   Organization @relation(fields: [organizationId], references: [id])
   organizationId String
+  createdById    String?
+  createdBy      User?        @relation("RuleCreatedBy", fields: [createdById], references: [id])
+  updatedById    String?
+  updatedBy      User?        @relation("RuleUpdatedBy", fields: [updatedById], references: [id])
   createdAt      BigInt       @default(0)
   updatedAt      BigInt       @default(0)
 

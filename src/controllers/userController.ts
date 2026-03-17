@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient, UserRole } from '@prisma/client';
 import { hashPassword } from '../utils/password';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
-import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed } from '../utils/errors';
+import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
 
 const prisma = new PrismaClient();
 

@@ -54,7 +54,7 @@ export const getPayors = async (req: Request, res: Response): Promise<void> => {
         ...payor,
         createdAt: Number(payor.createdAt),
         updatedAt: Number(payor.updatedAt),
-        plans: payor.plans.map(plan => ({
+        plans: (payor as any).plans?.map((plan: any) => ({
           ...plan,
           createdAt: Number(plan.createdAt),
           updatedAt: Number(plan.updatedAt),
@@ -97,7 +97,7 @@ export const getPayorById = async (req: Request, res: Response): Promise<void> =
         ...payor,
         createdAt: Number(payor.createdAt),
         updatedAt: Number(payor.updatedAt),
-        plans: payor.plans.map(plan => ({
+        plans: (payor as any).plans?.map((plan: any) => ({
           ...plan,
           createdAt: Number(plan.createdAt),
           updatedAt: Number(plan.updatedAt),
@@ -164,7 +164,7 @@ export const createPayor = async (req: Request, res: Response): Promise<void> =>
         address,
         phone,
         portalUrl,
-        organization: { connect: { id: organizationId } },
+        organizationId,
         createdById: req.user!.userId,
         updatedById: req.user!.userId,
         createdAt: BigInt(now),
@@ -192,7 +192,7 @@ export const createPayor = async (req: Request, res: Response): Promise<void> =>
         ...payor,
         createdAt: Number(payor.createdAt),
         updatedAt: Number(payor.updatedAt),
-        plans: payor.plans.map(plan => ({
+        plans: (payor as any).plans?.map((plan: any) => ({
           ...plan,
           createdAt: Number(plan.createdAt),
           updatedAt: Number(plan.updatedAt),
@@ -279,7 +279,7 @@ export const updatePayor = async (req: Request, res: Response): Promise<void> =>
         ...payor,
         createdAt: Number(payor.createdAt),
         updatedAt: Number(payor.updatedAt),
-        plans: payor.plans.map(plan => ({
+        plans: (payor as any).plans?.map((plan: any) => ({
           ...plan,
           createdAt: Number(plan.createdAt),
           updatedAt: Number(plan.updatedAt),

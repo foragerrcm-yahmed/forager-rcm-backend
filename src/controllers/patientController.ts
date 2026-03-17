@@ -42,7 +42,7 @@ export const getPatients = async (req: Request, res: Response): Promise<void> =>
     };
 
     if (includeInsurances === 'true') {
-      include.insurancePolicies = {
+      (include as any).patientInsurances = {
         include: {
           plan: {
             include: {
@@ -60,7 +60,7 @@ export const getPatients = async (req: Request, res: Response): Promise<void> =>
         where,
         skip,
         take: limit,
-        include,
+        include: include as any,
       }),
       prisma.patient.count({ where }),
     ]);
@@ -74,7 +74,7 @@ export const getPatients = async (req: Request, res: Response): Promise<void> =>
         dateOfBirth: Number(patient.dateOfBirth),
         // Mask SSN for security
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        insurancePolicies: patient.insurancePolicies?.map(policy => ({
+        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),
@@ -105,7 +105,7 @@ export const getPatientById = async (req: Request, res: Response): Promise<void>
     };
 
     if (includeInsurances === 'true') {
-      include.insurancePolicies = {
+      (include as any).patientInsurances = {
         include: {
           plan: {
             include: {
@@ -120,7 +120,7 @@ export const getPatientById = async (req: Request, res: Response): Promise<void>
 
     const patient = await prisma.patient.findUnique({
       where: { id, organizationId: req.user?.organizationId },
-      include,
+      include: include as any,
     });
 
     if (!patient) {
@@ -136,7 +136,7 @@ export const getPatientById = async (req: Request, res: Response): Promise<void>
         updatedAt: Number(patient.updatedAt),
         dateOfBirth: Number(patient.dateOfBirth),
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        insurancePolicies: patient.insurancePolicies?.map(policy => ({
+        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),
@@ -195,7 +195,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
 
     const now = Math.floor(Date.now() / 1000);
 
-    const patient = await prisma.patient.create({
+    const patient = await (prisma.patient.create as any)({
       data: {
         prefix,
         firstName,
@@ -208,13 +208,13 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
         phone,
         email,
         address,
-        organization: { connect: { id: organizationId } },
+        organizationId,
         source,
         createdById: req.user!.userId,
         updatedById: req.user!.userId,
         createdAt: BigInt(now),
         updatedAt: BigInt(now),
-        insurancePolicies: {
+        patientInsurances: {
           create: insurances?.map((ins: any) => ({
             plan: { connect: { id: ins.planId } },
             isPrimary: ins.isPrimary,
@@ -231,7 +231,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
       include: {
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
-        insurancePolicies: {
+        patientInsurances: {
           include: {
             plan: {
               include: {
@@ -251,7 +251,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
         updatedAt: Number(patient.updatedAt),
         dateOfBirth: Number(patient.dateOfBirth),
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        insurancePolicies: patient.insurancePolicies?.map(policy => ({
+        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),
@@ -315,7 +315,7 @@ export const updatePatient = async (req: Request, res: Response): Promise<void> 
       }
     }
 
-    const patient = await prisma.patient.update({
+    const patient = await (prisma.patient.update as any)({
       where: { id },
       data: {
         prefix,
@@ -336,7 +336,7 @@ export const updatePatient = async (req: Request, res: Response): Promise<void> 
       include: {
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
-        insurancePolicies: {
+        patientInsurances: {
           include: {
             plan: {
               include: {
@@ -356,7 +356,7 @@ export const updatePatient = async (req: Request, res: Response): Promise<void> 
         updatedAt: Number(patient.updatedAt),
         dateOfBirth: Number(patient.dateOfBirth),
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        insurancePolicies: patient.insurancePolicies?.map(policy => ({
+        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),

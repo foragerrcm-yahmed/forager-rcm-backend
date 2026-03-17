@@ -150,7 +150,7 @@ export const createProvider = async (req: Request, res: Response): Promise<void>
         npi,
         specialty,
         licenseType,
-        organization: { connect: { id: organizationId } },
+        organizationId,
         source,
         createdById: req.user!.userId,
         updatedById: req.user!.userId,

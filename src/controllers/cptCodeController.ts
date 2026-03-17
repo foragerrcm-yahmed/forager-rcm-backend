@@ -58,7 +58,7 @@ export const getCPTCodeById = async (req: Request, res: Response): Promise<void>
     const { id } = req.params;
 
     const cptCode = await prisma.cPTCode.findUnique({
-      where: { id: id as string, organizationId: req.user?.organizationId as string | undefined },
+      where: { code: id as string },
     });
 
     if (!cptCode) {
@@ -112,6 +112,7 @@ export const createCPTCode = async (req: Request, res: Response): Promise<void> 
         code,
         description,
         specialty,
+        standardPrice: basePrice || 0,
         basePrice,
         organization: { connect: { id: organizationId as string } },
         createdAt: BigInt(now),
@@ -139,7 +140,7 @@ export const updateCPTCode = async (req: Request, res: Response): Promise<void> 
     const { code, description, specialty, basePrice } = req.body;
     const now = Math.floor(Date.now() / 1000);
 
-    const existingCode = await prisma.cPTCode.findUnique({ where: { id: id as string } });
+    const existingCode = await prisma.cPTCode.findUnique({ where: { code: id as string } });
     if (!existingCode || existingCode.organizationId !== (req.user?.organizationId as string | undefined)) {
       sendError(res, 403, forbidden('CPT_CODE'), 'Cannot update CPT codes outside your organization or code not found');
       return;
@@ -159,7 +160,7 @@ export const updateCPTCode = async (req: Request, res: Response): Promise<void> 
     }
 
     const cptCode = await prisma.cPTCode.update({
-      where: { id: id as string },
+      where: { code: id as string },
       data: {
         code,
         description,
@@ -187,19 +188,19 @@ export const deleteCPTCode = async (req: Request, res: Response): Promise<void> 
   try {
     const { id } = req.params;
 
-    const existingCode = await prisma.cPTCode.findUnique({ where: { id: id as string } });
+    const existingCode = await prisma.cPTCode.findUnique({ where: { code: id as string } });
     if (!existingCode || existingCode.organizationId !== (req.user?.organizationId as string | undefined)) {
       sendError(res, 403, forbidden('CPT_CODE'), 'Cannot delete CPT codes outside your organization or code not found');
       return;
     }
 
-    const serviceCount = await prisma.claimService.count({ where: { cptCodeId: id as string } });
+    const serviceCount = await prisma.claimService.count({ where: { cptCodeCode: id as string } });
     if (serviceCount > 0) {
       sendError(res, 409, deleteFailed('CPT_CODE'), 'CPT code is used in claim services and cannot be deleted');
       return;
     }
 
-    await prisma.cPTCode.delete({ where: { id: id as string } });
+    await prisma.cPTCode.delete({ where: { code: id as string } });
     res.status(204).send();
   } catch (error) {
     console.error('Delete CPT code error:', error);

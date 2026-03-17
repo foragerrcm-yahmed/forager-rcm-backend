@@ -50,7 +50,7 @@ export const getAttachments = async (req: Request, res: Response): Promise<void>
       success: true,
       data: attachments.map(a => ({
         ...a,
-        uploadedAt: Number(a.uploadedAt),
+        createdAt: Number(a.createdAt),
       })),
       pagination: getPaginationMeta(page, limit, total),
     });
@@ -64,7 +64,7 @@ export const uploadAttachment = async (req: Request, res: Response): Promise<voi
   try {
     const { claimId, patientId } = req.body;
 
-    if (!req.file) {
+    if (!(req as any).file) {
       sendError(res, 400, validationError('ATTACHMENT'), 'No file provided');
       return;
     }
@@ -74,13 +74,13 @@ export const uploadAttachment = async (req: Request, res: Response): Promise<voi
       return;
     }
 
-    const fileSize = req.file.size;
+    const fileSize = (req as any).file.size;
     if (fileSize > MAX_FILE_SIZE) {
       sendError(res, 400, validationError('ATTACHMENT'), `File size exceeds maximum allowed size of ${MAX_FILE_SIZE / 1024 / 1024}MB`);
       return;
     }
 
-    const fileExtension = path.extname(req.file.originalname).toLowerCase().slice(1);
+    const fileExtension = path.extname((req as any).file.originalname).toLowerCase().slice(1);
     if (!ALLOWED_TYPES.includes(fileExtension)) {
       sendError(res, 400, validationError('ATTACHMENT'), `File type .${fileExtension} is not allowed`);
       return;
@@ -105,7 +105,7 @@ export const uploadAttachment = async (req: Request, res: Response): Promise<voi
 
     const now = Math.floor(Date.now() / 1000);
     const fileId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const filePath = path.join(UPLOAD_DIR, fileId, req.file.originalname);
+    const filePath = path.join(UPLOAD_DIR, fileId, (req as any).file.originalname);
     const fileDir = path.dirname(filePath);
 
     // Create directory if it doesn't exist
@@ -114,18 +114,18 @@ export const uploadAttachment = async (req: Request, res: Response): Promise<voi
     }
 
     // Save file to disk
-    fs.writeFileSync(filePath, req.file.buffer);
+    fs.writeFileSync(filePath, (req as any).file.buffer);
 
     const attachment = await prisma.attachment.create({
       data: {
         claim: claimId ? { connect: { id: claimId as string } } : undefined,
         patient: patientId ? { connect: { id: patientId as string } } : undefined,
-        fileName: req.file.originalname,
+        fileName: (req as any).file.originalname,
         fileType: fileExtension,
         fileSize: fileSize,
-        filePath: `/attachments/${fileId}/${req.file.originalname}`,
+        filePath: `/attachments/${fileId}/${(req as any).file.originalname}`,
         uploadedBy: { connect: { id: req.user!.userId } },
-        uploadedAt: BigInt(now),
+        createdAt: BigInt(now),
       },
       include: {
         uploadedBy: { select: { id: true, firstName: true, lastName: true } },
@@ -136,7 +136,7 @@ export const uploadAttachment = async (req: Request, res: Response): Promise<voi
       success: true,
       data: {
         ...attachment,
-        uploadedAt: Number(attachment.uploadedAt),
+        createdAt: Number(attachment.createdAt),
       },
     });
   } catch (error) {
