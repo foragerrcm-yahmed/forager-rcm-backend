@@ -37,7 +37,7 @@ const getPatients = async (req, res) => {
             },
         };
         if (includeInsurances === 'true') {
-            include.patientInsurances = {
+            include.insurancePolicies = {
                 include: {
                     plan: {
                         include: {
@@ -67,7 +67,7 @@ const getPatients = async (req, res) => {
                 dateOfBirth: Number(patient.dateOfBirth),
                 // Mask SSN for security
                 ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-                patientInsurances: patient.patientInsurances?.map((policy) => ({
+                insurancePolicies: patient.insurancePolicies?.map((policy) => ({
                     ...policy,
                     createdAt: Number(policy.createdAt),
                     updatedAt: Number(policy.updatedAt),
@@ -96,7 +96,7 @@ const getPatientById = async (req, res) => {
             },
         };
         if (includeInsurances === 'true') {
-            include.patientInsurances = {
+            include.insurancePolicies = {
                 include: {
                     plan: {
                         include: {
@@ -124,7 +124,7 @@ const getPatientById = async (req, res) => {
                 updatedAt: Number(patient.updatedAt),
                 dateOfBirth: Number(patient.dateOfBirth),
                 ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-                patientInsurances: patient.patientInsurances?.map((policy) => ({
+                insurancePolicies: patient.insurancePolicies?.map((policy) => ({
                     ...policy,
                     createdAt: Number(policy.createdAt),
                     updatedAt: Number(policy.updatedAt),
@@ -201,7 +201,7 @@ const createPatient = async (req, res) => {
                 updatedById: req.user.userId,
                 createdAt: BigInt(now),
                 updatedAt: BigInt(now),
-                patientInsurances: {
+                insurancePolicies: {
                     create: insurances?.map((ins) => ({
                         plan: { connect: { id: ins.planId } },
                         isPrimary: ins.isPrimary,
@@ -218,7 +218,7 @@ const createPatient = async (req, res) => {
             include: {
                 createdBy: { select: { id: true, firstName: true, lastName: true } },
                 updatedBy: { select: { id: true, firstName: true, lastName: true } },
-                patientInsurances: {
+                insurancePolicies: {
                     include: {
                         plan: {
                             include: {
@@ -237,7 +237,7 @@ const createPatient = async (req, res) => {
                 updatedAt: Number(patient.updatedAt),
                 dateOfBirth: Number(patient.dateOfBirth),
                 ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-                patientInsurances: patient.patientInsurances?.map((policy) => ({
+                insurancePolicies: patient.insurancePolicies?.map((policy) => ({
                     ...policy,
                     createdAt: Number(policy.createdAt),
                     updatedAt: Number(policy.updatedAt),
@@ -324,7 +324,7 @@ const updatePatient = async (req, res) => {
             include: {
                 createdBy: { select: { id: true, firstName: true, lastName: true } },
                 updatedBy: { select: { id: true, firstName: true, lastName: true } },
-                patientInsurances: {
+                insurancePolicies: {
                     include: {
                         plan: {
                             include: {
@@ -343,7 +343,7 @@ const updatePatient = async (req, res) => {
                 updatedAt: Number(patient.updatedAt),
                 dateOfBirth: Number(patient.dateOfBirth),
                 ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-                patientInsurances: patient.patientInsurances?.map((policy) => ({
+                insurancePolicies: patient.insurancePolicies?.map((policy) => ({
                     ...policy,
                     createdAt: Number(policy.createdAt),
                     updatedAt: Number(policy.updatedAt),

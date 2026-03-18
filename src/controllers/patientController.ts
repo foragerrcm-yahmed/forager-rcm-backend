@@ -43,7 +43,7 @@ export const getPatients = async (req: Request, res: Response): Promise<void> =>
     };
 
     if (includeInsurances === 'true') {
-      (include as any).patientInsurances = {
+      (include as any).insurancePolicies = {
         include: {
           plan: {
             include: {
@@ -75,7 +75,7 @@ export const getPatients = async (req: Request, res: Response): Promise<void> =>
         dateOfBirth: Number(patient.dateOfBirth),
         // Mask SSN for security
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
+        insurancePolicies: (patient as any).insurancePolicies?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),
@@ -105,7 +105,7 @@ export const getPatientById = async (req: Request, res: Response): Promise<void>
     };
 
     if (includeInsurances === 'true') {
-      (include as any).patientInsurances = {
+      (include as any).insurancePolicies = {
         include: {
           plan: {
             include: {
@@ -136,7 +136,7 @@ export const getPatientById = async (req: Request, res: Response): Promise<void>
         updatedAt: Number(patient.updatedAt),
         dateOfBirth: Number(patient.dateOfBirth),
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
+        insurancePolicies: (patient as any).insurancePolicies?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),
@@ -218,7 +218,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
         updatedById: req.user!.userId,
         createdAt: BigInt(now),
         updatedAt: BigInt(now),
-        patientInsurances: {
+        insurancePolicies: {
           create: insurances?.map((ins: any) => ({
             plan: { connect: { id: ins.planId } },
             isPrimary: ins.isPrimary,
@@ -235,7 +235,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
       include: {
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
-        patientInsurances: {
+        insurancePolicies: {
           include: {
             plan: {
               include: {
@@ -255,7 +255,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
         updatedAt: Number(patient.updatedAt),
         dateOfBirth: Number(patient.dateOfBirth),
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
+        insurancePolicies: (patient as any).insurancePolicies?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),
@@ -344,7 +344,7 @@ export const updatePatient = async (req: Request, res: Response): Promise<void> 
       include: {
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
-        patientInsurances: {
+        insurancePolicies: {
           include: {
             plan: {
               include: {
@@ -364,7 +364,7 @@ export const updatePatient = async (req: Request, res: Response): Promise<void> 
         updatedAt: Number(patient.updatedAt),
         dateOfBirth: Number(patient.dateOfBirth),
         ssn: patient.ssn ? '***-**-' + patient.ssn.slice(-4) : null,
-        patientInsurances: (patient as any).patientInsurances?.map((policy: any) => ({
+        insurancePolicies: (patient as any).insurancePolicies?.map((policy: any) => ({
           ...policy,
           createdAt: Number(policy.createdAt),
           updatedAt: Number(policy.updatedAt),
