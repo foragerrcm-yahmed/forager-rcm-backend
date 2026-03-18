@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient, DataSource } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 import { convertBigIntToNumber } from '../utils/bigint';
 
 const prisma = new PrismaClient();
@@ -87,8 +88,7 @@ export const getClaims = async (req: Request, res: Response): Promise<void> => {
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get claims error:', error);
-    sendError(res, 500, 'CLAIM_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CLAIM');
   }
 };
 
@@ -122,8 +122,7 @@ export const getClaimById = async (req: Request, res: Response): Promise<void> =
       },
     });
   } catch (error) {
-    console.error('Get claim by ID error:', error);
-    sendError(res, 500, 'CLAIM_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CLAIM');
   }
 };
 
@@ -227,8 +226,7 @@ export const createClaim = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Create claim error:', error);
-    sendError(res, 500, 'CLAIM_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CLAIM');
   }
 };
 
@@ -290,8 +288,7 @@ export const updateClaim = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Update claim error:', error);
-    sendError(res, 500, 'CLAIM_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CLAIM');
   }
 };
 
@@ -346,8 +343,7 @@ export const updateClaimStatus = async (req: Request, res: Response): Promise<vo
       },
     });
   } catch (error) {
-    console.error('Update claim status error:', error);
-    sendError(res, 500, 'CLAIM_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CLAIM');
   }
 };
 
@@ -364,7 +360,6 @@ export const deleteClaim = async (req: Request, res: Response): Promise<void> =>
     await prisma.claim.delete({ where: { id: id as string } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete claim error:', error);
-    sendError(res, 500, 'CLAIM_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CLAIM');
   }
 };

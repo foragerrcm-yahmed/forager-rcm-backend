@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient, PlanType } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -63,8 +64,7 @@ export const getPayors = async (req: Request, res: Response): Promise<void> => {
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get payors error:', error);
-    sendError(res, 500, 'PAYOR_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PAYOR');
   }
 };
 
@@ -105,8 +105,7 @@ export const getPayorById = async (req: Request, res: Response): Promise<void> =
       },
     });
   } catch (error) {
-    console.error('Get payor by ID error:', error);
-    sendError(res, 500, 'PAYOR_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PAYOR');
   }
 };
 
@@ -200,8 +199,7 @@ export const createPayor = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Create payor error:', error);
-    sendError(res, 500, 'PAYOR_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PAYOR');
   }
 };
 
@@ -287,8 +285,7 @@ export const updatePayor = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Update payor error:', error);
-    sendError(res, 500, 'PAYOR_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PAYOR');
   }
 };
 
@@ -320,8 +317,7 @@ export const deletePayor = async (req: Request, res: Response): Promise<void> =>
     await prisma.payor.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete payor error:', error);
-    sendError(res, 500, 'PAYOR_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PAYOR');
   }
 };
 

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient, DataSource } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -70,8 +71,7 @@ export const getVisits = async (req: Request, res: Response): Promise<void> => {
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get visits error:', error);
-    sendError(res, 500, 'VISIT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'VISIT');
   }
 };
 
@@ -102,8 +102,7 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
       },
     });
   } catch (error) {
-    console.error('Get visit by ID error:', error);
-    sendError(res, 500, 'VISIT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'VISIT');
   }
 };
 
@@ -172,8 +171,7 @@ export const createVisit = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Create visit error:', error);
-    sendError(res, 500, 'VISIT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'VISIT');
   }
 };
 
@@ -217,8 +215,7 @@ export const updateVisit = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Update visit error:', error);
-    sendError(res, 500, 'VISIT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'VISIT');
   }
 };
 
@@ -241,7 +238,6 @@ export const deleteVisit = async (req: Request, res: Response): Promise<void> =>
     await prisma.visit.delete({ where: { id: id as string } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete visit error:', error);
-    sendError(res, 500, 'VISIT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'VISIT');
   }
 };

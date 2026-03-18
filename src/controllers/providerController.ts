@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient, DataSource, ProviderLicenseType } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -66,8 +67,7 @@ export const getProviders = async (req: Request, res: Response): Promise<void> =
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get providers error:', error);
-    sendError(res, 500, 'PROVIDER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PROVIDER');
   }
 };
 
@@ -102,8 +102,7 @@ export const getProviderById = async (req: Request, res: Response): Promise<void
       },
     });
   } catch (error) {
-    console.error('Get provider by ID error:', error);
-    sendError(res, 500, 'PROVIDER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PROVIDER');
   }
 };
 
@@ -172,8 +171,7 @@ export const createProvider = async (req: Request, res: Response): Promise<void>
       },
     });
   } catch (error) {
-    console.error('Create provider error:', error);
-    sendError(res, 500, 'PROVIDER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PROVIDER');
   }
 };
 
@@ -228,8 +226,7 @@ export const updateProvider = async (req: Request, res: Response): Promise<void>
       },
     });
   } catch (error) {
-    console.error('Update provider error:', error);
-    sendError(res, 500, 'PROVIDER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PROVIDER');
   }
 };
 
@@ -261,8 +258,7 @@ export const deleteProvider = async (req: Request, res: Response): Promise<void>
     await prisma.provider.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete provider error:', error);
-    sendError(res, 500, 'PROVIDER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PROVIDER');
   }
 };
 

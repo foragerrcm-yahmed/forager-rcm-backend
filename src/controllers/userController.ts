@@ -3,6 +3,7 @@ import { PrismaClient, UserRole } from '@prisma/client';
 import { hashPassword } from '../utils/password';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -67,8 +68,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get users error:', error);
-    sendError(res, 500, 'USER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'USER');
   }
 };
 
@@ -110,8 +110,7 @@ export const getUserById = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Get user by ID error:', error);
-    sendError(res, 500, 'USER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'USER');
   }
 };
 
@@ -181,8 +180,7 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       },
     });
   } catch (error) {
-    console.error('Create user error:', error);
-    sendError(res, 500, 'USER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'USER');
   }
 };
 
@@ -229,8 +227,7 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       },
     });
   } catch (error) {
-    console.error('Update user error:', error);
-    sendError(res, 500, 'USER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'USER');
   }
 };
 
@@ -266,8 +263,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     await prisma.user.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete user error:', error);
-    sendError(res, 500, 'USER_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'USER');
   }
 };
 

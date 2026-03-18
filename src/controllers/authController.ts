@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateToken } from '../utils/jwt';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -77,8 +78,7 @@ export const setup = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    console.error('Setup error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    handlePrismaError(res, error, 'AUTH');
   }
 };
 
@@ -143,8 +143,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    handlePrismaError(res, error, 'AUTH');
   }
 };
 
@@ -197,8 +196,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    handlePrismaError(res, error, 'AUTH');
   }
 };
 
@@ -236,7 +234,6 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
       },
     });
   } catch (error) {
-    console.error('Get profile error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    handlePrismaError(res, error, 'AUTH');
   }
 };

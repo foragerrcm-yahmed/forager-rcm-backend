@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, forbidden, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -57,8 +58,7 @@ export const getInsurancePolicies = async (req: Request, res: Response): Promise
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get insurance policies error:', error);
-    sendError(res, 500, 'INSURANCE_POLICY_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'INSURANCE_POLICY');
   }
 };
 
@@ -94,8 +94,7 @@ export const getInsurancePolicyById = async (req: Request, res: Response): Promi
       },
     });
   } catch (error) {
-    console.error('Get insurance policy by ID error:', error);
-    sendError(res, 500, 'INSURANCE_POLICY_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'INSURANCE_POLICY');
   }
 };
 
@@ -141,8 +140,7 @@ export const updateInsurancePolicy = async (req: Request, res: Response): Promis
       },
     });
   } catch (error) {
-    console.error('Update insurance policy error:', error);
-    sendError(res, 500, 'INSURANCE_POLICY_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'INSURANCE_POLICY');
   }
 };
 
@@ -159,7 +157,6 @@ export const deleteInsurancePolicy = async (req: Request, res: Response): Promis
     await prisma.patientInsurance.delete({ where: { id: id as string } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete insurance policy error:', error);
-    sendError(res, 500, 'INSURANCE_POLICY_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'INSURANCE_POLICY');
   }
 };

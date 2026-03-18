@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, forbidden } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -55,8 +56,7 @@ export const getAttachments = async (req: Request, res: Response): Promise<void>
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get attachments error:', error);
-    sendError(res, 500, 'ATTACHMENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ATTACHMENT');
   }
 };
 
@@ -164,8 +164,7 @@ export const downloadAttachment = async (req: Request, res: Response): Promise<v
 
     res.download(filePath, attachment.fileName);
   } catch (error) {
-    console.error('Download attachment error:', error);
-    sendError(res, 500, 'ATTACHMENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ATTACHMENT');
   }
 };
 
@@ -189,7 +188,6 @@ export const deleteAttachment = async (req: Request, res: Response): Promise<voi
     await prisma.attachment.delete({ where: { id: id as string } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete attachment error:', error);
-    sendError(res, 500, 'ATTACHMENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ATTACHMENT');
   }
 };

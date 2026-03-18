@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -48,8 +49,7 @@ export const getRuleExecutions = async (req: Request, res: Response): Promise<vo
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get rule executions error:', error);
-    sendError(res, 500, 'RULE_EXECUTION_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE_EXECUTION');
   }
 };
 
@@ -74,7 +74,6 @@ export const getRuleExecutionById = async (req: Request, res: Response): Promise
       },
     });
   } catch (error) {
-    console.error('Get rule execution by ID error:', error);
-    sendError(res, 500, 'RULE_EXECUTION_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE_EXECUTION');
   }
 };

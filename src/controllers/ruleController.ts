@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -49,8 +50,7 @@ export const getRules = async (req: Request, res: Response): Promise<void> => {
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get rules error:', error);
-    sendError(res, 500, 'RULE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE');
   }
 };
 
@@ -80,8 +80,7 @@ export const getRuleById = async (req: Request, res: Response): Promise<void> =>
       },
     });
   } catch (error) {
-    console.error('Get rule by ID error:', error);
-    sendError(res, 500, 'RULE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE');
   }
 };
 
@@ -135,8 +134,7 @@ export const createRule = async (req: Request, res: Response): Promise<void> => 
       },
     });
   } catch (error) {
-    console.error('Create rule error:', error);
-    sendError(res, 500, 'RULE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE');
   }
 };
 
@@ -185,8 +183,7 @@ export const updateRule = async (req: Request, res: Response): Promise<void> => 
       },
     });
   } catch (error) {
-    console.error('Update rule error:', error);
-    sendError(res, 500, 'RULE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE');
   }
 };
 
@@ -229,8 +226,7 @@ export const toggleRuleStatus = async (req: Request, res: Response): Promise<voi
       },
     });
   } catch (error) {
-    console.error('Toggle rule status error:', error);
-    sendError(res, 500, 'RULE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE');
   }
 };
 
@@ -247,7 +243,6 @@ export const deleteRule = async (req: Request, res: Response): Promise<void> => 
     await prisma.rule.delete({ where: { id: id as string } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete rule error:', error);
-    sendError(res, 500, 'RULE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'RULE');
   }
 };

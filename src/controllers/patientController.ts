@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient, DataSource, InsuredType } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -84,8 +85,7 @@ export const getPatients = async (req: Request, res: Response): Promise<void> =>
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get patients error:', error);
-    sendError(res, 500, 'PATIENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PATIENT');
   }
 };
 
@@ -145,8 +145,7 @@ export const getPatientById = async (req: Request, res: Response): Promise<void>
       },
     });
   } catch (error) {
-    console.error('Get patient by ID error:', error);
-    sendError(res, 500, 'PATIENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PATIENT');
   }
 };
 
@@ -260,8 +259,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
       },
     });
   } catch (error) {
-    console.error('Create patient error:', error);
-    sendError(res, 500, 'PATIENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PATIENT');
   }
 };
 
@@ -365,8 +363,7 @@ export const updatePatient = async (req: Request, res: Response): Promise<void> 
       },
     });
   } catch (error) {
-    console.error('Update patient error:', error);
-    sendError(res, 500, 'PATIENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PATIENT');
   }
 };
 
@@ -399,8 +396,7 @@ export const deletePatient = async (req: Request, res: Response): Promise<void> 
     await prisma.patient.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete patient error:', error);
-    sendError(res, 500, 'PATIENT_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'PATIENT');
   }
 };
 

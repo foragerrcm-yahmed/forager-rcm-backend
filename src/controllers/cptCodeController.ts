@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -48,8 +49,7 @@ export const getCPTCodes = async (req: Request, res: Response): Promise<void> =>
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get CPT codes error:', error);
-    sendError(res, 500, 'CPT_CODE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CPT_CODE');
   }
 };
 
@@ -75,8 +75,7 @@ export const getCPTCodeById = async (req: Request, res: Response): Promise<void>
       },
     });
   } catch (error) {
-    console.error('Get CPT code by ID error:', error);
-    sendError(res, 500, 'CPT_CODE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CPT_CODE');
   }
 };
 
@@ -129,8 +128,7 @@ export const createCPTCode = async (req: Request, res: Response): Promise<void> 
       },
     });
   } catch (error) {
-    console.error('Create CPT code error:', error);
-    sendError(res, 500, 'CPT_CODE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CPT_CODE');
   }
 };
 
@@ -179,8 +177,7 @@ export const updateCPTCode = async (req: Request, res: Response): Promise<void> 
       },
     });
   } catch (error) {
-    console.error('Update CPT code error:', error);
-    sendError(res, 500, 'CPT_CODE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CPT_CODE');
   }
 };
 
@@ -203,7 +200,6 @@ export const deleteCPTCode = async (req: Request, res: Response): Promise<void> 
     await prisma.cPTCode.delete({ where: { code: id as string } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete CPT code error:', error);
-    sendError(res, 500, 'CPT_CODE_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'CPT_CODE');
   }
 };

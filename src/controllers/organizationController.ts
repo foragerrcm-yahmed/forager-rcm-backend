@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
+import { handlePrismaError } from '../utils/prismaErrors';
 
 const prisma = new PrismaClient();
 
@@ -59,8 +60,7 @@ export const getOrganizations = async (req: Request, res: Response): Promise<voi
       pagination: getPaginationMeta(page, limit, total),
     });
   } catch (error) {
-    console.error('Get organizations error:', error);
-    sendError(res, 500, 'ORG_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ORGANIZATION');
   }
 };
 
@@ -108,8 +108,7 @@ export const getOrganizationById = async (req: Request, res: Response): Promise<
       },
     });
   } catch (error) {
-    console.error('Get organization by ID error:', error);
-    sendError(res, 500, 'ORG_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ORGANIZATION');
   }
 };
 
@@ -170,8 +169,7 @@ export const createOrganization = async (req: Request, res: Response): Promise<v
       },
     });
   } catch (error) {
-    console.error('Create organization error:', error);
-    sendError(res, 500, 'ORG_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ORGANIZATION');
   }
 };
 
@@ -237,8 +235,7 @@ export const updateOrganization = async (req: Request, res: Response): Promise<v
       },
     });
   } catch (error) {
-    console.error('Update organization error:', error);
-    sendError(res, 500, 'ORG_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ORGANIZATION');
   }
 };
 
@@ -281,8 +278,7 @@ export const deleteOrganization = async (req: Request, res: Response): Promise<v
     await prisma.organization.delete({ where: { id } });
     res.status(204).send();
   } catch (error) {
-    console.error('Delete organization error:', error);
-    sendError(res, 500, 'ORG_INTERNAL_ERROR', 'Internal server error');
+    handlePrismaError(res, error, 'ORGANIZATION');
   }
 };
 
