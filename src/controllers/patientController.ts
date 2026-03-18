@@ -152,7 +152,7 @@ export const getPatientById = async (req: Request, res: Response): Promise<void>
 // Create a new patient
 export const createPatient = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { prefix, firstName, middleName, lastName, suffix, dateOfBirth, gender, ssn, phone, email, address, organizationId, source, insurances } = req.body;
+    const { prefix, firstName, middleName, lastName, suffix, dateOfBirth, gender, ssn, phone, email, address, city, state, zipCode, organizationId, source, insurances } = req.body;
 
     // Basic validation
     if (!firstName || !lastName || !dateOfBirth || !organizationId || !source) {
@@ -206,7 +206,12 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
         ssn,
         phone,
         email,
-        address,
+        address: (address || city || state || zipCode) ? {
+          street: address || null,
+          city: city || null,
+          state: state || null,
+          zipCode: zipCode || null,
+        } : undefined,
         organizationId,
         source,
         createdById: req.user!.userId,
@@ -267,7 +272,7 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
 export const updatePatient = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { prefix, firstName, middleName, lastName, suffix, dateOfBirth, gender, ssn, phone, email, address, source, insurances } = req.body;
+    const { prefix, firstName, middleName, lastName, suffix, dateOfBirth, gender, ssn, phone, email, address, city, state, zipCode, source, insurances } = req.body;
     const now = Math.floor(Date.now() / 1000);
 
     // Ensure user is updating a patient within their own organization
@@ -326,7 +331,12 @@ export const updatePatient = async (req: Request, res: Response): Promise<void> 
         ssn,
         phone,
         email,
-        address,
+        address: (address !== undefined || city !== undefined || state !== undefined || zipCode !== undefined) ? {
+          street: address || null,
+          city: city || null,
+          state: state || null,
+          zipCode: zipCode || null,
+        } : undefined,
         source,
         updatedById: req.user!.userId,
         updatedAt: BigInt(now),
