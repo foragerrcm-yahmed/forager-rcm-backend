@@ -60,6 +60,9 @@ export const getClaims = async (req: Request, res: Response): Promise<void> => {
     }
 
     const include: any = {
+      patient: { select: { id: true, firstName: true, lastName: true } },
+      provider: { select: { id: true, firstName: true, lastName: true } },
+      payor: { select: { id: true, name: true } },
       createdBy: { select: { id: true, firstName: true, lastName: true } },
       updatedBy: { select: { id: true, firstName: true, lastName: true } },
     };
@@ -99,6 +102,10 @@ export const getClaimById = async (req: Request, res: Response): Promise<void> =
     const claim = await prisma.claim.findUnique({
       where: { id: id as string, organizationId: req.user?.organizationId as string | undefined },
       include: {
+        patient: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, phone: true, email: true } },
+        provider: { select: { id: true, firstName: true, lastName: true, specialty: true } },
+        payor: { select: { id: true, name: true } },
+        visit: { select: { id: true, visitDate: true, visitType: true, location: true, status: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
         services: true,
@@ -117,8 +124,33 @@ export const getClaimById = async (req: Request, res: Response): Promise<void> =
         ...claim,
         serviceDate: Number(claim.serviceDate),
         submissionDate: claim.submissionDate ? Number(claim.submissionDate) : null,
+        creationDate: Number(claim.creationDate),
         createdAt: Number(claim.createdAt),
         updatedAt: Number(claim.updatedAt),
+        billedAmount: Number(claim.billedAmount),
+        allowedAmount: claim.allowedAmount ? Number(claim.allowedAmount) : null,
+        paidAmount: claim.paidAmount ? Number(claim.paidAmount) : null,
+        adjustmentAmount: claim.adjustmentAmount ? Number(claim.adjustmentAmount) : null,
+        patientResponsibility: claim.patientResponsibility ? Number(claim.patientResponsibility) : null,
+        patient: claim.patient ? {
+          ...claim.patient,
+          dateOfBirth: Number((claim.patient as any).dateOfBirth),
+        } : null,
+        visit: claim.visit ? {
+          ...claim.visit,
+          visitDate: Number(claim.visit.visitDate),
+        } : null,
+        services: (claim as any).services?.map((s: any) => ({
+          ...s,
+          unitPrice: Number(s.unitPrice),
+          totalPrice: Number(s.totalPrice),
+          contractedRate: s.contractedRate ? Number(s.contractedRate) : null,
+          createdAt: Number(s.createdAt),
+        })),
+        timeline: (claim as any).timeline?.map((t: any) => ({
+          ...t,
+          createdAt: Number(t.createdAt),
+        })),
       },
     });
   } catch (error) {
