@@ -1,0 +1,852 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-03-18",
+  "__export_source": "forager-rcm-backend",
+  "resources": [
+    {
+      "_id": "wrk_forager",
+      "_type": "workspace",
+      "name": "Forager RCM API",
+      "description": "Complete API collection for Forager RCM Backend"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_forager",
+      "name": "Production",
+      "data": {
+        "base_url": "https://forager-rcm-backend-production.up.railway.app",
+        "token": "PASTE_YOUR_TOKEN_HERE",
+        "organization_id": "ff145d75-192c-4a7c-afe2-01e045d1dd29"
+      }
+    },
+
+    {
+      "_id": "fld_auth",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Auth"
+    },
+    {
+      "_id": "req_auth_setup",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Setup (first-time only)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/setup",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"admin@yourpractice.com\",\n  \"password\": \"YourPassword123!\",\n  \"firstName\": \"Your\",\n  \"lastName\": \"Name\",\n  \"organizationName\": \"Your Practice Name\"\n}"
+      },
+      "description": "One-time setup. Creates the first org and admin user. Disabled after first use."
+    },
+    {
+      "_id": "req_auth_login",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Login",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/login",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"yahmed@foragerrcm.com\",\n  \"password\": \"YourPassword123!\"\n}"
+      },
+      "description": "Returns a JWT token. Copy the token value into the environment variable 'token'."
+    },
+    {
+      "_id": "req_auth_profile",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Get My Profile",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/auth/profile",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Returns the currently authenticated user's profile."
+    },
+    {
+      "_id": "req_auth_register",
+      "_type": "request",
+      "parentId": "fld_auth",
+      "name": "Register New User",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/auth/register",
+      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"newuser@foragerrcm.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"role\": \"Biller\",\n  \"organizationId\": \"{{ _.organization_id }}\"\n}"
+      },
+      "description": "Roles: Admin, Biller, Provider, FrontDesk"
+    },
+
+    {
+      "_id": "fld_users",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Users"
+    },
+    {
+      "_id": "req_users_list",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "List Users",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/users?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_users_get",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Get User by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/users/USER_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_users_update",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Update User",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/users/USER_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"role\": \"Biller\"\n}"
+      }
+    },
+    {
+      "_id": "req_users_delete",
+      "_type": "request",
+      "parentId": "fld_users",
+      "name": "Delete User",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/users/USER_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_orgs",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Organizations"
+    },
+    {
+      "_id": "req_orgs_list",
+      "_type": "request",
+      "parentId": "fld_orgs",
+      "name": "List Organizations",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/organizations?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_orgs_get",
+      "_type": "request",
+      "parentId": "fld_orgs",
+      "name": "Get Organization by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/organizations/{{ _.organization_id }}",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_orgs_create",
+      "_type": "request",
+      "parentId": "fld_orgs",
+      "name": "Create Organization",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/organizations",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Branch Office\",\n  \"phone\": \"555-000-1111\",\n  \"email\": \"branch@foragerrcm.com\",\n  \"npi\": \"9876543210\",\n  \"parentOrganizationId\": \"{{ _.organization_id }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_orgs_update",
+      "_type": "request",
+      "parentId": "fld_orgs",
+      "name": "Update Organization",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/organizations/{{ _.organization_id }}",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Forager Family Care\",\n  \"phone\": \"555-999-8888\",\n  \"email\": \"admin@foragerrcm.com\"\n}"
+      }
+    },
+    {
+      "_id": "req_orgs_delete",
+      "_type": "request",
+      "parentId": "fld_orgs",
+      "name": "Delete Organization",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/organizations/ORG_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_patients",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Patients"
+    },
+    {
+      "_id": "req_patients_list",
+      "_type": "request",
+      "parentId": "fld_patients",
+      "name": "List Patients",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/patients?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Optional filters: ?search=Jane&source=Forager&includeInsurances=true"
+    },
+    {
+      "_id": "req_patients_get",
+      "_type": "request",
+      "parentId": "fld_patients",
+      "name": "Get Patient by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/patients/PATIENT_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_patients_create",
+      "_type": "request",
+      "parentId": "fld_patients",
+      "name": "Create Patient",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/patients",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"dateOfBirth\": 631152000,\n  \"gender\": \"Female\",\n  \"phone\": \"555-123-4567\",\n  \"email\": \"jane.doe@email.com\",\n  \"address\": {\n    \"street\": \"123 Main St\",\n    \"city\": \"Austin\",\n    \"state\": \"TX\",\n    \"zip\": \"78701\"\n  },\n  \"organizationId\": \"{{ _.organization_id }}\",\n  \"source\": \"Forager\"\n}"
+      },
+      "description": "dateOfBirth is a Unix timestamp. Convert at unixtimestamp.com"
+    },
+    {
+      "_id": "req_patients_update",
+      "_type": "request",
+      "parentId": "fld_patients",
+      "name": "Update Patient",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/patients/PATIENT_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"phone\": \"555-999-0000\",\n  \"email\": \"jane.updated@email.com\"\n}"
+      }
+    },
+    {
+      "_id": "req_patients_delete",
+      "_type": "request",
+      "parentId": "fld_patients",
+      "name": "Delete Patient",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/patients/PATIENT_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_providers",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Providers"
+    },
+    {
+      "_id": "req_providers_list",
+      "_type": "request",
+      "parentId": "fld_providers",
+      "name": "List Providers",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/providers?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_providers_get",
+      "_type": "request",
+      "parentId": "fld_providers",
+      "name": "Get Provider by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/providers/PROVIDER_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_providers_create",
+      "_type": "request",
+      "parentId": "fld_providers",
+      "name": "Create Provider",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/providers",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"npi\": \"1234567890\",\n  \"specialty\": \"Family Medicine\",\n  \"licenseType\": \"MD\",\n  \"phone\": \"555-222-3333\",\n  \"email\": \"dr.smith@foragerrcm.com\",\n  \"organizationId\": \"{{ _.organization_id }}\",\n  \"source\": \"Forager\"\n}"
+      }
+    },
+    {
+      "_id": "req_providers_update",
+      "_type": "request",
+      "parentId": "fld_providers",
+      "name": "Update Provider",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/providers/PROVIDER_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"specialty\": \"Internal Medicine\",\n  \"phone\": \"555-444-5555\"\n}"
+      }
+    },
+    {
+      "_id": "req_providers_delete",
+      "_type": "request",
+      "parentId": "fld_providers",
+      "name": "Delete Provider",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/providers/PROVIDER_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_payors",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Payors"
+    },
+    {
+      "_id": "req_payors_list",
+      "_type": "request",
+      "parentId": "fld_payors",
+      "name": "List Payors",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/payors?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_payors_get",
+      "_type": "request",
+      "parentId": "fld_payors",
+      "name": "Get Payor by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/payors/PAYOR_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_payors_create",
+      "_type": "request",
+      "parentId": "fld_payors",
+      "name": "Create Payor",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/payors",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Blue Cross Blue Shield\",\n  \"externalPayorId\": \"BCBS-001\",\n  \"payorCategory\": \"Commercial\",\n  \"billingTaxonomy\": \"Health Insurance\",\n  \"organizationId\": \"{{ _.organization_id }}\",\n  \"plans\": [\n    {\n      \"planName\": \"BCBS PPO\",\n      \"planType\": \"PPO\",\n      \"isInNetwork\": true\n    },\n    {\n      \"planName\": \"BCBS HMO\",\n      \"planType\": \"HMO\",\n      \"isInNetwork\": true\n    }\n  ]\n}"
+      }
+    },
+    {
+      "_id": "req_payors_update",
+      "_type": "request",
+      "parentId": "fld_payors",
+      "name": "Update Payor",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/payors/PAYOR_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Blue Cross Blue Shield (Updated)\",\n  \"payorCategory\": \"Commercial\"\n}"
+      }
+    },
+    {
+      "_id": "req_payors_delete",
+      "_type": "request",
+      "parentId": "fld_payors",
+      "name": "Delete Payor",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/payors/PAYOR_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_visits",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Visits"
+    },
+    {
+      "_id": "req_visits_list",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "List Visits",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/visits?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Optional filters: ?patientId=&providerId=&status=Scheduled&dateFrom=1700000000&dateTo=1800000000"
+    },
+    {
+      "_id": "req_visits_get",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Get Visit by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/visits/VISIT_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_visits_create",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Create Visit",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/visits",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"patientId\": \"PATIENT_ID_HERE\",\n  \"providerId\": \"PROVIDER_ID_HERE\",\n  \"organizationId\": \"{{ _.organization_id }}\",\n  \"visitDate\": 1773850277,\n  \"visitTime\": 1773850277,\n  \"duration\": 30,\n  \"visitType\": \"OfficeVisit\",\n  \"location\": \"InPerson\",\n  \"status\": \"Scheduled\",\n  \"chiefComplaint\": \"Annual wellness exam\",\n  \"source\": \"Forager\"\n}"
+      },
+      "description": "visitDate and visitTime are Unix timestamps. Status options: Scheduled, InProgress, Completed, Cancelled, NoShow"
+    },
+    {
+      "_id": "req_visits_update",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Update Visit",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/visits/VISIT_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"Completed\",\n  \"notes\": \"Patient seen, all vitals normal.\"\n}"
+      }
+    },
+    {
+      "_id": "req_visits_delete",
+      "_type": "request",
+      "parentId": "fld_visits",
+      "name": "Delete Visit",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/visits/VISIT_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_claims",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Claims"
+    },
+    {
+      "_id": "req_claims_list",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "name": "List Claims",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/claims?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Optional filters: ?status=Draft&patientId=&providerId="
+    },
+    {
+      "_id": "req_claims_get",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "name": "Get Claim by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/claims/CLAIM_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_claims_create",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "name": "Create Claim",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/claims",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"visitId\": \"VISIT_ID_HERE\",\n  \"patientId\": \"PATIENT_ID_HERE\",\n  \"providerId\": \"PROVIDER_ID_HERE\",\n  \"organizationId\": \"{{ _.organization_id }}\",\n  \"payorId\": \"PAYOR_ID_HERE\",\n  \"planId\": \"PLAN_ID_HERE\",\n  \"claimType\": \"Professional\",\n  \"status\": \"Draft\",\n  \"totalCharge\": 25000,\n  \"source\": \"Forager\"\n}"
+      },
+      "description": "totalCharge is in cents (25000 = $250.00). Status options: Draft, Submitted, Pending, Paid, Denied, Appealed, Void"
+    },
+    {
+      "_id": "req_claims_update",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "name": "Update Claim",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/claims/CLAIM_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"Submitted\",\n  \"submittedAt\": 1773850277\n}"
+      }
+    },
+    {
+      "_id": "req_claims_delete",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "name": "Delete Claim",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/claims/CLAIM_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_cpt",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "CPT Codes"
+    },
+    {
+      "_id": "req_cpt_list",
+      "_type": "request",
+      "parentId": "fld_cpt",
+      "name": "List CPT Codes",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cpt-codes?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Optional filter: ?search=99213"
+    },
+    {
+      "_id": "req_cpt_get",
+      "_type": "request",
+      "parentId": "fld_cpt",
+      "name": "Get CPT Code by Code",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/cpt-codes/99213",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Use the CPT code itself (e.g. 99213) as the ID, not a UUID"
+    },
+    {
+      "_id": "req_cpt_create",
+      "_type": "request",
+      "parentId": "fld_cpt",
+      "name": "Create CPT Code",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/cpt-codes",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"code\": \"99213\",\n  \"description\": \"Office or other outpatient visit, established patient, low complexity\",\n  \"category\": \"Evaluation and Management\",\n  \"defaultFee\": 15000,\n  \"organizationId\": \"{{ _.organization_id }}\"\n}"
+      },
+      "description": "defaultFee is in cents (15000 = $150.00)"
+    },
+    {
+      "_id": "req_cpt_update",
+      "_type": "request",
+      "parentId": "fld_cpt",
+      "name": "Update CPT Code",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/cpt-codes/99213",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"defaultFee\": 16000,\n  \"description\": \"Updated description\"\n}"
+      }
+    },
+    {
+      "_id": "req_cpt_delete",
+      "_type": "request",
+      "parentId": "fld_cpt",
+      "name": "Delete CPT Code",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/cpt-codes/99213",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_insurance",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Insurance Policies"
+    },
+    {
+      "_id": "req_insurance_list",
+      "_type": "request",
+      "parentId": "fld_insurance",
+      "name": "List Insurance Policies",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/insurance-policies?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Optional filter: ?patientId=PATIENT_ID_HERE"
+    },
+    {
+      "_id": "req_insurance_get",
+      "_type": "request",
+      "parentId": "fld_insurance",
+      "name": "Get Insurance Policy by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/insurance-policies/POLICY_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_insurance_create",
+      "_type": "request",
+      "parentId": "fld_insurance",
+      "name": "Create Insurance Policy",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/insurance-policies",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"patientId\": \"PATIENT_ID_HERE\",\n  \"planId\": \"PLAN_ID_HERE\",\n  \"memberId\": \"MEM-123456\",\n  \"groupNumber\": \"GRP-789\",\n  \"priority\": \"Primary\",\n  \"effectiveDate\": 1700000000,\n  \"terminationDate\": 1800000000,\n  \"copay\": 2000,\n  \"deductible\": 150000,\n  \"outOfPocketMax\": 500000\n}"
+      },
+      "description": "priority: Primary, Secondary, Tertiary. Monetary values in cents."
+    },
+    {
+      "_id": "req_insurance_update",
+      "_type": "request",
+      "parentId": "fld_insurance",
+      "name": "Update Insurance Policy",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/insurance-policies/POLICY_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"copay\": 2500,\n  \"deductible\": 200000\n}"
+      }
+    },
+    {
+      "_id": "req_insurance_delete",
+      "_type": "request",
+      "parentId": "fld_insurance",
+      "name": "Delete Insurance Policy",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/insurance-policies/POLICY_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_rules",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Rules"
+    },
+    {
+      "_id": "req_rules_list",
+      "_type": "request",
+      "parentId": "fld_rules",
+      "name": "List Rules",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/rules?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_rules_get",
+      "_type": "request",
+      "parentId": "fld_rules",
+      "name": "Get Rule by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_rules_create",
+      "_type": "request",
+      "parentId": "fld_rules",
+      "name": "Create Rule",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/rules",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Missing NPI Check\",\n  \"description\": \"Flags claims where the provider NPI is missing\",\n  \"ruleType\": \"Validation\",\n  \"conditions\": {\n    \"field\": \"provider.npi\",\n    \"operator\": \"isEmpty\"\n  },\n  \"actions\": {\n    \"flag\": \"MissingNPI\",\n    \"severity\": \"Error\"\n  },\n  \"isActive\": true,\n  \"organizationId\": \"{{ _.organization_id }}\"\n}"
+      }
+    },
+    {
+      "_id": "req_rules_update",
+      "_type": "request",
+      "parentId": "fld_rules",
+      "name": "Update Rule",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE",
+      "headers": [
+        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
+        { "name": "Content-Type", "value": "application/json" }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Updated Rule Name\",\n  \"description\": \"Updated description\"\n}"
+      }
+    },
+    {
+      "_id": "req_rules_activate",
+      "_type": "request",
+      "parentId": "fld_rules",
+      "name": "Activate Rule",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE/activate",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_rules_deactivate",
+      "_type": "request",
+      "parentId": "fld_rules",
+      "name": "Deactivate Rule",
+      "method": "PATCH",
+      "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE/deactivate",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_rules_delete",
+      "_type": "request",
+      "parentId": "fld_rules",
+      "name": "Delete Rule",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_rule_exec",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Rule Executions"
+    },
+    {
+      "_id": "req_rule_exec_list",
+      "_type": "request",
+      "parentId": "fld_rule_exec",
+      "name": "List Rule Executions",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/rule-executions?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_rule_exec_get",
+      "_type": "request",
+      "parentId": "fld_rule_exec",
+      "name": "Get Rule Execution by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/rule-executions/EXECUTION_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_attachments",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Attachments"
+    },
+    {
+      "_id": "req_attachments_list",
+      "_type": "request",
+      "parentId": "fld_attachments",
+      "name": "List Attachments",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/attachments?page=1&limit=20",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "description": "Optional filters: ?patientId=&visitId=&claimId="
+    },
+    {
+      "_id": "req_attachments_get",
+      "_type": "request",
+      "parentId": "fld_attachments",
+      "name": "Get Attachment by ID",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/attachments/ATTACHMENT_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+    {
+      "_id": "req_attachments_upload",
+      "_type": "request",
+      "parentId": "fld_attachments",
+      "name": "Upload Attachment",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/attachments",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          { "name": "file", "type": "file", "value": "" },
+          { "name": "patientId", "type": "text", "value": "PATIENT_ID_HERE" },
+          { "name": "visitId", "type": "text", "value": "VISIT_ID_HERE" },
+          { "name": "attachmentType", "type": "text", "value": "ClinicalNote" }
+        ]
+      },
+      "description": "Use multipart/form-data. attachmentType options: ClinicalNote, EOB, InsuranceCard, LabResult, Referral, Other"
+    },
+    {
+      "_id": "req_attachments_delete",
+      "_type": "request",
+      "parentId": "fld_attachments",
+      "name": "Delete Attachment",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/attachments/ATTACHMENT_ID_HERE",
+      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+    },
+
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "name": "Health"
+    },
+    {
+      "_id": "req_health",
+      "_type": "request",
+      "parentId": "fld_health",
+      "name": "Health Check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/health",
+      "description": "No auth required. Returns {status: 'ok'} if the server is running."
+    }
+  ]
+}
