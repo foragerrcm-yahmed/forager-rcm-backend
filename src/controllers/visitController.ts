@@ -86,13 +86,27 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
     const visit = await prisma.visit.findUnique({
       where: { id: id as string, organizationId: req.user?.organizationId as string | undefined },
       include: {
-        patient: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, phone: true, email: true } },
+        patient: {
+          select: {
+            id: true, firstName: true, lastName: true, dateOfBirth: true, phone: true, email: true,
+            insurancePolicies: {
+              include: {
+                plan: {
+                  include: {
+                    payor: { select: { id: true, name: true } },
+                  }
+                }
+              }
+            }
+          }
+        },
         provider: { select: { id: true, firstName: true, lastName: true, specialty: true, licenseType: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
         claims: {
           include: {
             payor: { select: { id: true, name: true } },
+            services: true,
           }
         },
       }
