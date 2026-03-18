@@ -98,10 +98,71 @@ export const getInsurancePolicyById = async (req: Request, res: Response): Promi
   }
 };
 
+export const createInsurancePolicy = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { patientId, planId, isPrimary, insuredType, subscriberName, subscriberDob, memberId } = req.body;
+    const now = Math.floor(Date.now() / 1000);
+
+    if (!patientId || !planId || isPrimary === undefined || !insuredType || !memberId) {
+      sendError(res, 400, validationError('INSURANCE_POLICY'), 'Missing required fields: patientId, planId, isPrimary, insuredType, memberId');
+      return;
+    }
+
+    // Validate patient exists
+    const patient = await prisma.patient.findUnique({ where: { id: patientId as string } });
+    if (!patient) {
+      sendError(res, 404, notFound('PATIENT'), 'Patient not found');
+      return;
+    }
+
+    // Validate plan exists
+    const plan = await prisma.payorPlan.findUnique({ where: { id: planId as string } });
+    if (!plan) {
+      sendError(res, 404, notFound('PAYOR_PLAN'), 'Payor plan not found');
+      return;
+    }
+
+    const policy = await prisma.patientInsurance.create({
+      data: {
+        patient: { connect: { id: patientId as string } },
+        plan: { connect: { id: planId as string } },
+        isPrimary,
+        insuredType,
+        subscriberName,
+        subscriberDob: subscriberDob ? BigInt(subscriberDob) : undefined,
+        memberId,
+        createdAt: BigInt(now),
+        updatedAt: BigInt(now),
+      },
+      include: {
+        plan: {
+          include: {
+            payor: {
+              select: { id: true, name: true }
+            }
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        ...policy,
+        subscriberDob: policy.subscriberDob ? Number(policy.subscriberDob) : null,
+        createdAt: Number(policy.createdAt),
+        updatedAt: Number(policy.updatedAt),
+      },
+    });
+  } catch (error) {
+    handlePrismaError(res, error, 'INSURANCE_POLICY');
+  }
+};
+
 export const updateInsurancePolicy = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { isPrimary, subscriberName, subscriberDob, memberId } = req.body;
+    const { isPrimary, isActive, subscriberName, subscriberDob, memberId, planId, insuredType } = req.body;
     const now = Math.floor(Date.now() / 1000);
 
     const existingPolicy = await prisma.patientInsurance.findUnique({ where: { id: id as string } });
@@ -114,9 +175,11 @@ export const updateInsurancePolicy = async (req: Request, res: Response): Promis
       where: { id: id as string },
       data: {
         isPrimary,
+        insuredType,
         subscriberName,
         subscriberDob: subscriberDob ? BigInt(subscriberDob) : undefined,
         memberId,
+        ...(planId ? { plan: { connect: { id: planId as string } } } : {}),
         updatedAt: BigInt(now),
       },
       include: {

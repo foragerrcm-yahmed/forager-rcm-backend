@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteInsurancePolicy = exports.updateInsurancePolicy = exports.getInsurancePolicyById = exports.getInsurancePolicies = void 0;
+exports.deleteInsurancePolicy = exports.updateInsurancePolicy = exports.createInsurancePolicy = exports.getInsurancePolicyById = exports.getInsurancePolicies = void 0;
 const client_1 = require("@prisma/client");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
@@ -91,10 +91,67 @@ const getInsurancePolicyById = async (req, res) => {
     }
 };
 exports.getInsurancePolicyById = getInsurancePolicyById;
+const createInsurancePolicy = async (req, res) => {
+    try {
+        const { patientId, planId, isPrimary, insuredType, subscriberName, subscriberDob, memberId } = req.body;
+        const now = Math.floor(Date.now() / 1000);
+        if (!patientId || !planId || isPrimary === undefined || !insuredType || !memberId) {
+            (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('INSURANCE_POLICY'), 'Missing required fields: patientId, planId, isPrimary, insuredType, memberId');
+            return;
+        }
+        // Validate patient exists
+        const patient = await prisma.patient.findUnique({ where: { id: patientId } });
+        if (!patient) {
+            (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('PATIENT'), 'Patient not found');
+            return;
+        }
+        // Validate plan exists
+        const plan = await prisma.payorPlan.findUnique({ where: { id: planId } });
+        if (!plan) {
+            (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('PAYOR_PLAN'), 'Payor plan not found');
+            return;
+        }
+        const policy = await prisma.patientInsurance.create({
+            data: {
+                patient: { connect: { id: patientId } },
+                plan: { connect: { id: planId } },
+                isPrimary,
+                insuredType,
+                subscriberName,
+                subscriberDob: subscriberDob ? BigInt(subscriberDob) : undefined,
+                memberId,
+                createdAt: BigInt(now),
+                updatedAt: BigInt(now),
+            },
+            include: {
+                plan: {
+                    include: {
+                        payor: {
+                            select: { id: true, name: true }
+                        }
+                    }
+                }
+            }
+        });
+        res.status(201).json({
+            success: true,
+            data: {
+                ...policy,
+                subscriberDob: policy.subscriberDob ? Number(policy.subscriberDob) : null,
+                createdAt: Number(policy.createdAt),
+                updatedAt: Number(policy.updatedAt),
+            },
+        });
+    }
+    catch (error) {
+        (0, prismaErrors_1.handlePrismaError)(res, error, 'INSURANCE_POLICY');
+    }
+};
+exports.createInsurancePolicy = createInsurancePolicy;
 const updateInsurancePolicy = async (req, res) => {
     try {
         const { id } = req.params;
-        const { isPrimary, subscriberName, subscriberDob, memberId } = req.body;
+        const { isPrimary, isActive, subscriberName, subscriberDob, memberId, planId, insuredType } = req.body;
         const now = Math.floor(Date.now() / 1000);
         const existingPolicy = await prisma.patientInsurance.findUnique({ where: { id: id } });
         if (!existingPolicy) {
@@ -105,9 +162,11 @@ const updateInsurancePolicy = async (req, res) => {
             where: { id: id },
             data: {
                 isPrimary,
+                insuredType,
                 subscriberName,
                 subscriberDob: subscriberDob ? BigInt(subscriberDob) : undefined,
                 memberId,
+                ...(planId ? { plan: { connect: { id: planId } } } : {}),
                 updatedAt: BigInt(now),
             },
             include: {

@@ -7,6 +7,7 @@ const router = (0, express_1.Router)();
 router.use(auth_1.authenticateToken);
 router.get('/', (0, auth_1.requireRole)('Admin', 'Biller', 'Provider', 'FrontDesk'), insurancePolicyController_1.getInsurancePolicies);
 router.get('/:id', (0, auth_1.requireRole)('Admin', 'Biller', 'Provider', 'FrontDesk'), insurancePolicyController_1.getInsurancePolicyById);
+router.post('/', (0, auth_1.requireRole)('Admin', 'Biller', 'FrontDesk'), insurancePolicyController_1.createInsurancePolicy);
 router.put('/:id', (0, auth_1.requireRole)('Admin', 'Biller', 'FrontDesk'), insurancePolicyController_1.updateInsurancePolicy);
 router.delete('/:id', (0, auth_1.requireRole)('Admin', 'Biller'), insurancePolicyController_1.deleteInsurancePolicy);
 exports.default = router;
