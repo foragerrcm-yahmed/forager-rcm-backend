@@ -92,11 +92,9 @@ export function handlePrismaError(res: Response, error: unknown, entity: string)
   // Prisma validation errors (invalid query construction)
   if (error instanceof Prisma.PrismaClientValidationError) {
     console.error(`[Prisma Validation] ${entity}:`, error.message);
-    // Extract the most useful part of the validation message
-    const lines = error.message.split('\n').filter(l => l.trim());
-    const hint = lines.find(l => l.includes('Unknown') || l.includes('Invalid') || l.includes('Argument')) || lines[lines.length - 1];
+    // Return the full message for debugging
     sendError(res, 400, `${entity.toUpperCase()}_VALIDATION_ERROR`,
-      `Invalid request data: ${hint?.trim() || 'please check all field names and types.'}`);
+      `Invalid request data: ${error.message}`);
     return;
   }
 
