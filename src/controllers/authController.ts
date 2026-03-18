@@ -23,12 +23,10 @@ export const setup = async (req: Request, res: Response): Promise<void> => {
 
     const now = Math.floor(Date.now() / 1000);
 
-    // Step 1: Create org with a temporary placeholder for createdById
-    const org = await (prisma.organization.create as any)({
+    // Step 1: Create org without createdById (it's now optional)
+    const org = await prisma.organization.create({
       data: {
         name: organizationName,
-        createdById: '00000000-0000-0000-0000-000000000000',
-        updatedById: '00000000-0000-0000-0000-000000000000',
         createdAt: BigInt(now),
         updatedAt: BigInt(now),
       },
