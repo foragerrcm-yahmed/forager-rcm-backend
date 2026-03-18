@@ -222,12 +222,12 @@ export const createClaim = async (req: Request, res: Response): Promise<void> =>
         updatedAt: BigInt(now),
         services: {
           create: services.map((s: any) => ({
-            cptCode: s.cptCode,
+            ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
+            description: s.description || null,
             quantity: s.quantity,
             unitPrice: s.unitPrice,
             totalPrice: s.totalPrice,
             createdAt: BigInt(now),
-            updatedAt: BigInt(now),
           })),
         },
         timeline: {
@@ -292,12 +292,12 @@ export const updateClaim = async (req: Request, res: Response): Promise<void> =>
         updatedAt: BigInt(now),
         services: services ? {
           create: services.map((s: any) => ({
-            cptCode: s.cptCode,
+            ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
+            description: s.description || null,
             quantity: s.quantity,
             unitPrice: s.unitPrice,
             totalPrice: s.totalPrice,
             createdAt: BigInt(now),
-            updatedAt: BigInt(now),
           })),
         } : undefined,
       },
