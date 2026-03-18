@@ -48,7 +48,7 @@ export const getAttachments = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({
       success: true,
-      data: attachments.map(a => ({
+      data: attachments.map((a: any) => ({
         ...a,
         createdAt: Number(a.createdAt),
       })),
