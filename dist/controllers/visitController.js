@@ -46,8 +46,11 @@ const getVisits = async (req, res) => {
                 skip,
                 take: limit,
                 include: {
+                    patient: { select: { id: true, firstName: true, lastName: true } },
+                    provider: { select: { id: true, firstName: true, lastName: true } },
                     createdBy: { select: { id: true, firstName: true, lastName: true } },
                     updatedBy: { select: { id: true, firstName: true, lastName: true } },
+                    claims: { select: { id: true, claimNumber: true, status: true, billedAmount: true } },
                 }
             }),
             prisma.visit.count({ where }),
@@ -57,6 +60,7 @@ const getVisits = async (req, res) => {
             data: visits.map(v => ({
                 ...v,
                 visitDate: Number(v.visitDate),
+                visitTime: Number(v.visitTime),
                 createdAt: Number(v.createdAt),
                 updatedAt: Number(v.updatedAt),
             })),
@@ -74,8 +78,15 @@ const getVisitById = async (req, res) => {
         const visit = await prisma.visit.findUnique({
             where: { id: id, organizationId: req.user?.organizationId },
             include: {
+                patient: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, phone: true, email: true } },
+                provider: { select: { id: true, firstName: true, lastName: true, specialty: true, licenseType: true } },
                 createdBy: { select: { id: true, firstName: true, lastName: true } },
                 updatedBy: { select: { id: true, firstName: true, lastName: true } },
+                claims: {
+                    include: {
+                        payor: { select: { id: true, name: true } },
+                    }
+                },
             }
         });
         if (!visit) {
@@ -87,8 +98,22 @@ const getVisitById = async (req, res) => {
             data: {
                 ...visit,
                 visitDate: Number(visit.visitDate),
+                visitTime: Number(visit.visitTime),
                 createdAt: Number(visit.createdAt),
                 updatedAt: Number(visit.updatedAt),
+                patient: visit.patient ? {
+                    ...visit.patient,
+                    dateOfBirth: Number(visit.patient.dateOfBirth),
+                } : null,
+                claims: visit.claims?.map((c) => ({
+                    ...c,
+                    billedAmount: Number(c.billedAmount),
+                    allowedAmount: c.allowedAmount ? Number(c.allowedAmount) : null,
+                    paidAmount: c.paidAmount ? Number(c.paidAmount) : null,
+                    serviceDate: Number(c.serviceDate),
+                    submissionDate: c.submissionDate ? Number(c.submissionDate) : null,
+                    creationDate: Number(c.creationDate),
+                })),
             },
         });
     }
