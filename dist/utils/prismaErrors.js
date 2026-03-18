@@ -64,10 +64,17 @@ function handlePrismaError(res, error, entity) {
                 (0, errors_1.sendError)(res, 400, `${entity.toUpperCase()}_VALIDATION_ERROR`, `Inconsistent data: one or more fields contain invalid values.`);
                 return;
             }
+            // Column not found in database (schema/DB mismatch)
+            case 'P2022': {
+                const column = meta?.column_name ? String(meta.column_name) : 'unknown column';
+                console.error(`[Prisma P2022] ${entity}: column not found: ${column}`, meta);
+                (0, errors_1.sendError)(res, 500, `${entity.toUpperCase()}_DATABASE_ERROR`, `Column not found in database: ${column}. The database schema may be out of sync.`);
+                return;
+            }
             default: {
                 // Log the full Prisma error for debugging but return a structured response
                 console.error(`[Prisma ${code}] ${entity}:`, error.message, meta);
-                (0, errors_1.sendError)(res, 500, `${entity.toUpperCase()}_DATABASE_ERROR`, `A database error occurred (code: ${code}). Please check your request and try again.`);
+                (0, errors_1.sendError)(res, 500, `${entity.toUpperCase()}_DATABASE_ERROR`, `A database error occurred (code: ${code}): ${error.message}`);
                 return;
             }
         }
