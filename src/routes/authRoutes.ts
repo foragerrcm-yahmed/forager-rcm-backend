@@ -1,8 +1,11 @@
 import { Router } from 'express';
-import { register, login, getProfile } from '../controllers/authController';
+import { setup, register, login, getProfile } from '../controllers/authController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
+
+// One-time setup route (disabled after first user is created)
+router.post('/setup', setup);
 
 // Public routes
 router.post('/register', register);
@@ -12,4 +15,3 @@ router.post('/login', login);
 router.get('/profile', authenticateToken, getProfile);
 
 export default router;
-
