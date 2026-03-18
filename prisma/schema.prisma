@@ -15,6 +15,7 @@ enum DataSource {
   Forager
   ForagerAPI
   ForagerCSVUpload
+  Manual
 }
 
 enum VisitStatus {
