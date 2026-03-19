@@ -101,7 +101,7 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
             }
           }
         },
-        provider: { select: { id: true, firstName: true, lastName: true, specialty: true, licenseType: true } },
+        provider: { select: { id: true, firstName: true, lastName: true, specialty: true, licenseType: true, taxonomyCode: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
         claims: {
