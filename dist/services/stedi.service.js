@@ -128,24 +128,31 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
     if (!STEDI_API_KEY) {
         throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
     }
-    // Load the PatientInsurance record with patient, plan, and payor
+    // Load the PatientInsurance record with patient, plan, payor, and masterPayor
     const patientInsurance = await prisma.patientInsurance.findUniqueOrThrow({
         where: { id: patientInsuranceId },
         include: {
             patient: true,
             plan: {
                 include: {
-                    payor: true,
+                    payor: {
+                        include: { masterPayor: true },
+                    },
                 },
             },
         },
     });
     const patient = patientInsurance.patient;
     const payor = patientInsurance.plan.payor;
-    // Resolve Stedi routing ID: prefer explicit stediPayorId, fall back to externalPayorId
-    const tradingPartnerServiceId = payor.stediPayorId ?? payor.externalPayorId;
+    // Resolve Stedi routing ID (priority order):
+    // 1. payor.stediPayorId — org-level override
+    // 2. payor.masterPayor.primaryPayorId — canonical Stedi routing ID from the master list
+    // 3. payor.externalPayorId — legacy fallback
+    const tradingPartnerServiceId = payor.stediPayorId ??
+        (payor.masterPayor?.primaryPayorId) ??
+        payor.externalPayorId;
     if (!tradingPartnerServiceId) {
-        throw new StediError(400, 'MISSING_STEDI_PAYOR_ID', `Payor "${payor.name}" has no Stedi routing ID. Set stediPayorId on the Payor record.`);
+        throw new StediError(400, 'MISSING_STEDI_PAYOR_ID', `Payor "${payor.name}" has no Stedi routing ID. Set stediPayorId on the Payor record or link it to a Master Payor.`);
     }
     // Load the org's billing NPI
     const org = await prisma.organization.findUniqueOrThrow({
@@ -206,6 +213,7 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
             isEligible: parsed.isEligible,
             coverageActive: parsed.coverageActive,
             planName: parsed.planName,
+            memberId: patientInsurance.memberId,
             copayAmount: parsed.copayAmount,
             deductibleTotal: parsed.deductibleTotal,
             deductibleMet: parsed.deductibleMet,
@@ -263,10 +271,17 @@ async function submitClaim(claimId) {
             isPrimary: true,
         },
         include: {
-            plan: { include: { payor: true } },
+            plan: { include: { payor: { include: { masterPayor: true } } } },
         },
     });
-    const tradingPartnerServiceId = claim.payor.stediPayorId ?? claim.payor.externalPayorId;
+    // Load the claim's payor with masterPayor for routing ID resolution
+    const claimPayorWithMaster = await prisma.payor.findUnique({
+        where: { id: claim.payor.id },
+        include: { masterPayor: true },
+    });
+    const tradingPartnerServiceId = claim.payor.stediPayorId ??
+        claimPayorWithMaster?.masterPayor?.primaryPayorId ??
+        claim.payor.externalPayorId;
     if (!tradingPartnerServiceId) {
         throw new StediError(400, 'MISSING_STEDI_PAYOR_ID', `Payor "${claim.payor.name}" has no Stedi routing ID. Set stediPayorId on the Payor record.`);
     }
