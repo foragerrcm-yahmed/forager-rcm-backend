@@ -15,6 +15,8 @@ import ruleExecutionRoutes from './routes/ruleExecutionRoutes';
 import insurancePolicyRoutes from './routes/insurancePolicyRoutes';
 import attachmentRoutes from './routes/attachmentRoutes';
 import masterPayorRoutes from './routes/masterPayorRoutes';
+import eligibilityRoutes from './routes/eligibilityRoutes';
+import stediWebhookRoutes from './routes/stediWebhookRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -47,6 +49,8 @@ app.use('/api/rule-executions', ruleExecutionRoutes);
 app.use('/api/insurance-policies', insurancePolicyRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/master-payors', masterPayorRoutes);
+app.use('/api/eligibility', eligibilityRoutes);
+app.use('/api/webhooks/stedi', stediWebhookRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
