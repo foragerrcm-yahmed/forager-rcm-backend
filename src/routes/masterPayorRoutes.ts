@@ -6,6 +6,9 @@ import {
   enableMasterPayorForOrg,
   disableMasterPayorForOrg,
   upsertMasterPayor,
+  listProviderCredentials,
+  createProviderCredential,
+  deleteProviderCredential,
 } from '../controllers/masterPayorController';
 
 const router = Router();
@@ -13,19 +16,24 @@ const router = Router();
 // All routes require authentication
 router.use(authenticateToken);
 
-// List / search all active master payors (includes enabledForOrg flag)
+// ─── Provider Credentials (must be before /:id to avoid route conflict) ───────
+// GET    /api/master-payors/credentials          — list for org
+// POST   /api/master-payors/credentials          — create
+// DELETE /api/master-payors/credentials/:credId  — delete
+router.get('/credentials', listProviderCredentials);
+router.post('/credentials', createProviderCredential);
+router.delete('/credentials/:credId', deleteProviderCredential);
+
+// ─── Master Payors ────────────────────────────────────────────────────────────
+// GET  /api/master-payors            — list (hierarchical by default, ?flat=1, ?search=)
+// GET  /api/master-payors/:id        — single payor with children + credentialing info
+// POST /api/master-payors/:id/enable — enable for current org
+// DELETE /api/master-payors/:id/enable — disable for current org
+// PUT  /api/master-payors            — admin upsert (seed/sync)
 router.get('/', listMasterPayors);
-
-// Get a single master payor by ID
 router.get('/:id', getMasterPayor);
-
-// Enable a master payor for the current org (creates a Payor record)
 router.post('/:id/enable', enableMasterPayorForOrg);
-
-// Disable a master payor for the current org (deletes the Payor record)
 router.delete('/:id/enable', disableMasterPayorForOrg);
-
-// Admin: upsert a master payor (used by seed/sync)
 router.put('/', upsertMasterPayor);
 
 export default router;

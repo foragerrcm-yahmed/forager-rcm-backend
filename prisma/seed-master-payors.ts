@@ -1,252 +1,283 @@
 /**
- * Seed script for MasterPayor table.
+ * Seed script: MasterPayor canonical list with payor hierarchy.
  *
- * Sources the canonical list of US insurance payors with their Stedi IDs,
- * primary payor IDs, aliases, and transaction support flags.
+ * Run with:
+ *   npx ts-node --project tsconfig.json prisma/seed-master-payors.ts
  *
- * Run with: npx ts-node prisma/seed-master-payors.ts
- *
- * In production, this should be replaced by a nightly sync job that calls
- * GET https://healthcare.us.stedi.com/2024-04-01/payers and upserts records.
+ * Structure:
+ *   - Top-level payors have no parentId
+ *   - BCBS state plans are children of the BCBS National parent
+ *   - Medicaid state plans are children of the Medicaid National parent
+ *   - Stedi IDs are the stable internal identifiers used for clearinghouse routing
  */
 
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Top US insurance payors with Stedi IDs and common aliases.
-// stediId values are Stedi's stable internal identifiers.
-// primaryPayorId is the ID used in claim/eligibility submissions.
-const MASTER_PAYORS = [
+// ─── Transaction support presets ──────────────────────────────────────────────
+const FULL = {
+  eligibilityCheck: 'SUPPORTED',
+  professionalClaimSubmission: 'SUPPORTED',
+  institutionalClaimSubmission: 'SUPPORTED',
+  claimStatus: 'SUPPORTED',
+  claimPayment: 'SUPPORTED',
+};
+const ELIGIBILITY_ONLY = {
+  eligibilityCheck: 'SUPPORTED',
+  professionalClaimSubmission: 'ENROLLMENT_REQUIRED',
+  institutionalClaimSubmission: 'ENROLLMENT_REQUIRED',
+  claimStatus: 'SUPPORTED',
+  claimPayment: 'NOT_SUPPORTED',
+};
+const CLAIMS_NO_ERA = {
+  eligibilityCheck: 'SUPPORTED',
+  professionalClaimSubmission: 'SUPPORTED',
+  institutionalClaimSubmission: 'SUPPORTED',
+  claimStatus: 'SUPPORTED',
+  claimPayment: 'NOT_SUPPORTED',
+};
+
+// ─── Top-level payors ─────────────────────────────────────────────────────────
+const TOP_LEVEL = [
   {
-    stediId: 'BCBSA',
+    stediId: 'bcbs-national',
     displayName: 'Blue Cross Blue Shield (National)',
-    primaryPayorId: 'BCBSA',
-    aliases: ['BCBS', 'BlueCross', 'BlueShield'],
+    primaryPayorId: 'BCBS',
+    aliases: ['Blue Cross', 'Blue Shield', 'BCBS', 'BCBSA'],
     coverageTypes: ['medical', 'dental', 'vision'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    transactionSupport: ELIGIBILITY_ONLY,
   },
   {
-    stediId: 'BCBSTX',
-    displayName: 'Blue Cross Blue Shield of Texas',
-    primaryPayorId: 'TXBCBS',
-    aliases: ['TXBLS', 'BCBS Texas', 'BCBSTX', 'SB800'],
-    coverageTypes: ['medical', 'dental', 'vision'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
-  },
-  {
-    stediId: 'AETNA',
+    stediId: 'aetna',
     displayName: 'Aetna',
     primaryPayorId: '60054',
-    aliases: ['Aetna Health', 'Aetna Life', 'AET'],
-    coverageTypes: ['medical', 'dental', 'vision'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    aliases: ['Aetna Health', 'CVS Aetna', 'AET'],
+    coverageTypes: ['medical', 'dental', 'vision', 'behavioral'],
+    transactionSupport: FULL,
   },
   {
-    stediId: 'CIGNA',
+    stediId: 'cigna',
     displayName: 'Cigna',
     primaryPayorId: '62308',
-    aliases: ['Cigna Health', 'Cigna Healthcare', 'CIGNA'],
-    coverageTypes: ['medical', 'dental', 'vision'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    aliases: ['Cigna Healthcare', 'Cigna Health', 'CIGNA'],
+    coverageTypes: ['medical', 'dental', 'vision', 'behavioral'],
+    transactionSupport: FULL,
   },
   {
-    stediId: 'UHC',
+    stediId: 'uhc',
     displayName: 'UnitedHealthcare',
     primaryPayorId: '87726',
-    aliases: ['United Health', 'UHC', 'UnitedHealth', 'United Healthcare', 'UHG'],
-    coverageTypes: ['medical', 'dental', 'vision'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    aliases: ['UHC', 'United Healthcare', 'United Health Group', 'UHG'],
+    coverageTypes: ['medical', 'dental', 'vision', 'behavioral'],
+    transactionSupport: FULL,
   },
   {
-    stediId: 'HUMANA',
+    stediId: 'humana',
     displayName: 'Humana',
     primaryPayorId: '61101',
     aliases: ['Humana Health', 'HUM'],
     coverageTypes: ['medical', 'dental', 'vision'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    transactionSupport: FULL,
   },
   {
-    stediId: 'ANTHEM',
+    stediId: 'anthem',
     displayName: 'Anthem (Elevance Health)',
-    primaryPayorId: 'ANTHEM',
-    aliases: ['Anthem', 'Elevance', 'WellPoint', 'Empire BCBS'],
-    coverageTypes: ['medical', 'dental'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    primaryPayorId: '00710',
+    aliases: ['Anthem Blue Cross', 'Anthem BCBS', 'Elevance Health', 'WellPoint'],
+    coverageTypes: ['medical', 'dental', 'vision', 'behavioral'],
+    transactionSupport: FULL,
   },
   {
-    stediId: 'CVSHLT',
-    displayName: 'CVS Health / Aetna',
-    primaryPayorId: '60054',
-    aliases: ['CVS Aetna', 'CVS Health', 'Aetna CVS'],
-    coverageTypes: ['medical'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
-  },
-  {
-    stediId: 'MEDICARE',
+    stediId: 'medicare',
     displayName: 'Medicare (CMS)',
     primaryPayorId: 'MEDICARE',
-    aliases: ['CMS', 'Medicare Part B', 'Medicare Fee-for-Service', 'HCFA'],
+    aliases: ['CMS Medicare', 'Medicare Part B', 'Medicare FFS', 'HCFA'],
     coverageTypes: ['medical'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    transactionSupport: FULL,
   },
   {
-    stediId: 'MEDICAID',
-    displayName: 'Medicaid',
+    stediId: 'medicaid-national',
+    displayName: 'Medicaid (National)',
     primaryPayorId: 'MEDICAID',
-    aliases: ['State Medicaid', 'Medicaid FFS'],
-    coverageTypes: ['medical', 'dental'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'ENROLLMENT_REQUIRED',
-      claimStatus: 'SUPPORTED',
-    },
+    aliases: ['Medicaid', 'CMS Medicaid', 'State Medicaid'],
+    coverageTypes: ['medical', 'dental', 'vision', 'behavioral'],
+    transactionSupport: ELIGIBILITY_ONLY,
   },
   {
-    stediId: 'TXMEDICAID',
-    displayName: 'Texas Medicaid (TMHP)',
-    primaryPayorId: 'TXMEDICAID',
-    aliases: ['TMHP', 'Texas Medicaid', 'TX Medicaid'],
-    coverageTypes: ['medical', 'dental'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'ENROLLMENT_REQUIRED',
-      claimStatus: 'SUPPORTED',
-    },
-  },
-  {
-    stediId: 'TRICARE',
+    stediId: 'tricare',
     displayName: 'TRICARE',
     primaryPayorId: 'TRICARE',
-    aliases: ['Tricare', 'Military Health', 'CHAMPUS', 'Defense Health Agency'],
-    coverageTypes: ['medical'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    aliases: ['Defense Health Agency', 'DHA', 'CHAMPUS', 'Military Health'],
+    coverageTypes: ['medical', 'dental'],
+    transactionSupport: FULL,
   },
   {
-    stediId: 'OSCAR',
+    stediId: 'oscar',
     displayName: 'Oscar Health',
-    primaryPayorId: 'OSCAR',
+    primaryPayorId: 'OSCAR1',
     aliases: ['Oscar', 'Oscar Insurance'],
     coverageTypes: ['medical'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    transactionSupport: CLAIMS_NO_ERA,
   },
   {
-    stediId: 'MOLINA',
+    stediId: 'molina',
     displayName: 'Molina Healthcare',
     primaryPayorId: 'MOLINA',
     aliases: ['Molina', 'Molina Health'],
-    coverageTypes: ['medical'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'ENROLLMENT_REQUIRED',
-      claimStatus: 'SUPPORTED',
-    },
+    coverageTypes: ['medical', 'behavioral'],
+    transactionSupport: FULL,
   },
   {
-    stediId: 'CENTENE',
+    stediId: 'centene',
     displayName: 'Centene / WellCare',
     primaryPayorId: 'CENTENE',
-    aliases: ['Centene', 'WellCare', 'Ambetter', 'Health Net'],
+    aliases: ['WellCare', 'Centene Corporation', 'Ambetter', 'Health Net'],
+    coverageTypes: ['medical', 'behavioral'],
+    transactionSupport: FULL,
+  },
+  {
+    stediId: 'kaiser',
+    displayName: 'Kaiser Permanente',
+    primaryPayorId: 'KAISER',
+    aliases: ['Kaiser', 'KP', 'Kaiser Foundation'],
     coverageTypes: ['medical'],
-    transactionSupport: {
-      eligibilityCheck: 'SUPPORTED',
-      professionalClaimSubmission: 'SUPPORTED',
-      claimPayment: 'SUPPORTED',
-      claimStatus: 'SUPPORTED',
-    },
+    transactionSupport: ELIGIBILITY_ONLY,
+  },
+  {
+    stediId: 'magellan',
+    displayName: 'Magellan Health',
+    primaryPayorId: 'MAGELLAN',
+    aliases: ['Magellan Behavioral Health'],
+    coverageTypes: ['behavioral'],
+    transactionSupport: CLAIMS_NO_ERA,
+  },
+  {
+    stediId: 'optum',
+    displayName: 'Optum / United Behavioral Health',
+    primaryPayorId: 'OPTUM',
+    aliases: ['UBH', 'Optum Behavioral', 'United Behavioral Health'],
+    coverageTypes: ['behavioral'],
+    transactionSupport: FULL,
   },
 ];
 
+// ─── BCBS State Plans ─────────────────────────────────────────────────────────
+const BCBS_CHILDREN = [
+  { stediId: 'bcbs-al', displayName: 'BCBS of Alabama', primaryPayorId: 'BCBSAL', aliases: ['Blue Cross Blue Shield of Alabama', 'BCBS AL'] },
+  { stediId: 'bcbs-az', displayName: 'BCBS of Arizona', primaryPayorId: 'BCBSAZ', aliases: ['Blue Cross Blue Shield of Arizona', 'BCBS AZ'] },
+  { stediId: 'bcbs-ca', displayName: 'Blue Shield of California', primaryPayorId: 'BCBSCA', aliases: ['BSCA', 'Blue Shield CA', 'Blue Shield of CA'] },
+  { stediId: 'bcbs-fl', displayName: 'Florida Blue (BCBS FL)', primaryPayorId: 'BCBSFL', aliases: ['Florida Blue', 'BCBS Florida', 'BCBS FL'] },
+  { stediId: 'bcbs-ga', displayName: 'BCBS of Georgia', primaryPayorId: 'BCBSGA', aliases: ['Anthem BCBS Georgia', 'BCBS GA'] },
+  { stediId: 'bcbs-il', displayName: 'BCBS of Illinois', primaryPayorId: 'BCBSIL', aliases: ['HCSC Illinois', 'Blue Cross Illinois', 'BCBS IL'] },
+  { stediId: 'bcbs-ks', displayName: 'BCBS of Kansas', primaryPayorId: 'BCBSKS', aliases: ['Blue Cross Blue Shield of Kansas', 'BCBS KS'] },
+  { stediId: 'bcbs-la', displayName: 'BCBS of Louisiana', primaryPayorId: 'BCBSLA', aliases: ['Blue Cross Blue Shield of Louisiana', 'BCBS LA'] },
+  { stediId: 'bcbs-ma', displayName: 'BCBS of Massachusetts', primaryPayorId: 'BCBSMA', aliases: ['Blue Cross MA', 'BCBS MA'] },
+  { stediId: 'bcbs-mi', displayName: 'BCBS of Michigan', primaryPayorId: 'BCBSMI', aliases: ['Blue Cross Michigan', 'BCBS MI'] },
+  { stediId: 'bcbs-mn', displayName: 'BCBS of Minnesota', primaryPayorId: 'BCBSMN', aliases: ['Blue Cross MN', 'BCBS MN'] },
+  { stediId: 'bcbs-ms', displayName: 'BCBS of Mississippi', primaryPayorId: 'BCBSMS', aliases: ['Blue Cross Blue Shield of Mississippi', 'BCBS MS'] },
+  { stediId: 'bcbs-mt', displayName: 'BCBS of Montana', primaryPayorId: 'BCBSMT', aliases: ['Blue Cross Blue Shield of Montana', 'BCBS MT'] },
+  { stediId: 'bcbs-nc', displayName: 'Blue Cross NC', primaryPayorId: 'BCBSNC', aliases: ['BCBS North Carolina', 'Blue Cross Blue Shield NC', 'BCBS NC'] },
+  { stediId: 'bcbs-nd', displayName: 'BCBS of North Dakota', primaryPayorId: 'BCBSND', aliases: ['Noridian BCBS', 'BCBS ND'] },
+  { stediId: 'bcbs-ne', displayName: 'BCBS of Nebraska', primaryPayorId: 'BCBSNE', aliases: ['Blue Cross Blue Shield of Nebraska', 'BCBS NE'] },
+  { stediId: 'bcbs-nm', displayName: 'BCBS of New Mexico', primaryPayorId: 'BCBSNM', aliases: ['HCSC New Mexico', 'BCBS NM'] },
+  { stediId: 'bcbs-ok', displayName: 'BCBS of Oklahoma', primaryPayorId: 'BCBSOK', aliases: ['HCSC Oklahoma', 'BCBS OK'] },
+  { stediId: 'bcbs-ri', displayName: 'BCBS of Rhode Island', primaryPayorId: 'BCBSRI', aliases: ['Blue Cross RI', 'BCBS RI'] },
+  { stediId: 'bcbs-sc', displayName: 'BlueCross BlueShield of South Carolina', primaryPayorId: 'BCBSSC', aliases: ['BCBS SC'] },
+  { stediId: 'bcbs-tn', displayName: 'BlueCross BlueShield of Tennessee', primaryPayorId: 'BCBSTN', aliases: ['BCBS Tennessee', 'BCBS TN'] },
+  { stediId: 'bcbs-tx', displayName: 'BCBS of Texas', primaryPayorId: 'BCBSTX', aliases: ['HCSC Texas', 'Blue Cross Blue Shield of Texas', 'BCBS TX'] },
+  { stediId: 'bcbs-vt', displayName: 'BCBS of Vermont', primaryPayorId: 'BCBSVT', aliases: ['Blue Cross VT', 'BCBS VT'] },
+  { stediId: 'bcbs-wy', displayName: 'BCBS of Wyoming', primaryPayorId: 'BCBSWY', aliases: ['Blue Cross Wyoming', 'BCBS WY'] },
+];
+
+// ─── Medicaid State Plans ─────────────────────────────────────────────────────
+const MEDICAID_CHILDREN = [
+  { stediId: 'medicaid-tx', displayName: 'Texas Medicaid (TMHP)', primaryPayorId: 'TXMEDICAID', aliases: ['TMHP', 'Texas Medicaid', 'TX Medicaid', 'Texas Health and Human Services'] },
+  { stediId: 'medicaid-ca', displayName: 'California Medi-Cal', primaryPayorId: 'CAMEDICAID', aliases: ['Medi-Cal', 'DHCS California', 'CA Medicaid'] },
+  { stediId: 'medicaid-fl', displayName: 'Florida Medicaid', primaryPayorId: 'FLMEDICAID', aliases: ['Florida AHCA Medicaid', 'FL Medicaid'] },
+  { stediId: 'medicaid-ny', displayName: 'New York Medicaid', primaryPayorId: 'NYMEDICAID', aliases: ['NY Medicaid', 'eMedNY', 'New York State Medicaid'] },
+  { stediId: 'medicaid-il', displayName: 'Illinois Medicaid (HFS)', primaryPayorId: 'ILMEDICAID', aliases: ['Illinois HFS', 'IL Medicaid', 'Illinois Department of Healthcare and Family Services'] },
+  { stediId: 'medicaid-oh', displayName: 'Ohio Medicaid', primaryPayorId: 'OHMEDICAID', aliases: ['Ohio Department of Medicaid', 'OH Medicaid'] },
+  { stediId: 'medicaid-pa', displayName: 'Pennsylvania Medicaid (MA)', primaryPayorId: 'PAMEDICAID', aliases: ['PA Medicaid', 'Pennsylvania Medical Assistance'] },
+  { stediId: 'medicaid-ga', displayName: 'Georgia Medicaid', primaryPayorId: 'GAMEDICAID', aliases: ['GA Medicaid', 'Georgia DCH Medicaid'] },
+];
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('Seeding MasterPayor table...');
+  console.log('Seeding MasterPayor records...\n');
   const now = Math.floor(Date.now() / 1000);
 
-  for (const mp of MASTER_PAYORS) {
-    await prisma.masterPayor.upsert({
-      where: { stediId: mp.stediId },
-      create: {
-        stediId: mp.stediId,
-        displayName: mp.displayName,
-        primaryPayorId: mp.primaryPayorId,
-        aliases: mp.aliases,
-        coverageTypes: mp.coverageTypes,
-        transactionSupport: mp.transactionSupport,
-        isActive: true,
-        createdAt: BigInt(now),
-        updatedAt: BigInt(now),
-      },
-      update: {
-        displayName: mp.displayName,
-        primaryPayorId: mp.primaryPayorId,
-        aliases: mp.aliases,
-        coverageTypes: mp.coverageTypes,
-        transactionSupport: mp.transactionSupport,
-        isActive: true,
-        updatedAt: BigInt(now),
-      },
+  // 1. Upsert top-level payors and capture their IDs
+  const parentIdMap: Record<string, string> = {};
+
+  for (const p of TOP_LEVEL) {
+    const record = await prisma.masterPayor.upsert({
+      where: { stediId: p.stediId },
+      create: { ...p, parentId: null, isActive: true, createdAt: BigInt(now), updatedAt: BigInt(now) },
+      update: { ...p, updatedAt: BigInt(now) },
     });
-    console.log(`  ✓ ${mp.displayName}`);
+    parentIdMap[p.stediId] = record.id;
+    console.log(`  ✓ ${p.displayName}`);
   }
 
-  console.log(`\nSeeded ${MASTER_PAYORS.length} master payors.`);
+  // 2. Upsert BCBS state plans under BCBS National
+  const bcbsParentId = parentIdMap['bcbs-national'];
+  if (bcbsParentId) {
+    console.log('\n  BCBS State Plans:');
+    for (const p of BCBS_CHILDREN) {
+      await prisma.masterPayor.upsert({
+        where: { stediId: p.stediId },
+        create: {
+          ...p,
+          coverageTypes: ['medical'],
+          transactionSupport: FULL,
+          isActive: true,
+          parentId: bcbsParentId,
+          createdAt: BigInt(now),
+          updatedAt: BigInt(now),
+        },
+        update: {
+          ...p,
+          coverageTypes: ['medical'],
+          transactionSupport: FULL,
+          parentId: bcbsParentId,
+          updatedAt: BigInt(now),
+        },
+      });
+      console.log(`    ↳ ${p.displayName}`);
+    }
+  }
+
+  // 3. Upsert Medicaid state plans under Medicaid National
+  const medicaidParentId = parentIdMap['medicaid-national'];
+  if (medicaidParentId) {
+    console.log('\n  Medicaid State Plans:');
+    for (const p of MEDICAID_CHILDREN) {
+      await prisma.masterPayor.upsert({
+        where: { stediId: p.stediId },
+        create: {
+          ...p,
+          coverageTypes: ['medical', 'behavioral'],
+          transactionSupport: FULL,
+          isActive: true,
+          parentId: medicaidParentId,
+          createdAt: BigInt(now),
+          updatedAt: BigInt(now),
+        },
+        update: {
+          ...p,
+          coverageTypes: ['medical', 'behavioral'],
+          transactionSupport: FULL,
+          parentId: medicaidParentId,
+          updatedAt: BigInt(now),
+        },
+      });
+      console.log(`    ↳ ${p.displayName}`);
+    }
+  }
+
+  const total = TOP_LEVEL.length + BCBS_CHILDREN.length + MEDICAID_CHILDREN.length;
+  console.log(`\nDone! Seeded ${total} master payors (${TOP_LEVEL.length} top-level, ${BCBS_CHILDREN.length} BCBS state plans, ${MEDICAID_CHILDREN.length} Medicaid state plans).`);
 }
 
 main()

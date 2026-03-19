@@ -143,6 +143,7 @@ model Organization {
   rules                 Rule[]
   payors                Payor[]
   cptCodes              CPTCode[]
+  providerCredentials   ProviderCredential[]
 
   @@map("organizations")
 }
@@ -175,6 +176,7 @@ model User {
   updatedRules             Rule[]         @relation("RuleUpdatedBy")
   createdVisits            Visit[]        @relation("VisitCreatedBy")
   updatedVisits            Visit[]        @relation("VisitUpdatedBy")
+  createdCredentials       ProviderCredential[] @relation("CredentialCreatedBy")
 
   @@map("users")
 }
@@ -246,8 +248,9 @@ model Provider {
   createdAt      BigInt               @default(0)
   updatedAt      BigInt               @default(0)
 
-  visits         Visit[]
-  claims         Claim[]
+  visits              Visit[]
+  claims              Claim[]
+  providerCredentials ProviderCredential[]
 
   @@map("providers")
 }
@@ -256,19 +259,46 @@ model Provider {
 // Clients never interact with this table directly — they search it and "enable"
 // a MasterPayor for their org, which creates a Payor record linked here.
 model MasterPayor {
-  id                  String   @id @default(uuid())
-  stediId             String   @unique          // Stedi's stable internal ID
-  displayName         String                    // Canonical business name (e.g. "Aetna")
-  primaryPayorId      String                    // Stedi primaryPayerId used for routing
-  aliases             Json     @default("[]")   // Array of alternative IDs
+  id                  String        @id @default(uuid())
+  stediId             String        @unique          // Stedi's stable internal ID
+  displayName         String                         // Canonical business name (e.g. "Aetna")
+  primaryPayorId      String                         // Stedi primaryPayerId used for routing
+  aliases             Json          @default("[]")   // Array of alternative IDs
   avatarUrl           String?
-  coverageTypes       Json     @default("[]")   // e.g. ["medical", "dental", "vision"]
-  transactionSupport  Json     @default("{}")   // eligibilityCheck, professionalClaimSubmission, claimPayment, claimStatus
-  isActive            Boolean  @default(true)
-  createdAt           BigInt   @default(0)
-  updatedAt           BigInt   @default(0)
+  coverageTypes       Json          @default("[]")   // e.g. ["medical", "dental", "vision"]
+  transactionSupport  Json          @default("{}")   // eligibilityCheck, professionalClaimSubmission, claimPayment, claimStatus
+  isActive            Boolean       @default(true)
+  // Hierarchy: optional parent for subsidiaries (e.g. BCBS state plans under BCBS National)
+  parentId            String?
+  parent              MasterPayor?  @relation("MasterPayorHierarchy", fields: [parentId], references: [id])
+  children            MasterPayor[] @relation("MasterPayorHierarchy")
+  createdAt           BigInt        @default(0)
+  updatedAt           BigInt        @default(0)
   payors              Payor[]
+  providerCredentials ProviderCredential[]
   @@map("master_payors")
+}
+
+// Tracks which providers are credentialed with which payors.
+// Used to surface warnings when a payor is disabled but providers are credentialed with it.
+model ProviderCredential {
+  id              String       @id @default(uuid())
+  provider        Provider     @relation(fields: [providerId], references: [id])
+  providerId      String
+  masterPayor     MasterPayor  @relation(fields: [masterPayorId], references: [id])
+  masterPayorId   String
+  credentialType  String?      // e.g. "PAR" (participating), "NON-PAR", "Medicaid"
+  effectiveDate   BigInt?      // Unix timestamp
+  expirationDate  BigInt?      // Unix timestamp
+  notes           String?
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  organizationId  String
+  createdById     String?
+  createdBy       User?        @relation("CredentialCreatedBy", fields: [createdById], references: [id])
+  createdAt       BigInt       @default(0)
+  updatedAt       BigInt       @default(0)
+  @@unique([providerId, masterPayorId, organizationId])
+  @@map("provider_credentials")
 }
 
 model Payor {
