@@ -52,12 +52,14 @@ async function runEligibilityCheck(req, res) {
 async function getEligibilityChecks(req, res) {
     try {
         const organizationId = req.user?.organizationId;
-        const { patientId, visitId, limit = '20', offset = '0' } = req.query;
+        const { patientId, visitId, patientInsuranceId, limit = '20', offset = '0' } = req.query;
         const where = { organizationId };
         if (patientId)
             where.patientId = patientId;
         if (visitId)
             where.visitId = visitId;
+        if (patientInsuranceId)
+            where.patientInsuranceId = patientInsuranceId;
         const [items, total] = await Promise.all([
             prisma.eligibilityCheck.findMany({
                 where,

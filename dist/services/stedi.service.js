@@ -217,6 +217,10 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
             therapyVisitsUsed: parsed.therapyVisitsUsed,
             therapyVisitsRemaining: parsed.therapyVisitsRemaining,
             requiresAuthorization: parsed.requiresAuthorization,
+            coinsurancePercent: parsed.coinsurancePercent,
+            groupNumber: parsed.groupNumber,
+            coverageStartDate: parsed.coverageStartDate,
+            coverageEndDate: parsed.coverageEndDate,
         },
     });
     return updated;
@@ -475,27 +479,113 @@ async function searchStediPayors(query) {
     return result.items ?? result ?? [];
 }
 // ─── 271 response parser ──────────────────────────────────────────────────────
+//
+// Benefit type codes (benefitsInformation[].code):
+//   1  = Active Coverage
+//   A  = Co-insurance (benefitPercent, e.g. "20" = 20%)
+//   B  = Co-pay       (benefitAmount, fixed dollar)
+//   C  = Deductible   (benefitAmount)
+//   G  = Out-of-Pocket / Stop Loss (benefitAmount)
+//   J  = Cost Containment (Medicaid deductible-like)
+//   Y  = Spend Down
+//
+// timeQualifierCode values:
+//   23 = Calendar Year (total/max)
+//   24 = Year-to-Date (amount met so far)
+//   26 = Remaining (some payers)
+//   29 = Remaining (most common)
+//   30 = Exceeded
+//
+// coverageLevelCode: IND = Individual, FAM = Family
+// inPlanNetworkIndicatorCode: Y = In-network, N = Out-of-network, W = Both
 function parse271Response(response) {
     const benefits = response?.benefitsInformation ?? [];
-    const findBenefit = (code) => benefits.find((b) => b.code === code || b.serviceTypeCodes?.includes(code));
-    const deductible = findBenefit('30');
-    const copay = findBenefit('B');
-    const oop = findBenefit('G');
-    const therapy = findBenefit('PT');
+    // Filter helpers
+    const byCode = (code) => benefits.filter((b) => b.code === code);
+    // Prefer in-network (Y or W) individual-level entries; fall back to any match
+    const preferInNetwork = (entries) => {
+        const inNet = entries.filter((b) => b.inPlanNetworkIndicatorCode === 'Y' || b.inPlanNetworkIndicatorCode === 'W');
+        return inNet.length > 0 ? inNet : entries;
+    };
+    const preferIndividual = (entries) => {
+        const ind = entries.filter((b) => !b.coverageLevelCode || b.coverageLevelCode === 'IND');
+        return ind.length > 0 ? ind : entries;
+    };
+    const pickBest = (code) => {
+        const all = byCode(code);
+        if (!all.length)
+            return null;
+        return preferIndividual(preferInNetwork(all))[0] ?? all[0];
+    };
+    // Find a specific time-qualified entry (e.g. remaining vs total)
+    const pickByTimeQualifier = (code, ...tqCodes) => {
+        const all = byCode(code);
+        if (!all.length)
+            return null;
+        const pool = preferIndividual(preferInNetwork(all));
+        for (const tq of tqCodes) {
+            const match = pool.find((b) => b.timeQualifierCode === tq);
+            if (match)
+                return match;
+        }
+        return null;
+    };
+    // ── Deductible (code C) ──
+    // timeQualifier 23 = calendar year total; 29/26 = remaining; 24 = met
+    const deductibleTotal = pickByTimeQualifier('C', '23');
+    const deductibleRemaining = pickByTimeQualifier('C', '29', '26');
+    const deductibleMet = pickByTimeQualifier('C', '24');
+    // Fallback: if no time-qualified entries, grab best single entry as total
+    const deductibleFallback = !deductibleTotal && !deductibleRemaining ? pickBest('C') : null;
+    // ── Out-of-Pocket (code G) ──
+    const oopTotal = pickByTimeQualifier('G', '23');
+    const oopRemaining = pickByTimeQualifier('G', '29', '26');
+    const oopMet = pickByTimeQualifier('G', '24');
+    const oopFallback = !oopTotal && !oopRemaining ? pickBest('G') : null;
+    // ── Co-pay (code B) — fixed dollar ──
+    const copay = pickBest('B');
+    // ── Co-insurance (code A) — percentage ──
+    const coinsurance = pickBest('A');
+    // ── Therapy visits (service type code 'PT' = Physical Therapy) ──
+    // Look for quantity-based entries under PT service type
+    const therapyBenefits = benefits.filter((b) => b.serviceTypeCodes?.includes('PT') || b.serviceTypeCodes?.includes('50'));
+    const therapyAllowed = therapyBenefits.find((b) => b.timeQualifierCode === '27' || b.benefitQuantity);
+    const therapyRemaining = therapyBenefits.find((b) => b.timeQualifierCode === '29' && b.benefitQuantity);
+    const therapyUsed = therapyBenefits.find((b) => b.timeQualifierCode === '24' && b.benefitQuantity);
+    // ── Plan / group info ──
+    const groupNumber = response?.planInformation?.groupNumber
+        ?? response?.planInformation?.groupName
+        ?? null;
+    // ── Coverage dates ──
+    const planDates = response?.planDateInformation ?? {};
+    const coverageStartDate = planDates.eligibilityBegin ?? planDates.planBegin ?? null;
+    const coverageEndDate = planDates.eligibilityEnd ?? planDates.planEnd ?? null;
+    // ── Active coverage: planStatus[0].statusCode === '1' ──
+    const coverageActive = response?.planStatus?.[0]?.statusCode === '1';
     return {
-        isEligible: benefits.length > 0,
-        coverageActive: response?.planStatus?.[0]?.statusCode === '1',
+        isEligible: coverageActive || benefits.some((b) => b.code === '1'),
+        coverageActive,
         planName: response?.planStatus?.[0]?.planDetails ?? null,
-        copayAmount: copay?.benefitAmount ?? null,
-        deductibleTotal: deductible?.benefitAmount ?? null,
-        deductibleMet: null,
-        deductibleRemaining: deductible?.benefitAmount ?? null,
-        oopTotal: oop?.benefitAmount ?? null,
-        oopMet: null,
-        oopRemaining: oop?.benefitAmount ?? null,
-        therapyVisitsAllowed: therapy?.benefitQuantity ?? null,
-        therapyVisitsUsed: null,
-        therapyVisitsRemaining: therapy?.benefitQuantity ?? null,
+        groupNumber,
+        coverageStartDate,
+        coverageEndDate,
+        // Copay
+        copayAmount: copay?.benefitAmount ? parseFloat(copay.benefitAmount) : null,
+        // Coinsurance (percent, e.g. 20 = 20%)
+        coinsurancePercent: coinsurance?.benefitPercent ? parseFloat(coinsurance.benefitPercent) : null,
+        // Deductible
+        deductibleTotal: deductibleTotal?.benefitAmount ? parseFloat(deductibleTotal.benefitAmount) : (deductibleFallback?.benefitAmount ? parseFloat(deductibleFallback.benefitAmount) : null),
+        deductibleMet: deductibleMet?.benefitAmount ? parseFloat(deductibleMet.benefitAmount) : null,
+        deductibleRemaining: deductibleRemaining?.benefitAmount ? parseFloat(deductibleRemaining.benefitAmount) : null,
+        // Out-of-pocket
+        oopTotal: oopTotal?.benefitAmount ? parseFloat(oopTotal.benefitAmount) : (oopFallback?.benefitAmount ? parseFloat(oopFallback.benefitAmount) : null),
+        oopMet: oopMet?.benefitAmount ? parseFloat(oopMet.benefitAmount) : null,
+        oopRemaining: oopRemaining?.benefitAmount ? parseFloat(oopRemaining.benefitAmount) : null,
+        // Therapy visits
+        therapyVisitsAllowed: therapyAllowed?.benefitQuantity ? parseFloat(therapyAllowed.benefitQuantity) : null,
+        therapyVisitsUsed: therapyUsed?.benefitQuantity ? parseFloat(therapyUsed.benefitQuantity) : null,
+        therapyVisitsRemaining: therapyRemaining?.benefitQuantity ? parseFloat(therapyRemaining.benefitQuantity) : null,
+        // Auth
         requiresAuthorization: benefits.some((b) => b.authorizationOrCertificationRequired === 'Y'),
     };
 }

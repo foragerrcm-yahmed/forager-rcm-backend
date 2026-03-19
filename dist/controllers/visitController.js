@@ -127,7 +127,7 @@ const getVisitById = async (req, res) => {
                         }
                     }
                 },
-                provider: { select: { id: true, firstName: true, lastName: true, specialty: true, licenseType: true } },
+                provider: { select: { id: true, firstName: true, lastName: true, specialty: true, licenseType: true, taxonomyCode: true } },
                 createdBy: { select: { id: true, firstName: true, lastName: true } },
                 updatedBy: { select: { id: true, firstName: true, lastName: true } },
                 claims: {

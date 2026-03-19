@@ -606,6 +606,9 @@ model EligibilityCheck {
   therapyVisitsUsed      Int?
   therapyVisitsRemaining Int?
   requiresAuthorization  Boolean?
+  coinsurancePercent     Decimal? @db.Decimal(5, 2)   // e.g. 20.00 = 20%
+  coverageStartDate      String?                       // YYYYMMDD from planDateInformation
+  coverageEndDate        String?                       // YYYYMMDD from planDateInformation
 
   // Raw response stored for debugging/audit
   rawRequest   Json?
