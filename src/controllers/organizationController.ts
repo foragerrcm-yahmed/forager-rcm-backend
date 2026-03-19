@@ -123,6 +123,11 @@ export const createOrganization = async (req: Request, res: Response): Promise<v
       return;
     }
 
+    if (!npi || !/^\d{10}$/.test(String(npi).trim())) {
+      sendError(res, 400, validationError('ORG'), 'A valid 10-digit Billing NPI is required');
+      return;
+    }
+
     // Check if parent organization exists if provided
     if (parentOrganizationId) {
       const parentOrg = await prisma.organization.findUnique({ where: { id: parentOrganizationId } });
@@ -179,6 +184,12 @@ export const updateOrganization = async (req: Request, res: Response): Promise<v
     const { id } = req.params;
     const { name, addresses, phone, email, npi, parentOrganizationId } = req.body;
     const now = Math.floor(Date.now() / 1000);
+
+    // Validate NPI if provided
+    if (npi !== undefined && (npi === null || npi === '' || !/^\d{10}$/.test(String(npi).trim()))) {
+      sendError(res, 400, validationError('ORG'), 'A valid 10-digit Billing NPI is required');
+      return;
+    }
 
     // Ensure user is updating an organization they have access to
     const existingOrg = await prisma.organization.findUnique({ where: { id } });
