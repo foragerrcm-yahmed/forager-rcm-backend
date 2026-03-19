@@ -225,11 +225,12 @@ model PatientInsurance {
   subscriberName    String?
   subscriberDob     BigInt?
   memberId          String
-  insuranceCardPath String?      // Path to uploaded insurance card image
-  createdAt         BigInt       @default(0)
-  updatedAt         BigInt       @default(0)
+  insuranceCardPath    String?      // Path to uploaded insurance card image
+  planYearStartMonth   Int?         // 1-12; null = calendar year (January). Used for non-calendar-year plan deductible resets.
+  createdAt            BigInt       @default(0)
+  updatedAt            BigInt       @default(0)
 
-  eligibilityChecks EligibilityCheck[]
+  eligibilityChecks    EligibilityCheck[]
 
   @@map("patient_insurances")
 }

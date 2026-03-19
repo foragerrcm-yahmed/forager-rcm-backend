@@ -238,7 +238,8 @@ export const createVisit = async (req: Request, res: Response): Promise<void> =>
 
           const shouldRecheck = shouldRecheckEligibility(
             { visitDate: BigInt(visitDate), visitType } as any,
-            lastCheckAdapted
+            lastCheckAdapted,
+            primaryInsurance.planYearStartMonth ?? 1
           );
 
           if (!shouldRecheck) return;
@@ -330,10 +331,17 @@ function differenceInDays(a: Date, b: Date): number {
   return Math.floor((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function crossesPlanYearReset(lastCheckDate: Date, appointmentDate: Date): boolean {
-  // Most commercial plans reset Jan 1; Medicare resets Jan 1.
-  // Check if the appointment is in a different calendar year than the last check.
-  return lastCheckDate.getFullYear() !== appointmentDate.getFullYear();
+function crossesPlanYearReset(lastCheckDate: Date, appointmentDate: Date, planYearStartMonth: number = 1): boolean {
+  // planYearStartMonth: 1 = January (calendar year), 7 = July, etc.
+  // A "plan year" runs from planYearStartMonth of year N through planYearStartMonth-1 of year N+1.
+  // We check whether lastCheckDate and appointmentDate fall in different plan years.
+  const planYearOf = (d: Date): number => {
+    const month = d.getMonth() + 1; // 1-12
+    const year = d.getFullYear();
+    // If we're before the start month, we're still in the previous plan year
+    return month >= planYearStartMonth ? year : year - 1;
+  };
+  return planYearOf(lastCheckDate) !== planYearOf(appointmentDate);
 }
 
 function isTherapyVisit(visit: { visitType: string }): boolean {
@@ -345,7 +353,8 @@ function isTherapyVisit(visit: { visitType: string }): boolean {
 
 export function shouldRecheckEligibility(
   visit: { visitDate: bigint; visitType: string },
-  lastCheck: { createdAt: bigint } | null
+  lastCheck: { createdAt: bigint } | null,
+  planYearStartMonth: number = 1  // 1-12; default January (calendar year)
 ): boolean {
   if (!lastCheck) return true;
 
@@ -357,7 +366,7 @@ export function shouldRecheckEligibility(
   const daysUntilAppointment = differenceInDays(appointmentDate, today);
 
   // Always recheck if appointment crosses a plan year boundary
-  if (crossesPlanYearReset(lastCheckDate, appointmentDate)) return true;
+  if (crossesPlanYearReset(lastCheckDate, appointmentDate, planYearStartMonth)) return true;
 
   // Always recheck PT/rehab — therapy visit counts change with every claim
   if (isTherapyVisit({ visitType: visit.visitType })) return true;

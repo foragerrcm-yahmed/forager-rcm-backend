@@ -17,6 +17,7 @@ import attachmentRoutes from './routes/attachmentRoutes';
 import masterPayorRoutes from './routes/masterPayorRoutes';
 import eligibilityRoutes from './routes/eligibilityRoutes';
 import stediWebhookRoutes from './routes/stediWebhookRoutes';
+import adminRoutes from './routes/adminRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +52,7 @@ app.use('/api/attachments', attachmentRoutes);
 app.use('/api/master-payors', masterPayorRoutes);
 app.use('/api/eligibility', eligibilityRoutes);
 app.use('/api/webhooks/stedi', stediWebhookRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
