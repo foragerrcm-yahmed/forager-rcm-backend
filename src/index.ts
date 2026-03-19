@@ -18,6 +18,7 @@ import masterPayorRoutes from './routes/masterPayorRoutes';
 import eligibilityRoutes from './routes/eligibilityRoutes';
 import stediWebhookRoutes from './routes/stediWebhookRoutes';
 import adminRoutes from './routes/adminRoutes';
+import diagnosisCodeRoutes, { visitDiagnosisRouter, cptCodeToggleRouter } from './routes/diagnosisCodeRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,9 @@ app.use('/api/payors', payorRoutes);
 app.use('/api/visits', visitRoutes);
 app.use('/api/claims', claimRoutes);
 app.use('/api/cpt-codes', cptCodeRoutes);
+app.use('/api/cpt-codes/:id/toggle-active', cptCodeToggleRouter);
+app.use('/api/diagnosis-codes', diagnosisCodeRoutes);
+app.use('/api/visits/:visitId/diagnoses', visitDiagnosisRouter);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/rule-executions', ruleExecutionRoutes);
 app.use('/api/insurance-policies', insurancePolicyRoutes);

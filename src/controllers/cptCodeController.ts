@@ -13,9 +13,14 @@ const prisma = new PrismaClient();
 export const getCPTCodes = async (req: Request, res: Response): Promise<void> => {
   try {
     const { page, limit, skip } = getPaginationParams(req.query.page as string, req.query.limit as string);
-    const { search, specialty } = req.query;
+    const { search, specialty, showInactive } = req.query;
 
     const where: any = {};
+
+    // By default only show active codes; pass showInactive=true to include hidden ones
+    if (showInactive !== 'true') {
+      where.isActive = true;
+    }
 
     if (search && typeof search === 'string') {
       where.OR = [

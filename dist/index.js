@@ -1,4 +1,37 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -23,6 +56,7 @@ const masterPayorRoutes_1 = __importDefault(require("./routes/masterPayorRoutes"
 const eligibilityRoutes_1 = __importDefault(require("./routes/eligibilityRoutes"));
 const stediWebhookRoutes_1 = __importDefault(require("./routes/stediWebhookRoutes"));
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
+const diagnosisCodeRoutes_1 = __importStar(require("./routes/diagnosisCodeRoutes"));
 // Load environment variables
 dotenv_1.default.config();
 // Global BigInt serialization fix for JSON responses
@@ -45,6 +79,9 @@ app.use('/api/payors', payorRoutes_1.default);
 app.use('/api/visits', visitRoutes_1.default);
 app.use('/api/claims', claimRoutes_1.default);
 app.use('/api/cpt-codes', cptCodeRoutes_1.default);
+app.use('/api/cpt-codes/:id/toggle-active', diagnosisCodeRoutes_1.cptCodeToggleRouter);
+app.use('/api/diagnosis-codes', diagnosisCodeRoutes_1.default);
+app.use('/api/visits/:visitId/diagnoses', diagnosisCodeRoutes_1.visitDiagnosisRouter);
 app.use('/api/rules', ruleRoutes_1.default);
 app.use('/api/rule-executions', ruleExecutionRoutes_1.default);
 app.use('/api/insurance-policies', insurancePolicyRoutes_1.default);

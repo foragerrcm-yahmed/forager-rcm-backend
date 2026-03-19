@@ -145,6 +145,7 @@ model Organization {
   payors                Payor[]
   cptCodes              CPTCode[]          // platform codes visible to all orgs
   cptCodeRates          CPTCodeRate[]      // org-specific rate overrides
+  diagnosisCodes        DiagnosisCode[]    // org-managed ICD-10 code library
   providerCredentials   ProviderCredential[]
 
   @@map("organizations")
@@ -436,6 +437,7 @@ model CPTCode {
   // Optional: org that first created this code (for audit). Nullable so codes can be platform-wide.
   organization   Organization?  @relation(fields: [organizationId], references: [id])
   organizationId String?
+  isActive       Boolean        @default(true)  // false = hidden from pickers; still visible with showInactive filter
   createdAt      BigInt         @default(0)
   updatedAt      BigInt         @default(0)
   claimServices ClaimService[]
@@ -467,6 +469,27 @@ model CPTCodeRate {
   @@index([cptCodeCode])
   @@index([organizationId])
   @@map("cpt_code_rates")
+}
+
+// Platform-level master list of ICD-10 diagnosis codes.
+// Orgs can hide codes they don't use (isActive = false per-org via DiagnosisCodeOrg),
+// but for simplicity we use a single isActive flag scoped by org on the code itself.
+// The Diagnosis join table links a specific icdCode to a visit or claim.
+model DiagnosisCode {
+  id            String   @id @default(uuid())
+  code          String   @unique  // e.g. "M54.5", "J06.9"
+  description   String             // e.g. "Low back pain"
+  category      String?            // ICD-10 chapter/category e.g. "Musculoskeletal"
+  isActive      Boolean  @default(true)  // false = hidden from pickers; can be reinstated
+  // Org-scoped: each org manages their own active/hidden list
+  organization  Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  createdAt     BigInt   @default(0)
+  updatedAt     BigInt   @default(0)
+
+  @@unique([code, organizationId])
+  @@index([organizationId])
+  @@map("diagnosis_codes")
 }
 
 model ClaimService {

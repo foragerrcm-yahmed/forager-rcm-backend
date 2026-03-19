@@ -136,6 +136,9 @@ const getVisitById = async (req, res) => {
                         services: true,
                     }
                 },
+                diagnoses: {
+                    orderBy: { sequence: 'asc' },
+                },
             }
         });
         if (!visit) {

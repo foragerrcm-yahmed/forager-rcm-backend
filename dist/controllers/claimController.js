@@ -94,11 +94,17 @@ const getClaimById = async (req, res) => {
                 patient: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, phone: true, email: true } },
                 provider: { select: { id: true, firstName: true, lastName: true, specialty: true } },
                 payor: { select: { id: true, name: true } },
-                visit: { select: { id: true, visitDate: true, visitType: true, location: true, status: true } },
+                visit: {
+                    select: {
+                        id: true, visitDate: true, visitType: true, location: true, status: true,
+                        diagnoses: { orderBy: { sequence: 'asc' } },
+                    }
+                },
                 createdBy: { select: { id: true, firstName: true, lastName: true } },
                 updatedBy: { select: { id: true, firstName: true, lastName: true } },
                 services: true,
                 timeline: true,
+                diagnoses: { orderBy: { sequence: 'asc' } },
             }
         });
         if (!claim) {

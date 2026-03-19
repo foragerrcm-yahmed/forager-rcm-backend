@@ -110,6 +110,9 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
             services: true,
           }
         },
+        diagnoses: {
+          orderBy: { sequence: 'asc' },
+        },
       }
     });
 
