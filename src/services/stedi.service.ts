@@ -224,7 +224,7 @@ export async function checkEligibility(
   let rawResponse: any;
 
   try {
-    rawResponse = await stediRequest<any>('POST', '/eligibility/professional', requestBody);
+    rawResponse = await stediRequest<any>('POST', '/change/medicalnetwork/eligibility/v3', requestBody);
   } catch (e: any) {
     await prisma.eligibilityCheck.update({
       where: { id: eligibilityCheck.id },

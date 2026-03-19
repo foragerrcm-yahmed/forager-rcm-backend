@@ -193,7 +193,7 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
     });
     let rawResponse;
     try {
-        rawResponse = await stediRequest('POST', '/eligibility/professional', requestBody);
+        rawResponse = await stediRequest('POST', '/change/medicalnetwork/eligibility/v3', requestBody);
     }
     catch (e) {
         await prisma.eligibilityCheck.update({
