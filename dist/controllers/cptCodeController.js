@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteCPTCode = exports.updateCPTCode = exports.createCPTCode = exports.getCPTCodeById = exports.getCPTCodes = void 0;
+exports.deleteCPTCodeRate = exports.updateCPTCodeRate = exports.createCPTCodeRate = exports.getCPTCodeRates = exports.deleteCPTCode = exports.updateCPTCode = exports.createCPTCode = exports.getCPTCodeById = exports.getCPTCodes = void 0;
 const client_1 = require("@prisma/client");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
@@ -185,3 +185,137 @@ const deleteCPTCode = async (req, res) => {
     }
 };
 exports.deleteCPTCode = deleteCPTCode;
+// ─── CPT Code Rate Tiers ─────────────────────────────────────────────────────
+// Provider-taxonomy-specific rate overrides per CPT code.
+/**
+ * GET /api/cpt-codes/:id/rates
+ * List all rate tiers for a CPT code in the org.
+ */
+const getCPTCodeRates = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const organizationId = req.user?.organizationId;
+        const rates = await prisma.cPTCodeRate.findMany({
+            where: { cptCodeCode: id, organizationId },
+            orderBy: { taxonomyLabel: 'asc' },
+        });
+        res.status(200).json({
+            success: true,
+            data: rates.map(r => ({
+                ...r,
+                createdAt: Number(r.createdAt),
+                updatedAt: Number(r.updatedAt),
+            })),
+        });
+    }
+    catch (error) {
+        (0, prismaErrors_1.handlePrismaError)(res, error, 'CPT_CODE_RATE');
+    }
+};
+exports.getCPTCodeRates = getCPTCodeRates;
+/**
+ * POST /api/cpt-codes/:id/rates
+ * Create a rate tier for a CPT code.
+ * Body: { taxonomyCode, taxonomyLabel?, standardPrice, contractedPrice?, notes? }
+ */
+const createCPTCodeRate = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { taxonomyCode, taxonomyLabel, standardPrice, contractedPrice, notes } = req.body;
+        const organizationId = req.user?.organizationId;
+        if (!taxonomyCode || standardPrice === undefined) {
+            (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('CPT_CODE_RATE'), 'taxonomyCode and standardPrice are required');
+            return;
+        }
+        // Verify CPT code exists (CPT codes are platform-level, not per-org)
+        const cptCode = await prisma.cPTCode.findFirst({
+            where: { code: id },
+        });
+        if (!cptCode) {
+            (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('CPT_CODE'), 'CPT code not found');
+            return;
+        }
+        const now = BigInt(Math.floor(Date.now() / 1000));
+        const rate = await prisma.cPTCodeRate.create({
+            data: {
+                cptCodeCode: id,
+                taxonomyCode,
+                taxonomyLabel: taxonomyLabel ?? null,
+                standardPrice,
+                contractedPrice: contractedPrice ?? null,
+                notes: notes ?? null,
+                organizationId: organizationId,
+                createdAt: now,
+                updatedAt: now,
+            },
+        });
+        res.status(201).json({
+            success: true,
+            data: { ...rate, createdAt: Number(rate.createdAt), updatedAt: Number(rate.updatedAt) },
+        });
+    }
+    catch (error) {
+        (0, prismaErrors_1.handlePrismaError)(res, error, 'CPT_CODE_RATE');
+    }
+};
+exports.createCPTCodeRate = createCPTCodeRate;
+/**
+ * PUT /api/cpt-codes/:id/rates/:rateId
+ * Update a rate tier.
+ */
+const updateCPTCodeRate = async (req, res) => {
+    try {
+        const { rateId } = req.params;
+        const { taxonomyLabel, standardPrice, contractedPrice, notes } = req.body;
+        const organizationId = req.user?.organizationId;
+        const existing = await prisma.cPTCodeRate.findFirst({
+            where: { id: rateId, organizationId },
+        });
+        if (!existing) {
+            (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('CPT_CODE_RATE'), 'Rate tier not found');
+            return;
+        }
+        const now = BigInt(Math.floor(Date.now() / 1000));
+        const rate = await prisma.cPTCodeRate.update({
+            where: { id: rateId },
+            data: {
+                taxonomyLabel: taxonomyLabel ?? existing.taxonomyLabel,
+                standardPrice: standardPrice ?? existing.standardPrice,
+                contractedPrice: contractedPrice !== undefined ? contractedPrice : existing.contractedPrice,
+                notes: notes !== undefined ? notes : existing.notes,
+                updatedAt: now,
+            },
+        });
+        res.status(200).json({
+            success: true,
+            data: { ...rate, createdAt: Number(rate.createdAt), updatedAt: Number(rate.updatedAt) },
+        });
+    }
+    catch (error) {
+        (0, prismaErrors_1.handlePrismaError)(res, error, 'CPT_CODE_RATE');
+    }
+};
+exports.updateCPTCodeRate = updateCPTCodeRate;
+/**
+ * DELETE /api/cpt-codes/:id/rates/:rateId
+ * Delete a rate tier.
+ */
+const deleteCPTCodeRate = async (req, res) => {
+    try {
+        const { rateId } = req.params;
+        const organizationId = req.user?.organizationId;
+        const existing = await prisma.cPTCodeRate.findFirst({
+            where: { id: rateId, organizationId },
+        });
+        if (!existing) {
+            (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('CPT_CODE_RATE'), 'Rate tier not found');
+            return;
+        }
+        await prisma.cPTCodeRate.delete({ where: { id: rateId } });
+        res.status(204).send();
+    }
+    catch (error) {
+        (0, prismaErrors_1.handlePrismaError)(res, error, 'CPT_CODE_RATE');
+    }
+};
+exports.deleteCPTCodeRate = deleteCPTCodeRate;

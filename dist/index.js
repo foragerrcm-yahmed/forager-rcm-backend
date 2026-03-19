@@ -19,6 +19,10 @@ const ruleRoutes_1 = __importDefault(require("./routes/ruleRoutes"));
 const ruleExecutionRoutes_1 = __importDefault(require("./routes/ruleExecutionRoutes"));
 const insurancePolicyRoutes_1 = __importDefault(require("./routes/insurancePolicyRoutes"));
 const attachmentRoutes_1 = __importDefault(require("./routes/attachmentRoutes"));
+const masterPayorRoutes_1 = __importDefault(require("./routes/masterPayorRoutes"));
+const eligibilityRoutes_1 = __importDefault(require("./routes/eligibilityRoutes"));
+const stediWebhookRoutes_1 = __importDefault(require("./routes/stediWebhookRoutes"));
+const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 // Load environment variables
 dotenv_1.default.config();
 // Global BigInt serialization fix for JSON responses
@@ -45,6 +49,10 @@ app.use('/api/rules', ruleRoutes_1.default);
 app.use('/api/rule-executions', ruleExecutionRoutes_1.default);
 app.use('/api/insurance-policies', insurancePolicyRoutes_1.default);
 app.use('/api/attachments', attachmentRoutes_1.default);
+app.use('/api/master-payors', masterPayorRoutes_1.default);
+app.use('/api/eligibility', eligibilityRoutes_1.default);
+app.use('/api/webhooks/stedi', stediWebhookRoutes_1.default);
+app.use('/api/admin', adminRoutes_1.default);
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Server is running' });

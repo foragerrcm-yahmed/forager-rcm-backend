@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const claimController_1 = require("../controllers/claimController");
+const claimsStediController_1 = require("../controllers/claimsStediController");
 const auth_1 = require("../middleware/auth");
 const router = (0, express_1.Router)();
 router.use(auth_1.authenticateToken);
@@ -9,6 +10,8 @@ router.get('/', (0, auth_1.requireRole)('Admin', 'Biller', 'Provider', 'FrontDes
 router.get('/:id', (0, auth_1.requireRole)('Admin', 'Biller', 'Provider', 'FrontDesk'), claimController_1.getClaimById);
 router.post('/', (0, auth_1.requireRole)('Admin', 'Biller'), claimController_1.createClaim);
 router.put('/:id/status', (0, auth_1.requireRole)('Admin', 'Biller'), claimController_1.updateClaimStatus);
+router.post('/:id/submit', (0, auth_1.requireRole)('Admin', 'Biller'), claimsStediController_1.submitClaimToStedi);
+router.get('/:id/status-check', (0, auth_1.requireRole)('Admin', 'Biller', 'Provider', 'FrontDesk'), claimsStediController_1.checkClaimStatusFromStedi);
 router.put('/:id', (0, auth_1.requireRole)('Admin', 'Biller'), claimController_1.updateClaim);
 router.delete('/:id', (0, auth_1.requireRole)('Admin', 'Biller'), claimController_1.deleteClaim);
 exports.default = router;

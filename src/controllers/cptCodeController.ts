@@ -250,12 +250,12 @@ export const createCPTCodeRate = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Verify CPT code belongs to org
+    // Verify CPT code exists (CPT codes are platform-level, not per-org)
     const cptCode = await prisma.cPTCode.findFirst({
-      where: { code: id as string, organizationId },
+      where: { code: id as string },
     });
     if (!cptCode) {
-      sendError(res, 404, notFound('CPT_CODE'), 'CPT code not found in your organization');
+      sendError(res, 404, notFound('CPT_CODE'), 'CPT code not found');
       return;
     }
 

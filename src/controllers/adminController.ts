@@ -185,3 +185,29 @@ export const seedMasterPayors = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ error: 'Seed failed', detail: error?.message });
   }
 };
+
+/**
+ * POST /api/admin/seed-cms-rates
+ * Seeds CPTCodeRate records from the 2026 CMS Physician Fee Schedule.
+ * Protected by x-admin-seed-secret header.
+ */
+export const seedCmsRatesEndpoint = async (req: Request, res: Response): Promise<void> => {
+  const secret = req.headers['x-admin-seed-secret'];
+  if (!secret || secret !== process.env.ADMIN_SEED_SECRET) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  try {
+    const { seedCmsRates } = await import('../services/cmsRateSeeder');
+    const result = await seedCmsRates();
+    res.status(200).json({
+      success: true,
+      message: `CMS rate seed complete. Processed: ${result.processed} codes, Created/updated: ${result.created} rate tiers, Skipped: ${result.skipped}`,
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('[admin] seed-cms-rates error:', error);
+    res.status(500).json({ error: 'Seed failed', detail: error?.message });
+  }
+};
