@@ -252,6 +252,25 @@ model Provider {
   @@map("providers")
 }
 
+// Platform-managed canonical payor list seeded from Stedi's payer network.
+// Clients never interact with this table directly — they search it and "enable"
+// a MasterPayor for their org, which creates a Payor record linked here.
+model MasterPayor {
+  id                  String   @id @default(uuid())
+  stediId             String   @unique          // Stedi's stable internal ID
+  displayName         String                    // Canonical business name (e.g. "Aetna")
+  primaryPayorId      String                    // Stedi primaryPayerId used for routing
+  aliases             Json     @default("[]")   // Array of alternative IDs
+  avatarUrl           String?
+  coverageTypes       Json     @default("[]")   // e.g. ["medical", "dental", "vision"]
+  transactionSupport  Json     @default("{}")   // eligibilityCheck, professionalClaimSubmission, claimPayment, claimStatus
+  isActive            Boolean  @default(true)
+  createdAt           BigInt   @default(0)
+  updatedAt           BigInt   @default(0)
+  payors              Payor[]
+  @@map("master_payors")
+}
+
 model Payor {
   id                String         @id @default(uuid())
   name              String
@@ -261,6 +280,8 @@ model Payor {
   address           Json?
   phone             String?
   portalUrl         String?
+  masterPayor       MasterPayor?   @relation(fields: [masterPayorId], references: [id])
+  masterPayorId     String?                     // FK to MasterPayor — set when org enables a master payor
   organization      Organization   @relation(fields: [organizationId], references: [id])
   organizationId    String
   createdById       String
@@ -269,10 +290,8 @@ model Payor {
   updatedBy         User?          @relation("PayorUpdatedBy", fields: [updatedById], references: [id])
   createdAt         BigInt         @default(0)
   updatedAt         BigInt         @default(0)
-
   plans             PayorPlan[]
   claims            Claim[]
-
   @@map("payors")
 }
 

@@ -14,6 +14,7 @@ import ruleRoutes from './routes/ruleRoutes';
 import ruleExecutionRoutes from './routes/ruleExecutionRoutes';
 import insurancePolicyRoutes from './routes/insurancePolicyRoutes';
 import attachmentRoutes from './routes/attachmentRoutes';
+import masterPayorRoutes from './routes/masterPayorRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,7 @@ app.use('/api/rules', ruleRoutes);
 app.use('/api/rule-executions', ruleExecutionRoutes);
 app.use('/api/insurance-policies', insurancePolicyRoutes);
 app.use('/api/attachments', attachmentRoutes);
+app.use('/api/master-payors', masterPayorRoutes);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
