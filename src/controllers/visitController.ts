@@ -3,6 +3,7 @@ import { PrismaClient, DataSource } from '@prisma/client';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
 import { handlePrismaError } from '../utils/prismaErrors';
+import * as stediService from '../services/stedi.service';
 
 const prisma = new PrismaClient();
 
@@ -209,6 +210,46 @@ export const createVisit = async (req: Request, res: Response): Promise<void> =>
         updatedAt: Number(visit.updatedAt),
       },
     });
+
+    // Auto-trigger eligibility check when a visit is created with Upcoming status
+    // Fire-and-forget: does not block the response
+    if (status === 'Upcoming') {
+      setImmediate(async () => {
+        try {
+          // Fetch patient's primary insurance
+          const primaryInsurance = await prisma.patientInsurance.findFirst({
+            where: { patientId: patientId as string, isPrimary: true },
+            include: {
+              plan: { include: { payor: true } },
+            },
+          });
+          if (!primaryInsurance) return;
+
+          // Check if we should recheck eligibility using the shouldRecheckEligibility logic
+          const lastCheck = await prisma.eligibilityCheck.findFirst({
+            where: { patientInsuranceId: primaryInsurance.id },
+            orderBy: { createdAt: 'desc' },
+          });
+
+          // Adapt lastCheck.createdAt (Date) to the bigint shape expected by shouldRecheckEligibility
+          const lastCheckAdapted = lastCheck
+            ? { createdAt: BigInt(Math.floor(lastCheck.createdAt.getTime() / 1000)) }
+            : null;
+
+          const shouldRecheck = shouldRecheckEligibility(
+            { visitDate: BigInt(visitDate), visitType } as any,
+            lastCheckAdapted
+          );
+
+          if (!shouldRecheck) return;
+
+          await stediService.checkEligibility(primaryInsurance.id, visit.id);
+        } catch (e) {
+          // Log but do not fail — eligibility check is best-effort
+          console.error('[auto-eligibility] Error during auto-check for visit', visit.id, e);
+        }
+      });
+    }
   } catch (error) {
     handlePrismaError(res, error, 'VISIT');
   }
@@ -280,3 +321,53 @@ export const deleteVisit = async (req: Request, res: Response): Promise<void> =>
     handlePrismaError(res, error, 'VISIT');
   }
 };
+
+// ─── Eligibility Recheck Logic ───────────────────────────────────────────────
+// Determines whether a new eligibility check should be triggered for a visit.
+// This is the canonical implementation of the shouldRecheckEligibility function.
+
+function differenceInDays(a: Date, b: Date): number {
+  return Math.floor((a.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function crossesPlanYearReset(lastCheckDate: Date, appointmentDate: Date): boolean {
+  // Most commercial plans reset Jan 1; Medicare resets Jan 1.
+  // Check if the appointment is in a different calendar year than the last check.
+  return lastCheckDate.getFullYear() !== appointmentDate.getFullYear();
+}
+
+function isTherapyVisit(visit: { visitType: string }): boolean {
+  // PT, OT, SLP, and mental health visits have per-visit benefit limits that
+  // change with every claim — always recheck.
+  const therapyTypes = ['PhysicalTherapy', 'OccupationalTherapy', 'SpeechTherapy', 'MentalHealth', 'BehavioralHealth'];
+  return therapyTypes.includes(visit.visitType);
+}
+
+export function shouldRecheckEligibility(
+  visit: { visitDate: bigint; visitType: string },
+  lastCheck: { createdAt: bigint } | null
+): boolean {
+  if (!lastCheck) return true;
+
+  const appointmentDate = new Date(Number(visit.visitDate) * 1000);
+  const lastCheckDate = new Date(Number(lastCheck.createdAt) * 1000);
+  const today = new Date();
+
+  const daysSinceCheck = differenceInDays(today, lastCheckDate);
+  const daysUntilAppointment = differenceInDays(appointmentDate, today);
+
+  // Always recheck if appointment crosses a plan year boundary
+  if (crossesPlanYearReset(lastCheckDate, appointmentDate)) return true;
+
+  // Always recheck PT/rehab — therapy visit counts change with every claim
+  if (isTherapyVisit({ visitType: visit.visitType })) return true;
+
+  // If appointment is today or tomorrow and checked within 3 days — skip
+  if (daysUntilAppointment <= 1 && daysSinceCheck <= 3) return false;
+
+  // If checked within 3 days of the appointment date — skip
+  if (daysSinceCheck <= 3) return false;
+
+  // Otherwise recheck
+  return true;
+}
