@@ -211,3 +211,29 @@ export const seedCmsRatesEndpoint = async (req: Request, res: Response): Promise
     res.status(500).json({ error: 'Seed failed', detail: error?.message });
   }
 };
+
+/**
+ * POST /api/admin/seed-icd10-codes
+ * Seeds common ICD-10-CM diagnosis codes for all orgs (or a specific org).
+ * Protected by x-admin-seed-secret header.
+ */
+export const seedIcd10CodesEndpoint = async (req: Request, res: Response): Promise<void> => {
+  const secret = req.headers['x-admin-seed-secret'];
+  if (!secret || secret !== process.env.ADMIN_SEED_SECRET) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  try {
+    const { seedIcd10Codes } = await import('../services/icd10Seeder');
+    const { organizationId } = req.body;
+    const result = await seedIcd10Codes(organizationId);
+    res.status(200).json({
+      success: true,
+      message: `ICD-10 seed complete. Created: ${result.created}, Skipped: ${result.skipped}, Errors: ${result.errors}`,
+      ...result,
+    });
+  } catch (error: any) {
+    console.error('[admin] seed-icd10-codes error:', error);
+    res.status(500).json({ error: 'Seed failed', detail: error?.message });
+  }
+};

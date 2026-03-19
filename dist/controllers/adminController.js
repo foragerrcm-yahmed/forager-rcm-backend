@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.seedCmsRatesEndpoint = exports.seedMasterPayors = void 0;
+exports.seedIcd10CodesEndpoint = exports.seedCmsRatesEndpoint = exports.seedMasterPayors = void 0;
 const client_1 = require("@prisma/client");
 const prisma = new client_1.PrismaClient();
 // ─── Transaction support presets ──────────────────────────────────────────────
@@ -236,3 +236,30 @@ const seedCmsRatesEndpoint = async (req, res) => {
     }
 };
 exports.seedCmsRatesEndpoint = seedCmsRatesEndpoint;
+/**
+ * POST /api/admin/seed-icd10-codes
+ * Seeds common ICD-10-CM diagnosis codes for all orgs (or a specific org).
+ * Protected by x-admin-seed-secret header.
+ */
+const seedIcd10CodesEndpoint = async (req, res) => {
+    const secret = req.headers['x-admin-seed-secret'];
+    if (!secret || secret !== process.env.ADMIN_SEED_SECRET) {
+        res.status(401).json({ error: 'Unauthorized' });
+        return;
+    }
+    try {
+        const { seedIcd10Codes } = await Promise.resolve().then(() => __importStar(require('../services/icd10Seeder')));
+        const { organizationId } = req.body;
+        const result = await seedIcd10Codes(organizationId);
+        res.status(200).json({
+            success: true,
+            message: `ICD-10 seed complete. Created: ${result.created}, Skipped: ${result.skipped}, Errors: ${result.errors}`,
+            ...result,
+        });
+    }
+    catch (error) {
+        console.error('[admin] seed-icd10-codes error:', error);
+        res.status(500).json({ error: 'Seed failed', detail: error?.message });
+    }
+};
+exports.seedIcd10CodesEndpoint = seedIcd10CodesEndpoint;
