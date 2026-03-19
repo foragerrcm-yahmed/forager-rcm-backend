@@ -213,6 +213,36 @@ export const seedCmsRatesEndpoint = async (req: Request, res: Response): Promise
 };
 
 /**
+ * POST /api/admin/seed-test-data
+ * Creates a complete set of test records for eligibility testing:
+ *   - Aetna Payor + PPO Plan (linked to MasterPayor)
+ *   - Test Patient "Jane Doe" with Aetna insurance (Stedi sandbox member W000000000)
+ *   - Test Provider "Dr. Alex Test" (MD, NPI)
+ *   - Test Visit (today, Upcoming)
+ * Protected by x-admin-seed-secret header.
+ */
+export const seedTestDataEndpoint = async (req: Request, res: Response): Promise<void> => {
+  const secret = req.headers['x-admin-seed-secret'];
+  if (!secret || secret !== process.env.ADMIN_SEED_SECRET) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+  try {
+    const { seedTestData } = await import('../services/testDataSeeder');
+    const { organizationId } = req.body;
+    const results = await seedTestData(organizationId);
+    res.status(200).json({
+      success: true,
+      message: `Test data seeded for ${results.length} organization(s)`,
+      results,
+    });
+  } catch (error: any) {
+    console.error('[admin] seed-test-data error:', error);
+    res.status(500).json({ error: 'Seed failed', detail: error?.message });
+  }
+};
+
+/**
  * POST /api/admin/seed-icd10-codes
  * Seeds common ICD-10-CM diagnosis codes for all orgs (or a specific org).
  * Protected by x-admin-seed-secret header.
