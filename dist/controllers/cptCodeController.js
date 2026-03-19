@@ -6,21 +6,19 @@ const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
 const prisma = new client_1.PrismaClient();
+// ─── CPT Codes (platform-level) ──────────────────────────────────────────────
+// CPT codes are platform-wide: any org can see and use them.
+// Rates (CPTCodeRate) are per-org so each org can override the CMS defaults.
 const getCPTCodes = async (req, res) => {
     try {
         const { page, limit, skip } = (0, pagination_1.getPaginationParams)(req.query.page, req.query.limit);
-        const { search, organizationId, specialty } = req.query;
-        const where = {
-            organizationId: req.user?.organizationId,
-        };
+        const { search, specialty } = req.query;
+        const where = {};
         if (search && typeof search === 'string') {
             where.OR = [
                 { code: { contains: search, mode: 'insensitive' } },
                 { description: { contains: search, mode: 'insensitive' } },
             ];
-        }
-        if (organizationId && typeof organizationId === 'string') {
-            where.organizationId = organizationId;
         }
         if (specialty && typeof specialty === 'string') {
             where.specialty = { contains: specialty, mode: 'insensitive' };
@@ -30,6 +28,7 @@ const getCPTCodes = async (req, res) => {
                 where,
                 skip,
                 take: limit,
+                orderBy: { code: 'asc' },
             }),
             prisma.cPTCode.count({ where }),
         ]);
@@ -74,18 +73,16 @@ const getCPTCodeById = async (req, res) => {
 exports.getCPTCodeById = getCPTCodeById;
 const createCPTCode = async (req, res) => {
     try {
-        const { code, description, specialty, basePrice, organizationId } = req.body;
-        if (!code || !description || basePrice === undefined || !organizationId) {
-            (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('CPT_CODE'), 'Missing required CPT code fields');
+        const { code, description, specialty, basePrice } = req.body;
+        const organizationId = req.user?.organizationId;
+        if (!code || !description || basePrice === undefined) {
+            (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('CPT_CODE'), 'code, description, and basePrice are required');
             return;
         }
-        if (req.user?.organizationId !== organizationId) {
-            (0, errors_1.sendError)(res, 403, (0, errors_1.forbidden)('CPT_CODE'), 'Cannot create CPT codes outside your organization');
-            return;
-        }
-        const existingCode = await prisma.cPTCode.findFirst({ where: { code, organizationId: organizationId } });
+        // CPT codes are platform-level: check globally (not per-org)
+        const existingCode = await prisma.cPTCode.findUnique({ where: { code } });
         if (existingCode) {
-            (0, errors_1.sendError)(res, 409, (0, errors_1.duplicate)('CPT_CODE'), 'CPT code already exists in this organization');
+            (0, errors_1.sendError)(res, 409, (0, errors_1.duplicate)('CPT_CODE'), 'CPT code already exists');
             return;
         }
         if (basePrice < 0) {
@@ -100,7 +97,8 @@ const createCPTCode = async (req, res) => {
                 specialty,
                 standardPrice: basePrice || 0,
                 basePrice,
-                organization: { connect: { id: organizationId } },
+                // Record which org created this code for audit purposes (nullable)
+                ...(organizationId ? { organization: { connect: { id: organizationId } } } : {}),
                 createdAt: BigInt(now),
                 updatedAt: BigInt(now),
             },
@@ -125,14 +123,14 @@ const updateCPTCode = async (req, res) => {
         const { code, description, specialty, basePrice } = req.body;
         const now = Math.floor(Date.now() / 1000);
         const existingCode = await prisma.cPTCode.findUnique({ where: { code: id } });
-        if (!existingCode || existingCode.organizationId !== req.user?.organizationId) {
-            (0, errors_1.sendError)(res, 403, (0, errors_1.forbidden)('CPT_CODE'), 'Cannot update CPT codes outside your organization or code not found');
+        if (!existingCode) {
+            (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('CPT_CODE'), 'CPT code not found');
             return;
         }
         if (code && code !== existingCode.code) {
-            const duplicateCode = await prisma.cPTCode.findFirst({ where: { code, organizationId: existingCode.organizationId } });
+            const duplicateCode = await prisma.cPTCode.findUnique({ where: { code } });
             if (duplicateCode) {
-                (0, errors_1.sendError)(res, 409, (0, errors_1.duplicate)('CPT_CODE'), 'CPT code already exists in this organization');
+                (0, errors_1.sendError)(res, 409, (0, errors_1.duplicate)('CPT_CODE'), 'CPT code already exists');
                 return;
             }
         }
@@ -168,8 +166,8 @@ const deleteCPTCode = async (req, res) => {
     try {
         const { id } = req.params;
         const existingCode = await prisma.cPTCode.findUnique({ where: { code: id } });
-        if (!existingCode || existingCode.organizationId !== req.user?.organizationId) {
-            (0, errors_1.sendError)(res, 403, (0, errors_1.forbidden)('CPT_CODE'), 'Cannot delete CPT codes outside your organization or code not found');
+        if (!existingCode) {
+            (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('CPT_CODE'), 'CPT code not found');
             return;
         }
         const serviceCount = await prisma.claimService.count({ where: { cptCodeCode: id } });
@@ -185,11 +183,12 @@ const deleteCPTCode = async (req, res) => {
     }
 };
 exports.deleteCPTCode = deleteCPTCode;
-// ─── CPT Code Rate Tiers ─────────────────────────────────────────────────────
-// Provider-taxonomy-specific rate overrides per CPT code.
+// ─── CPT Code Rate Tiers (per-org) ───────────────────────────────────────────
+// Rates are scoped to the authenticated user's organization.
+// Seeded initially from CMS data; each org can override at any time.
 /**
  * GET /api/cpt-codes/:id/rates
- * List all rate tiers for a CPT code in the org.
+ * List all rate tiers for a CPT code in the caller's org.
  */
 const getCPTCodeRates = async (req, res) => {
     try {
@@ -203,6 +202,8 @@ const getCPTCodeRates = async (req, res) => {
             success: true,
             data: rates.map(r => ({
                 ...r,
+                standardPrice: Number(r.standardPrice),
+                contractedPrice: r.contractedPrice !== null ? Number(r.contractedPrice) : null,
                 createdAt: Number(r.createdAt),
                 updatedAt: Number(r.updatedAt),
             })),
@@ -215,7 +216,7 @@ const getCPTCodeRates = async (req, res) => {
 exports.getCPTCodeRates = getCPTCodeRates;
 /**
  * POST /api/cpt-codes/:id/rates
- * Create a rate tier for a CPT code.
+ * Create a rate tier for a CPT code in the caller's org.
  * Body: { taxonomyCode, taxonomyLabel?, standardPrice, contractedPrice?, notes? }
  */
 const createCPTCodeRate = async (req, res) => {
@@ -227,10 +228,8 @@ const createCPTCodeRate = async (req, res) => {
             (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('CPT_CODE_RATE'), 'taxonomyCode and standardPrice are required');
             return;
         }
-        // Verify CPT code exists (CPT codes are platform-level, not per-org)
-        const cptCode = await prisma.cPTCode.findFirst({
-            where: { code: id },
-        });
+        // Verify CPT code exists (platform-level)
+        const cptCode = await prisma.cPTCode.findUnique({ where: { code: id } });
         if (!cptCode) {
             (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('CPT_CODE'), 'CPT code not found');
             return;
@@ -251,7 +250,13 @@ const createCPTCodeRate = async (req, res) => {
         });
         res.status(201).json({
             success: true,
-            data: { ...rate, createdAt: Number(rate.createdAt), updatedAt: Number(rate.updatedAt) },
+            data: {
+                ...rate,
+                standardPrice: Number(rate.standardPrice),
+                contractedPrice: rate.contractedPrice !== null ? Number(rate.contractedPrice) : null,
+                createdAt: Number(rate.createdAt),
+                updatedAt: Number(rate.updatedAt),
+            },
         });
     }
     catch (error) {
@@ -261,7 +266,7 @@ const createCPTCodeRate = async (req, res) => {
 exports.createCPTCodeRate = createCPTCodeRate;
 /**
  * PUT /api/cpt-codes/:id/rates/:rateId
- * Update a rate tier.
+ * Update a rate tier (must belong to caller's org).
  */
 const updateCPTCodeRate = async (req, res) => {
     try {
@@ -288,7 +293,13 @@ const updateCPTCodeRate = async (req, res) => {
         });
         res.status(200).json({
             success: true,
-            data: { ...rate, createdAt: Number(rate.createdAt), updatedAt: Number(rate.updatedAt) },
+            data: {
+                ...rate,
+                standardPrice: Number(rate.standardPrice),
+                contractedPrice: rate.contractedPrice !== null ? Number(rate.contractedPrice) : null,
+                createdAt: Number(rate.createdAt),
+                updatedAt: Number(rate.updatedAt),
+            },
         });
     }
     catch (error) {
@@ -298,7 +309,7 @@ const updateCPTCodeRate = async (req, res) => {
 exports.updateCPTCodeRate = updateCPTCodeRate;
 /**
  * DELETE /api/cpt-codes/:id/rates/:rateId
- * Delete a rate tier.
+ * Delete a rate tier (must belong to caller's org).
  */
 const deleteCPTCodeRate = async (req, res) => {
     try {

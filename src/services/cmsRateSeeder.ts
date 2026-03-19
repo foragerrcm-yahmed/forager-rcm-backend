@@ -96,7 +96,7 @@ function parseCmsRvuFile(filePath: string): Map<string, CmsRvuRecord> {
   return records;
 }
 
-export async function seedCmsRates(organizationId?: string): Promise<{
+export async function seedCmsRates(targetOrganizationId?: string): Promise<{
   processed: number;
   created: number;
   skipped: number;
@@ -122,10 +122,21 @@ export async function seedCmsRates(organizationId?: string): Promise<{
     cmsData = getEmbeddedCmsData();
   }
 
-  // Get all CPT codes in the database
-  const whereClause = organizationId ? { organizationId } : {};
-  const cptCodes = await prisma.cPTCode.findMany({ where: whereClause });
+  // Get all CPT codes in the database (platform-level, no org filter)
+  const cptCodes = await prisma.cPTCode.findMany();
   console.log(`[seed-cms-rates] Found ${cptCodes.length} CPT codes in database`);
+
+  // Determine which orgs to seed rates for:
+  // - If a specific org is requested, seed only that org
+  // - Otherwise seed ALL orgs so every org gets the default CMS rates
+  let orgIds: string[];
+  if (targetOrganizationId) {
+    orgIds = [targetOrganizationId];
+  } else {
+    const orgs = await prisma.organization.findMany({ select: { id: true } });
+    orgIds = orgs.map(o => o.id);
+  }
+  console.log(`[seed-cms-rates] Seeding rates for ${orgIds.length} organization(s)`);
 
   const now = BigInt(Math.floor(Date.now() / 1000));
   let processed = 0;
@@ -140,8 +151,6 @@ export async function seedCmsRates(organizationId?: string): Promise<{
       continue;
     }
 
-    processed++;
-
     // Calculate Medicare national rate (non-facility setting)
     const medicareRate = cmsRecord.nonFacTotal * CONVERSION_FACTOR_2026;
     if (medicareRate <= 0) {
@@ -149,7 +158,9 @@ export async function seedCmsRates(organizationId?: string): Promise<{
       continue;
     }
 
-    // Update the CPT code's standardPrice with the CMS Medicare rate
+    processed++;
+
+    // Update the CPT code's platform-level standardPrice with the CMS Medicare rate
     await prisma.cPTCode.update({
       where: { code: cptCode.code },
       data: {
@@ -159,44 +170,44 @@ export async function seedCmsRates(organizationId?: string): Promise<{
       },
     });
 
-    // Create taxonomy-based rate tiers for each org that has this CPT code
-    const orgId = cptCode.organizationId;
+    // For each org, upsert taxonomy-based rate tiers
+    for (const orgId of orgIds) {
+      for (const [taxonomyCode, taxonomyLabel, multiplier] of TAXONOMY_TIERS) {
+        const standardPrice = Math.round(medicareRate * multiplier * 100) / 100;
+        const contractedPrice = Math.round(standardPrice * 0.85 * 100) / 100;
 
-    for (const [taxonomyCode, taxonomyLabel, multiplier] of TAXONOMY_TIERS) {
-      const standardPrice = Math.round(medicareRate * multiplier * 100) / 100;
-      const contractedPrice = Math.round(standardPrice * 0.85 * 100) / 100;
-
-      try {
-        await prisma.cPTCodeRate.upsert({
-          where: {
-            cptCodeCode_taxonomyCode_organizationId: {
+        try {
+          await prisma.cPTCodeRate.upsert({
+            where: {
+              cptCodeCode_taxonomyCode_organizationId: {
+                cptCodeCode: cptCode.code,
+                taxonomyCode,
+                organizationId: orgId,
+              },
+            },
+            update: {
+              taxonomyLabel,
+              standardPrice,
+              contractedPrice,
+              notes: `2026 CMS Medicare rate × ${(multiplier * 100).toFixed(0)}%. Source: PPRRVU2026_Jan_nonQPP`,
+              updatedAt: now,
+            },
+            create: {
               cptCodeCode: cptCode.code,
               taxonomyCode,
+              taxonomyLabel,
+              standardPrice,
+              contractedPrice,
+              notes: `2026 CMS Medicare rate × ${(multiplier * 100).toFixed(0)}%. Source: PPRRVU2026_Jan_nonQPP`,
               organizationId: orgId,
+              createdAt: now,
+              updatedAt: now,
             },
-          },
-          update: {
-            taxonomyLabel,
-            standardPrice,
-            contractedPrice,
-            notes: `2026 CMS Medicare rate × ${(multiplier * 100).toFixed(0)}%. Source: PPRRVU2026_Jan_nonQPP`,
-            updatedAt: now,
-          },
-          create: {
-            cptCodeCode: cptCode.code,
-            taxonomyCode,
-            taxonomyLabel,
-            standardPrice,
-            contractedPrice,
-            notes: `2026 CMS Medicare rate × ${(multiplier * 100).toFixed(0)}%. Source: PPRRVU2026_Jan_nonQPP`,
-            organizationId: orgId,
-            createdAt: now,
-            updatedAt: now,
-          },
-        });
-        created++;
-      } catch (err: any) {
-        errors.push(`${cptCode.code}/${taxonomyCode}: ${err.message}`);
+          });
+          created++;
+        } catch (err: any) {
+          errors.push(`${cptCode.code}/${taxonomyCode}/${orgId}: ${err.message}`);
+        }
       }
     }
   }

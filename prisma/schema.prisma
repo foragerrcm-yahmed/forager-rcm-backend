@@ -143,7 +143,8 @@ model Organization {
   claims                Claim[]
   rules                 Rule[]
   payors                Payor[]
-  cptCodes              CPTCode[]
+  cptCodes              CPTCode[]          // platform codes visible to all orgs
+  cptCodeRates          CPTCodeRate[]      // org-specific rate overrides
   providerCredentials   ProviderCredential[]
 
   @@map("organizations")
@@ -428,38 +429,40 @@ model CPTCode {
   description    String
   category       String?
   specialty      String?
-  standardPrice  Decimal        @db.Decimal(10, 2)
+  // National Medicare rate (non-facility). Populated by CMS fee schedule seeder.
+  standardPrice  Decimal        @default(0) @db.Decimal(10, 2)
+  // Default contracted rate (85% of standard). Overridden per-org via CPTCodeRate.
   basePrice      Decimal?       @db.Decimal(10, 2)
-  organization   Organization   @relation(fields: [organizationId], references: [id])
-  organizationId String
+  // Optional: org that first created this code (for audit). Nullable so codes can be platform-wide.
+  organization   Organization?  @relation(fields: [organizationId], references: [id])
+  organizationId String?
   createdAt      BigInt         @default(0)
   updatedAt      BigInt         @default(0)
-
   claimServices ClaimService[]
-  // Provider-taxonomy-specific rate tiers (e.g. MD vs NP vs PT rates)
+  // Provider-taxonomy-specific rate tiers (e.g. MD vs NP vs PT rates) — per-org
   rateTiers     CPTCodeRate[]
-
   @@map("cpt_codes")
 }
 
-// Per-taxonomy rate override for a CPT code.
+// Per-taxonomy rate overridee for a CPT code.
 // When a claim service is created, the system looks up the rendering provider's
 // taxonomyCode and applies the matching tier rate instead of the base standardPrice.
 model CPTCodeRate {
-  id              String   @id @default(uuid())
-  cptCode         CPTCode  @relation(fields: [cptCodeCode], references: [code], onDelete: Cascade)
+  id              String       @id @default(uuid())
+  cptCode         CPTCode      @relation(fields: [cptCodeCode], references: [code], onDelete: Cascade)
   cptCodeCode     String
   // Taxonomy code (e.g. "207Q00000X" = Family Medicine MD)
-  // Can also be a license type shorthand (e.g. "NP", "PT", "PA_C") for human-readable config
   taxonomyCode    String
-  taxonomyLabel   String?  // Human-readable label e.g. "Nurse Practitioner"
-  standardPrice   Decimal  @db.Decimal(10, 2)
-  contractedPrice Decimal? @db.Decimal(10, 2)
+  taxonomyLabel   String?      // Human-readable label e.g. "Nurse Practitioner"
+  standardPrice   Decimal      @db.Decimal(10, 2)
+  contractedPrice Decimal?     @db.Decimal(10, 2)
   notes           String?
+  // Per-org rate: each org can have its own rate tier for the same CPT+taxonomy combination.
+  // Seeded initially from CMS data; orgs can override at any time.
+  organization    Organization @relation(fields: [organizationId], references: [id])
   organizationId  String
-  createdAt       BigInt   @default(0)
-  updatedAt       BigInt   @default(0)
-
+  createdAt       BigInt       @default(0)
+  updatedAt       BigInt       @default(0)
   @@unique([cptCodeCode, taxonomyCode, organizationId])
   @@index([cptCodeCode])
   @@index([organizationId])
