@@ -162,8 +162,8 @@ export const createClaim = async (req: Request, res: Response): Promise<void> =>
   try {
     const { claimNumber, patientId, providerId, payorId, organizationId, visitId, serviceDate, billedAmount, paidAmount, status, notes, source, submissionDate, services } = req.body;
 
-    if (!claimNumber || !patientId || !providerId || !payorId || !organizationId || !serviceDate || billedAmount === undefined || !status || !source || !services || services.length === 0) {
-      sendError(res, 400, validationError('CLAIM'), 'Missing required claim fields or services');
+    if (!claimNumber || !patientId || !providerId || !payorId || !organizationId || !serviceDate || billedAmount === undefined || !status || !source) {
+      sendError(res, 400, validationError('CLAIM'), 'Missing required claim fields');
       return;
     }
 
@@ -220,16 +220,18 @@ export const createClaim = async (req: Request, res: Response): Promise<void> =>
         updatedBy: { connect: { id: req.user!.userId } },
         createdAt: BigInt(now),
         updatedAt: BigInt(now),
-        services: {
-          create: services.map((s: any) => ({
-            ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
-            description: s.description || null,
-            quantity: s.quantity,
-            unitPrice: s.unitPrice,
-            totalPrice: s.totalPrice,
-            createdAt: BigInt(now),
-          })),
-        },
+        ...(services && services.length > 0 ? {
+          services: {
+            create: services.map((s: any) => ({
+              ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
+              description: s.description || null,
+              quantity: s.quantity,
+              unitPrice: s.unitPrice,
+              totalPrice: s.totalPrice,
+              createdAt: BigInt(now),
+            })),
+          },
+        } : {}),
         timeline: {
           create: [{
             action: 'Created',
