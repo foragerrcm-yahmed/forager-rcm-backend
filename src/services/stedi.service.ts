@@ -69,15 +69,19 @@ async function stediRequest<T>(
       res.on('end', () => {
         try {
           const parsed = JSON.parse(data);
+          // Stedi returns 200 even for some errors (e.g. eligibility AAA errors)
+          // Check both HTTP status and response body for error indicators
           if (res.statusCode && res.statusCode >= 400) {
-            reject(
-              new StediError(
-                res.statusCode,
-                parsed.error || 'STEDI_ERROR',
-                parsed.message || 'Stedi API error',
-                parsed
-              )
-            );
+            const errorMsg = parsed.message
+              || (parsed.errors?.[0]?.description)
+              || 'Stedi API error';
+            const errorCode = parsed.error || parsed.errors?.[0]?.code || 'STEDI_ERROR';
+            reject(new StediError(res.statusCode, errorCode, errorMsg, parsed));
+          } else if (parsed.status === 'ERROR' && parsed.errors?.length) {
+            // Stedi returned 200 but with error status in body
+            const errorMsg = parsed.errors[0]?.description || 'Stedi returned an error';
+            const errorCode = parsed.errors[0]?.code || 'STEDI_ERROR';
+            reject(new StediError(400, errorCode, errorMsg, parsed));
           } else {
             resolve(parsed as T);
           }
@@ -190,7 +194,24 @@ export async function checkEligibility(
     );
   }
 
-  const requestBody = {
+  // Determine subscriber vs dependent
+  // If insuredType is Dependent, the subscriber info may differ from the patient
+  // subscriberName format: "FirstName LastName" or just use patient info
+  let subscriberFirstName = patient.firstName;
+  let subscriberLastName = patient.lastName;
+  let subscriberDob = formatDateForStedi(patient.dateOfBirth);
+  let subscriberGender = mapGender(patient.gender);
+
+  if (patientInsurance.insuredType === 'Dependent' && patientInsurance.subscriberName) {
+    const parts = patientInsurance.subscriberName.trim().split(/\s+/);
+    subscriberFirstName = parts[0] || patient.firstName;
+    subscriberLastName = parts.slice(1).join(' ') || patient.lastName;
+    if (patientInsurance.subscriberDob) {
+      subscriberDob = formatDateForStedi(patientInsurance.subscriberDob);
+    }
+  }
+
+  const requestBody: any = {
     controlNumber: generateControlNumber(),
     tradingPartnerServiceId,
     provider: {
@@ -199,16 +220,25 @@ export async function checkEligibility(
     },
     subscriber: {
       memberId: patientInsurance.memberId,
-      dateOfBirth: formatDateForStedi(patient.dateOfBirth),
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      gender: mapGender(patient.gender),
+      firstName: subscriberFirstName,
+      lastName: subscriberLastName,
+      ...(subscriberDob ? { dateOfBirth: subscriberDob } : {}),
+      ...(subscriberGender !== 'U' ? { gender: subscriberGender } : {}),
     },
     encounter: {
       serviceTypeCodes: ['30'], // "Health Benefit Plan Coverage" — broad check
-      dateOfService: new Date().toISOString().split('T')[0].replace(/-/g, ''),
     },
   };
+
+  // Add dependent info if patient is different from subscriber
+  if (patientInsurance.insuredType === 'Dependent') {
+    requestBody.dependents = [{
+      firstName: patient.firstName,
+      lastName: patient.lastName,
+      ...(patient.dateOfBirth ? { dateOfBirth: formatDateForStedi(patient.dateOfBirth) } : {}),
+      ...(patient.gender && mapGender(patient.gender) !== 'U' ? { gender: mapGender(patient.gender) } : {}),
+    }];
+  }
 
   // Create audit record before calling Stedi
   const eligibilityCheck = await prisma.eligibilityCheck.create({
@@ -226,9 +256,16 @@ export async function checkEligibility(
   try {
     rawResponse = await stediRequest<any>('POST', '/change/medicalnetwork/eligibility/v3', requestBody);
   } catch (e: any) {
+    // Store the error details for debugging
+    const errorMessage = e instanceof StediError
+      ? `${e.code}: ${e.message}`
+      : e.message;
     await prisma.eligibilityCheck.update({
       where: { id: eligibilityCheck.id },
-      data: { rawResponse: undefined, errorMessage: e.message },
+      data: {
+        rawResponse: e instanceof StediError && e.raw ? e.raw : undefined,
+        errorMessage,
+      },
     });
     throw e;
   }

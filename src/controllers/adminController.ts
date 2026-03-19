@@ -215,8 +215,8 @@ export const seedCmsRatesEndpoint = async (req: Request, res: Response): Promise
 /**
  * POST /api/admin/seed-test-data
  * Creates a complete set of test records for eligibility testing:
- *   - Aetna Payor + PPO Plan (linked to MasterPayor)
- *   - Test Patient "Jane Doe" with Aetna insurance (Stedi sandbox member W000000000)
+ *   - Aetna Payor + PPO Plan (linked to MasterPayor, tradingPartnerServiceId: 60054)
+ *   - Test Patient "John Doe" with Aetna insurance (Stedi sandbox member AETNA9wcSu)
  *   - Test Provider "Dr. Alex Test" (MD, NPI)
  *   - Test Visit (today, Upcoming)
  * Protected by x-admin-seed-secret header.
