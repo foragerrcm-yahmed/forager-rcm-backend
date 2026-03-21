@@ -21,7 +21,6 @@
         "organization_id": "ff145d75-192c-4a7c-afe2-01e045d1dd29"
       }
     },
-
     {
       "_id": "fld_auth",
       "_type": "request_group",
@@ -35,7 +34,12 @@
       "name": "Setup (first-time only)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/auth/setup",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"email\": \"admin@yourpractice.com\",\n  \"password\": \"YourPassword123!\",\n  \"firstName\": \"Your\",\n  \"lastName\": \"Name\",\n  \"organizationName\": \"Your Practice Name\"\n}"
@@ -49,7 +53,12 @@
       "name": "Login",
       "method": "POST",
       "url": "{{ _.base_url }}/api/auth/login",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"email\": \"yahmed@foragerrcm.com\",\n  \"password\": \"YourPassword123!\"\n}"
@@ -63,7 +72,12 @@
       "name": "Get My Profile",
       "method": "GET",
       "url": "{{ _.base_url }}/api/auth/profile",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Returns the currently authenticated user's profile."
     },
     {
@@ -73,14 +87,18 @@
       "name": "Register New User",
       "method": "POST",
       "url": "{{ _.base_url }}/api/auth/register",
-      "headers": [{ "name": "Content-Type", "value": "application/json" }],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
       "body": {
         "mimeType": "application/json",
         "text": "{\n  \"email\": \"newuser@foragerrcm.com\",\n  \"password\": \"Password123!\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"role\": \"Biller\",\n  \"organizationId\": \"{{ _.organization_id }}\"\n}"
       },
       "description": "Roles: Admin, Biller, Provider, FrontDesk"
     },
-
     {
       "_id": "fld_users",
       "_type": "request_group",
@@ -94,7 +112,12 @@
       "name": "List Users",
       "method": "GET",
       "url": "{{ _.base_url }}/api/users?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_users_get",
@@ -103,7 +126,12 @@
       "name": "Get User by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/users/USER_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_users_update",
@@ -113,8 +141,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/users/USER_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -128,9 +162,13 @@
       "name": "Delete User",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/users/USER_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_orgs",
       "_type": "request_group",
@@ -144,7 +182,12 @@
       "name": "List Organizations",
       "method": "GET",
       "url": "{{ _.base_url }}/api/organizations?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_orgs_get",
@@ -153,7 +196,12 @@
       "name": "Get Organization by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/organizations/{{ _.organization_id }}",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_orgs_create",
@@ -163,8 +211,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/organizations",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -179,8 +233,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/organizations/{{ _.organization_id }}",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -194,9 +254,13 @@
       "name": "Delete Organization",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/organizations/ORG_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_patients",
       "_type": "request_group",
@@ -210,7 +274,12 @@
       "name": "List Patients",
       "method": "GET",
       "url": "{{ _.base_url }}/api/patients?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Optional filters: ?search=Jane&source=Forager&includeInsurances=true"
     },
     {
@@ -220,7 +289,12 @@
       "name": "Get Patient by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/patients/PATIENT_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_patients_create",
@@ -230,8 +304,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/patients",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -247,8 +327,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/patients/PATIENT_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -262,9 +348,13 @@
       "name": "Delete Patient",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/patients/PATIENT_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_providers",
       "_type": "request_group",
@@ -278,7 +368,12 @@
       "name": "List Providers",
       "method": "GET",
       "url": "{{ _.base_url }}/api/providers?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_providers_get",
@@ -287,7 +382,12 @@
       "name": "Get Provider by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/providers/PROVIDER_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_providers_create",
@@ -297,8 +397,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/providers",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -313,8 +419,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/providers/PROVIDER_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -328,9 +440,13 @@
       "name": "Delete Provider",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/providers/PROVIDER_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_payors",
       "_type": "request_group",
@@ -344,7 +460,12 @@
       "name": "List Payors",
       "method": "GET",
       "url": "{{ _.base_url }}/api/payors?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_payors_get",
@@ -353,7 +474,12 @@
       "name": "Get Payor by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/payors/PAYOR_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_payors_create",
@@ -363,8 +489,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/payors",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -379,8 +511,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/payors/PAYOR_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -394,9 +532,13 @@
       "name": "Delete Payor",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/payors/PAYOR_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_visits",
       "_type": "request_group",
@@ -410,7 +552,12 @@
       "name": "List Visits",
       "method": "GET",
       "url": "{{ _.base_url }}/api/visits?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Optional filters: ?patientId=&providerId=&status=Scheduled&dateFrom=1700000000&dateTo=1800000000"
     },
     {
@@ -420,7 +567,12 @@
       "name": "Get Visit by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/visits/VISIT_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_visits_create",
@@ -430,8 +582,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/visits",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -447,8 +605,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/visits/VISIT_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -462,9 +626,13 @@
       "name": "Delete Visit",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/visits/VISIT_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_claims",
       "_type": "request_group",
@@ -478,7 +646,12 @@
       "name": "List Claims",
       "method": "GET",
       "url": "{{ _.base_url }}/api/claims?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Optional filters: ?status=Draft&patientId=&providerId="
     },
     {
@@ -488,7 +661,12 @@
       "name": "Get Claim by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/claims/CLAIM_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_claims_create",
@@ -498,8 +676,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/claims",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -515,8 +699,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/claims/CLAIM_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -530,9 +720,13 @@
       "name": "Delete Claim",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/claims/CLAIM_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_cpt",
       "_type": "request_group",
@@ -546,7 +740,12 @@
       "name": "List CPT Codes",
       "method": "GET",
       "url": "{{ _.base_url }}/api/cpt-codes?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Optional filter: ?search=99213"
     },
     {
@@ -556,7 +755,12 @@
       "name": "Get CPT Code by Code",
       "method": "GET",
       "url": "{{ _.base_url }}/api/cpt-codes/99213",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Use the CPT code itself (e.g. 99213) as the ID, not a UUID"
     },
     {
@@ -567,8 +771,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/cpt-codes",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -584,8 +794,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/cpt-codes/99213",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -599,9 +815,13 @@
       "name": "Delete CPT Code",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/cpt-codes/99213",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_insurance",
       "_type": "request_group",
@@ -615,7 +835,12 @@
       "name": "List Insurance Policies",
       "method": "GET",
       "url": "{{ _.base_url }}/api/insurance-policies?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Optional filter: ?patientId=PATIENT_ID_HERE"
     },
     {
@@ -625,7 +850,12 @@
       "name": "Get Insurance Policy by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/insurance-policies/POLICY_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_insurance_create",
@@ -635,8 +865,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/insurance-policies",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -652,8 +888,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/insurance-policies/POLICY_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -667,9 +909,13 @@
       "name": "Delete Insurance Policy",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/insurance-policies/POLICY_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_rules",
       "_type": "request_group",
@@ -683,7 +929,12 @@
       "name": "List Rules",
       "method": "GET",
       "url": "{{ _.base_url }}/api/rules?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_rules_get",
@@ -692,7 +943,12 @@
       "name": "Get Rule by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_rules_create",
@@ -702,8 +958,14 @@
       "method": "POST",
       "url": "{{ _.base_url }}/api/rules",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -718,8 +980,14 @@
       "method": "PUT",
       "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE",
       "headers": [
-        { "name": "Authorization", "value": "Bearer {{ _.token }}" },
-        { "name": "Content-Type", "value": "application/json" }
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
       ],
       "body": {
         "mimeType": "application/json",
@@ -733,7 +1001,12 @@
       "name": "Activate Rule",
       "method": "PATCH",
       "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE/activate",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_rules_deactivate",
@@ -742,7 +1015,12 @@
       "name": "Deactivate Rule",
       "method": "PATCH",
       "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE/deactivate",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_rules_delete",
@@ -751,9 +1029,13 @@
       "name": "Delete Rule",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/rules/RULE_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_rule_exec",
       "_type": "request_group",
@@ -767,7 +1049,12 @@
       "name": "List Rule Executions",
       "method": "GET",
       "url": "{{ _.base_url }}/api/rule-executions?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_rule_exec_get",
@@ -776,9 +1063,13 @@
       "name": "Get Rule Execution by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/rule-executions/EXECUTION_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_attachments",
       "_type": "request_group",
@@ -792,7 +1083,12 @@
       "name": "List Attachments",
       "method": "GET",
       "url": "{{ _.base_url }}/api/attachments?page=1&limit=20",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "description": "Optional filters: ?patientId=&visitId=&claimId="
     },
     {
@@ -802,7 +1098,12 @@
       "name": "Get Attachment by ID",
       "method": "GET",
       "url": "{{ _.base_url }}/api/attachments/ATTACHMENT_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
     {
       "_id": "req_attachments_upload",
@@ -811,14 +1112,35 @@
       "name": "Upload Attachment",
       "method": "POST",
       "url": "{{ _.base_url }}/api/attachments",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
       "body": {
         "mimeType": "multipart/form-data",
         "params": [
-          { "name": "file", "type": "file", "value": "" },
-          { "name": "patientId", "type": "text", "value": "PATIENT_ID_HERE" },
-          { "name": "visitId", "type": "text", "value": "VISIT_ID_HERE" },
-          { "name": "attachmentType", "type": "text", "value": "ClinicalNote" }
+          {
+            "name": "file",
+            "type": "file",
+            "value": ""
+          },
+          {
+            "name": "patientId",
+            "type": "text",
+            "value": "PATIENT_ID_HERE"
+          },
+          {
+            "name": "visitId",
+            "type": "text",
+            "value": "VISIT_ID_HERE"
+          },
+          {
+            "name": "attachmentType",
+            "type": "text",
+            "value": "ClinicalNote"
+          }
         ]
       },
       "description": "Use multipart/form-data. attachmentType options: ClinicalNote, EOB, InsuranceCard, LabResult, Referral, Other"
@@ -830,9 +1152,13 @@
       "name": "Delete Attachment",
       "method": "DELETE",
       "url": "{{ _.base_url }}/api/attachments/ATTACHMENT_ID_HERE",
-      "headers": [{ "name": "Authorization", "value": "Bearer {{ _.token }}" }]
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ]
     },
-
     {
       "_id": "fld_health",
       "_type": "request_group",
@@ -847,6 +1173,1482 @@
       "method": "GET",
       "url": "{{ _.base_url }}/health",
       "description": "No auth required. Returns {status: 'ok'} if the server is running."
+    },
+    {
+      "_id": "req_f67f1730ec8c419ab2da",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/claims/:id/status",
+      "name": "Update Claim Status",
+      "description": "Valid statuses: Draft, Ready, Submitted, Accepted, Rejected, Paid, Denied, Appealed, Voided",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"status\": \"Submitted\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_826fadabce0748969c98",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_75c57090f3c2459995ac",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 10,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_8e31ed34cd834b418a8b",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/claims/:id/submit",
+      "name": "Submit Claim to Stedi (837P)",
+      "description": "Submits the claim as an 837P professional claim to Stedi. Claim must be in Ready or Draft status.",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_9d655ae8401e4d02894f",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 20,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_8de2bd7556f34e60ba27",
+      "_type": "request",
+      "parentId": "fld_claims",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/claims/:id/status-check",
+      "name": "Check Claim Status via Stedi (276/277)",
+      "description": "Real-time claim status check via Stedi 276/277 transaction.",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_a55985ab87514b9b95da",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 30,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_c0aaf3f825954de7b97f",
+      "_type": "request",
+      "parentId": "fld_cpt",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/cpt-codes/:id/toggle-active",
+      "name": "Toggle CPT Code Active",
+      "description": "",
+      "method": "PATCH",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_adc10cb7137140bfad17",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 10,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_5f640360c6c643fbb91f",
+      "_type": "request_group",
+      "parentId": "fld_cpt",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "CPT Code Rates",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 20
+    },
+    {
+      "_id": "req_a79cc71c033c40a4995b",
+      "_type": "request",
+      "parentId": "fld_5f640360c6c643fbb91f",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/cpt-codes/:id/rates",
+      "name": "List CPT Code Rates",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_b9d56f1eb2cc43e881d1",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_9a328b88f1a34af7a95e",
+      "_type": "request",
+      "parentId": "fld_5f640360c6c643fbb91f",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/cpt-codes/:id/rates",
+      "name": "Create CPT Code Rate",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"taxonomyCode\": \"207R00000X\",\n  \"rate\": 145.0,\n  \"effectiveDate\": 1735689600\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_3529824d596d4bf8a97d",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_a9e68db18fa34a7fa670",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_434a29f4e98a4458918a",
+      "_type": "request",
+      "parentId": "fld_5f640360c6c643fbb91f",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/cpt-codes/:id/rates/:rateId",
+      "name": "Update CPT Code Rate",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"rate\": 150.0\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_0b87fad8f71549a1bb02",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_acc0c47be1664840b8f3",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_3a765ff5d5ec431db2aa",
+      "_type": "request",
+      "parentId": "fld_5f640360c6c643fbb91f",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/cpt-codes/:id/rates/:rateId",
+      "name": "Delete CPT Code Rate",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_d62aa223e0ac490ca441",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_be9001f80add47559e2b",
+      "_type": "request_group",
+      "parentId": "fld_visits",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "Visit Diagnoses",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 10
+    },
+    {
+      "_id": "req_56c052fe934043838835",
+      "_type": "request",
+      "parentId": "fld_be9001f80add47559e2b",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/visits/:visitId/diagnoses",
+      "name": "List Visit Diagnoses",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_f5e68fd38f5545cc9701",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_7bfce6df40924ec9995d",
+      "_type": "request",
+      "parentId": "fld_be9001f80add47559e2b",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/visits/:visitId/diagnoses",
+      "name": "Add Visit Diagnosis",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"diagnosisCodeId\": \"<diagnosis_code_id>\",\n  \"isPrimary\": true,\n  \"sortOrder\": 1\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_7cba169bc2fb4a73b012",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_34a13519288a4702ad70",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_4ab3349f18434fae991e",
+      "_type": "request",
+      "parentId": "fld_be9001f80add47559e2b",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/visits/:visitId/diagnoses/:diagnosisId",
+      "name": "Update Visit Diagnosis",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"isPrimary\": false,\n  \"sortOrder\": 2\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_5271312c66c047d7a2e9",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_12bdc4532b57447d9e73",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_9354afdc5b7045bd8403",
+      "_type": "request",
+      "parentId": "fld_be9001f80add47559e2b",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/visits/:visitId/diagnoses/:diagnosisId",
+      "name": "Remove Visit Diagnosis",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_51bc3fbb4c914d21bbc4",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_51fa62f032a141b9b88f",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "\u2705 Eligibility",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1050
+    },
+    {
+      "_id": "req_636ae33dd57f48f187bf",
+      "_type": "request",
+      "parentId": "fld_51fa62f032a141b9b88f",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/eligibility/check",
+      "name": "Run Eligibility Check",
+      "description": "Triggers a real-time 270/271 eligibility check via Stedi. patientInsuranceId required; visitId optional.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"patientInsuranceId\": \"<patient_insurance_id>\",\n  \"visitId\": \"<visit_id>\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_fa08acce506c4b308441",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_33f77c552b4e47dfb7cf",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_0884fab5dd014c60b514",
+      "_type": "request",
+      "parentId": "fld_51fa62f032a141b9b88f",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/eligibility",
+      "name": "List Eligibility Checks",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "patientId",
+          "value": "",
+          "id": "req_c769019d93e445028ba4",
+          "disabled": true
+        },
+        {
+          "name": "visitId",
+          "value": "",
+          "id": "req_bb75fcbc4ce94e3a9095",
+          "disabled": true
+        },
+        {
+          "name": "patientInsuranceId",
+          "value": "",
+          "id": "req_c46b4c13781b436abc28",
+          "disabled": true
+        },
+        {
+          "name": "limit",
+          "value": "20",
+          "id": "req_0667df190f684fa09a96",
+          "disabled": true
+        },
+        {
+          "name": "offset",
+          "value": "0",
+          "id": "req_c556d694c26e44bf9934",
+          "disabled": true
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_67118965ec7644488566",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_c36908f830344126a6b6",
+      "_type": "request",
+      "parentId": "fld_51fa62f032a141b9b88f",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/eligibility/:id",
+      "name": "Get Eligibility Check",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_3d5980cc00e948c487f5",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_1e0ef643ee4240ab803c",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "\ud83d\udd0c Stedi Direct (Sandbox)",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1060
+    },
+    {
+      "_id": "req_bb2d136670684ce0a290",
+      "_type": "request",
+      "parentId": "fld_1e0ef643ee4240ab803c",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{stedi_base_url}}/change/medicalnetwork/eligibility/v3",
+      "name": "Eligibility \u2014 Aetna Subscriber Only (AETNA9wcSu / John Doe)",
+      "description": "Stedi sandbox test \u2014 Aetna subscriber only.\n\u2022 No dateOfBirth on subscriber (omit it \u2014 Stedi flags real-looking dates as PII).\n\u2022 NPI 1999999984 passes check-digit validation.\n\u2022 Returns active medical coverage 271 response.\n\u2022 tradingPartnerServiceId 60054 = Aetna sandbox.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"controlNumber\": \"123456789\",\n  \"tradingPartnerServiceId\": \"60054\",\n  \"provider\": {\n    \"organizationName\": \"Provider Name\",\n    \"npi\": \"1999999984\"\n  },\n  \"subscriber\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"memberId\": \"AETNA9wcSu\"\n  },\n  \"encounter\": {\n    \"serviceTypeCodes\": [\n      \"30\"\n    ]\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Key {{stedi_api_key}}",
+          "id": "req_de25059691b0484e9673",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_5d89042aecd34c21ba53",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_64e0939724e74c628dd4",
+      "_type": "request",
+      "parentId": "fld_1e0ef643ee4240ab803c",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{stedi_base_url}}/change/medicalnetwork/eligibility/v3",
+      "name": "Eligibility \u2014 Aetna Dependent (AETNA9wcSu / Jordan Doe)",
+      "description": "Stedi sandbox \u2014 Aetna dependent. Jordan Doe (DOB 20010714) is John's child. Dependent info returned in dependents[] array.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"controlNumber\": \"987654321\",\n  \"tradingPartnerServiceId\": \"60054\",\n  \"provider\": {\n    \"organizationName\": \"Provider Name\",\n    \"npi\": \"1999999984\"\n  },\n  \"subscriber\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"memberId\": \"AETNA9wcSu\"\n  },\n  \"dependents\": [\n    {\n      \"firstName\": \"Jordan\",\n      \"lastName\": \"Doe\",\n      \"dateOfBirth\": \"20010714\"\n    }\n  ],\n  \"encounter\": {\n    \"serviceTypeCodes\": [\n      \"30\"\n    ]\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Key {{stedi_api_key}}",
+          "id": "req_c5201c21d707400a8634",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_1b7b62f568a44bf39ac5",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_625b4b8aded7460cb832",
+      "_type": "request",
+      "parentId": "fld_1e0ef643ee4240ab803c",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{stedi_base_url}}/change/medicalnetwork/eligibility/v3",
+      "name": "Eligibility \u2014 Aetna Subscriber Only (AETNA12345 / Jane Doe)",
+      "description": "Stedi sandbox \u2014 Aetna subscriber only. Jane Doe / AETNA12345 / DOB 20040404.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"controlNumber\": \"111222333\",\n  \"tradingPartnerServiceId\": \"60054\",\n  \"provider\": {\n    \"organizationName\": \"Provider Name\",\n    \"npi\": \"1999999984\"\n  },\n  \"subscriber\": {\n    \"firstName\": \"Jane\",\n    \"lastName\": \"Doe\",\n    \"memberId\": \"AETNA12345\",\n    \"dateOfBirth\": \"20040404\"\n  },\n  \"encounter\": {\n    \"serviceTypeCodes\": [\n      \"30\"\n    ]\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Key {{stedi_api_key}}",
+          "id": "req_3e4f61ba8b2044018d04",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_38d7a5c46a9747c6a9c8",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_2e5fdf9bd21642d08439",
+      "_type": "request",
+      "parentId": "fld_1e0ef643ee4240ab803c",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{stedi_base_url}}/change/medicalnetwork/eligibility/v3",
+      "name": "Eligibility \u2014 UnitedHealthcare Subscriber (UHC0000001)",
+      "description": "Stedi sandbox \u2014 UnitedHealthcare subscriber-only test case.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"controlNumber\": \"444555666\",\n  \"tradingPartnerServiceId\": \"87726\",\n  \"provider\": {\n    \"organizationName\": \"Provider Name\",\n    \"npi\": \"1999999984\"\n  },\n  \"subscriber\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"memberId\": \"UHC0000001\"\n  },\n  \"encounter\": {\n    \"serviceTypeCodes\": [\n      \"30\"\n    ]\n  }\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Key {{stedi_api_key}}",
+          "id": "req_30ca4a1871904208a419",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_33f08192a6494e57b4b9",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_ae7c6cb42e6b44749d89",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "\ud83e\ude7a Diagnosis Codes (ICD-10)",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1070
+    },
+    {
+      "_id": "req_0b7902604dcc4511bdfa",
+      "_type": "request",
+      "parentId": "fld_ae7c6cb42e6b44749d89",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/diagnosis-codes",
+      "name": "List Diagnosis Codes",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "search",
+          "value": "",
+          "id": "req_dc6f77adf4f3497fa3e2",
+          "disabled": true
+        },
+        {
+          "name": "active",
+          "value": "true",
+          "id": "req_0a37127b5b2e4d81b530",
+          "disabled": true
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_6fd01e08713d40e7996c",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_6f4c889981cc4ada9f4e",
+      "_type": "request",
+      "parentId": "fld_ae7c6cb42e6b44749d89",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/diagnosis-codes/:id",
+      "name": "Get Diagnosis Code",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_9c346ea043454335aa91",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_74cd8d3eb46947a0a3e9",
+      "_type": "request",
+      "parentId": "fld_ae7c6cb42e6b44749d89",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/diagnosis-codes",
+      "name": "Create Diagnosis Code",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"code\": \"M54.5\",\n  \"description\": \"Low back pain\",\n  \"organizationId\": \"{{org_id}}\",\n  \"source\": \"Forager\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_c451c3c244c64b9b8792",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_9926cd055f974efa97cd",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_8f2de32443334c41971a",
+      "_type": "request",
+      "parentId": "fld_ae7c6cb42e6b44749d89",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/diagnosis-codes/:id",
+      "name": "Update Diagnosis Code",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"description\": \"Low back pain, updated\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_785d49cb643a41c48954",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_82415d623ac94b0eb5af",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_0e9a9e3fdc2743e198a8",
+      "_type": "request",
+      "parentId": "fld_ae7c6cb42e6b44749d89",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/diagnosis-codes/:id/toggle-active",
+      "name": "Toggle Diagnosis Code Active",
+      "description": "",
+      "method": "PATCH",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_ca290b1ef5bc4394b893",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_b5940a65a6b94d38bfdc",
+      "_type": "request",
+      "parentId": "fld_ae7c6cb42e6b44749d89",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/diagnosis-codes/:id",
+      "name": "Delete Diagnosis Code",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_98e845a0bdc14beea996",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 6,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_7f1d6e76a7cf435db604",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "\ud83d\uddc2\ufe0f Master Payors",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1080
+    },
+    {
+      "_id": "req_efdddd1757e54d02ab46",
+      "_type": "request",
+      "parentId": "fld_7f1d6e76a7cf435db604",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors",
+      "name": "List Master Payors",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [
+        {
+          "name": "search",
+          "value": "aetna",
+          "id": "req_1c14209db241442f8b27",
+          "disabled": true
+        },
+        {
+          "name": "flat",
+          "value": "1",
+          "id": "req_d06e96702f394e809051",
+          "disabled": true
+        }
+      ],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_9669ae7940264786b5a0",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_fef438920f86434b8394",
+      "_type": "request",
+      "parentId": "fld_7f1d6e76a7cf435db604",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors/:id",
+      "name": "Get Master Payor",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_dd8cd3f285e64b44b3bd",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_68b52eb2e04a40b7bfae",
+      "_type": "request",
+      "parentId": "fld_7f1d6e76a7cf435db604",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors/:id/enable",
+      "name": "Enable Master Payor for Org",
+      "description": "",
+      "method": "POST",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_b8e6481d0a0d4e52880b",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_bcad6f9d3fbc45c98ed0",
+      "_type": "request",
+      "parentId": "fld_7f1d6e76a7cf435db604",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors/:id/enable",
+      "name": "Disable Master Payor for Org",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_198105e510914c489362",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_c1d6720a78204c78955e",
+      "_type": "request",
+      "parentId": "fld_7f1d6e76a7cf435db604",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors",
+      "name": "Upsert Master Payor (Admin)",
+      "description": "",
+      "method": "PUT",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"payors\": [\n    {\n      \"primaryPayorId\": \"60054\",\n      \"name\": \"Aetna\",\n      \"aliases\": [\n        \"Aetna Health\"\n      ],\n      \"category\": \"Commercial\"\n    }\n  ]\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_979e7aeacb4e4baca433",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_bad93f1f8e3e4608b27b",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 5,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_5d8bf6fa9e694484a5e9",
+      "_type": "request_group",
+      "parentId": "fld_7f1d6e76a7cf435db604",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "Credentials",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 10
+    },
+    {
+      "_id": "req_3ef40e4125ea4881975c",
+      "_type": "request",
+      "parentId": "fld_5d8bf6fa9e694484a5e9",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors/credentials",
+      "name": "List Provider Credentials",
+      "description": "",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_f165183ce0cb4479adb6",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_0b0cfeddc2f5439caef7",
+      "_type": "request",
+      "parentId": "fld_5d8bf6fa9e694484a5e9",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors/credentials",
+      "name": "Create Provider Credential",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"masterPayorId\": \"<master_payor_id>\",\n  \"credentialType\": \"ERA\",\n  \"username\": \"user\",\n  \"password\": \"pass\",\n  \"notes\": \"\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_55019e260407444a8192",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_c5961799adfa41398787",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_42a93fcbe0484baf914c",
+      "_type": "request",
+      "parentId": "fld_5d8bf6fa9e694484a5e9",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/master-payors/credentials/:credId",
+      "name": "Delete Provider Credential",
+      "description": "",
+      "method": "DELETE",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}",
+          "id": "req_36cc3b04e4e14c4da70e",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_f22eb23679e84395a38a",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "\ud83d\udd27 Admin (Seed)",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1090
+    },
+    {
+      "_id": "req_d652f47a9a144188912e",
+      "_type": "request",
+      "parentId": "fld_f22eb23679e84395a38a",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/admin/seed-test-data",
+      "name": "Seed Test Data",
+      "description": "Creates Aetna (Test) payor, plan, John Doe patient (memberId: AETNA9wcSu \u2014 no DOB), Dr. Alex Test provider, and an upcoming visit. Safe to run multiple times (upsert).",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "x-admin-seed-secret",
+          "value": "{{admin_seed_secret}}",
+          "id": "req_472bb0a116894c48b412",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_484ae6d2a90845138f2c",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_40bde6124ffd499c8cd2",
+      "_type": "request",
+      "parentId": "fld_f22eb23679e84395a38a",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/admin/seed-master-payors",
+      "name": "Seed Master Payors",
+      "description": "Syncs master payor list from Stedi into the MasterPayor table.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "x-admin-seed-secret",
+          "value": "{{admin_seed_secret}}",
+          "id": "req_4efdd94186e34615bd66",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_374cbf06a6704d24a31f",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 2,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_589c221aa5bc4ed2aab2",
+      "_type": "request",
+      "parentId": "fld_f22eb23679e84395a38a",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/admin/seed-cms-rates",
+      "name": "Seed CMS Rates (2026)",
+      "description": "Seeds CPTCodeRate records from the 2026 CMS Physician Fee Schedule.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "x-admin-seed-secret",
+          "value": "{{admin_seed_secret}}",
+          "id": "req_9bc2982e9ff242ab89b5",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_f3c0a42e76b44b05a678",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 3,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "req_e26d448c2b324297b6bb",
+      "_type": "request",
+      "parentId": "fld_f22eb23679e84395a38a",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/admin/seed-icd10-codes",
+      "name": "Seed ICD-10 Codes",
+      "description": "Seeds common ICD-10-CM diagnosis codes for all orgs.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "x-admin-seed-secret",
+          "value": "{{admin_seed_secret}}",
+          "id": "req_8f2de9eac42944c0bb6d",
+          "disabled": false
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_404597bfc8d8403284ab",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 4,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
+    },
+    {
+      "_id": "fld_25ef2b02136d4f8586fe",
+      "_type": "request_group",
+      "parentId": "wrk_forager",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "name": "\ud83d\udd14 Stedi Webhook",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": 1095
+    },
+    {
+      "_id": "req_fdb5663c6a164dbe8086",
+      "_type": "request",
+      "parentId": "fld_25ef2b02136d4f8586fe",
+      "modified": 1774122833017,
+      "created": 1774122833017,
+      "url": "{{base_url}}/api/webhooks/stedi",
+      "name": "Stedi Webhook (POST)",
+      "description": "No JWT auth \u2014 Stedi calls this directly. Controller validates STEDI_WEBHOOK_SECRET env var if set.",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"event\": \"claim.acknowledged\",\n  \"claimId\": \"<stedi_claim_id>\",\n  \"status\": \"Accepted\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json",
+          "id": "req_d33d2e5c7066447eb13d",
+          "disabled": false
+        },
+        {
+          "name": "x-stedi-webhook-secret",
+          "value": "<webhook_secret>",
+          "id": "req_0ad6156458fa4463a3be",
+          "disabled": false
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": 1,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global"
     }
   ]
 }
