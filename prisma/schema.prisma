@@ -233,8 +233,27 @@ model PatientInsurance {
   updatedAt            BigInt       @default(0)
 
   eligibilityChecks    EligibilityCheck[]
+  dependents           InsuranceDependent[]
 
   @@map("patient_insurances")
+}
+
+// Dependents covered under a PatientInsurance policy.
+// firstName, lastName, and dateOfBirth (BigInt Unix seconds) are required
+// for Stedi eligibility checks (270 dependent loop).
+model InsuranceDependent {
+  id                  String           @id @default(uuid())
+  patientInsurance    PatientInsurance @relation(fields: [patientInsuranceId], references: [id], onDelete: Cascade)
+  patientInsuranceId  String
+  firstName           String
+  lastName            String
+  dateOfBirth         BigInt?          // Unix timestamp (seconds) — same convention as Patient.dateOfBirth
+  relationship        String?          // e.g. "Child", "Spouse", "Other" — informational only
+  createdAt           BigInt           @default(0)
+  updatedAt           BigInt           @default(0)
+
+  @@index([patientInsuranceId])
+  @@map("insurance_dependents")
 }
 
 model Provider {

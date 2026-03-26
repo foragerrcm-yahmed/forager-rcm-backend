@@ -145,11 +145,12 @@ export async function checkEligibility(
     throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
   }
 
-  // Load the PatientInsurance record with patient, plan, payor, and masterPayor
+  // Load the PatientInsurance record with patient, plan, payor, masterPayor, and dependents
   const patientInsurance = await prisma.patientInsurance.findUniqueOrThrow({
     where: { id: patientInsuranceId },
     include: {
       patient: true,
+      dependents: { orderBy: { createdAt: 'asc' } },
       plan: {
         include: {
           payor: {
@@ -230,8 +231,26 @@ export async function checkEligibility(
     },
   };
 
-  // Add dependent info if patient is different from subscriber
-  if (patientInsurance.insuredType === 'Dependent') {
+  // Build dependents array for the 270 request.
+  //
+  // Priority logic:
+  //   1. If InsuranceDependent records exist on the policy, use them — these are
+  //      explicitly managed dependents (e.g. Jordan Doe, DOB 20010714).
+  //   2. If insuredType === 'Dependent' and no InsuranceDependent records exist,
+  //      fall back to the patient themselves as the single dependent (legacy behaviour).
+  //
+  // Stedi requires dateOfBirth in YYYYMMDD format for dependents.
+  const storedDependents: any[] = (patientInsurance as any).dependents ?? [];
+
+  if (storedDependents.length > 0) {
+    // Use the explicitly stored dependent records
+    requestBody.dependents = storedDependents.map((dep: any) => ({
+      firstName: dep.firstName,
+      lastName: dep.lastName,
+      ...(dep.dateOfBirth ? { dateOfBirth: formatDateForStedi(dep.dateOfBirth) } : {}),
+    }));
+  } else if (patientInsurance.insuredType === 'Dependent') {
+    // Legacy fallback: patient is the dependent
     requestBody.dependents = [{
       firstName: patient.firstName,
       lastName: patient.lastName,
