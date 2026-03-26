@@ -23,8 +23,14 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     const payload = verifyToken(token);
     req.user = payload;
     next();
-  } catch (error) {
-    res.status(403).json({ error: 'Invalid or expired token' });
+  } catch (error: any) {
+    // Always return 401 (not 403) for any token verification failure so the
+    // frontend's apiRequest handler clears the stored token and redirects to
+    // /login automatically. 403 is reserved for authorisation failures (wrong
+    // role), not authentication failures (bad/expired token).
+    const message =
+      error?.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid or expired token';
+    res.status(401).json({ error: message });
   }
 };
 
@@ -44,4 +50,3 @@ export const requireRole = (...allowedRoles: string[]) => {
     next();
   };
 };
-
