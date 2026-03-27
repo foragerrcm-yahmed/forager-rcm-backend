@@ -31,6 +31,7 @@ exports.fetchStediPayorList = fetchStediPayorList;
 exports.searchStediPayors = searchStediPayors;
 const https_1 = __importDefault(require("https"));
 const prisma_1 = require("../../generated/prisma");
+const claimStatusService_1 = require("./claimStatusService");
 const prisma = new prisma_1.PrismaClient();
 const STEDI_BASE_URL = 'https://healthcare.us.stedi.com/2024-04-01';
 const STEDI_API_KEY = process.env.STEDI_API_KEY || '';
@@ -495,17 +496,8 @@ async function processEra835(payload, organizationId) {
             return Number(svc.cptCode.basePrice);
         return null;
     }
-    // ── Helper: determine claim status from line-item totals ─────────────────────
-    function resolveStatus(totalPaid, totalContracted, patientResponsibility) {
-        if (totalPaid === 0) {
-            return patientResponsibility > 0 ? 'DeniedPatientResponsibility' : 'Denied';
-        }
-        if (totalPaid > totalContracted)
-            return 'Overpaid';
-        if (totalPaid < totalContracted)
-            return 'ShortPaid';
-        return 'Paid';
-    }
+    // resolveStatus delegates to the shared claimStatusService utility
+    const resolveStatus = claimStatusService_1.resolveClaimStatus;
     // ── Process Stedi-format (nested) entries ────────────────────────────────────
     for (const { pi, financialInfo } of eraPaymentInfos) {
         const cpi = pi.claimPaymentInfo ?? {};

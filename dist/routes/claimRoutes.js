@@ -13,5 +13,6 @@ router.put('/:id/status', (0, auth_1.requireRole)('Admin', 'Biller'), claimContr
 router.post('/:id/submit', (0, auth_1.requireRole)('Admin', 'Biller'), claimsStediController_1.submitClaimToStedi);
 router.get('/:id/status-check', (0, auth_1.requireRole)('Admin', 'Biller', 'Provider', 'FrontDesk'), claimsStediController_1.checkClaimStatusFromStedi);
 router.put('/:id', (0, auth_1.requireRole)('Admin', 'Biller'), claimController_1.updateClaim);
+router.post('/:id/payment', (0, auth_1.requireRole)('Admin', 'Biller', 'FrontDesk'), claimController_1.postPatientPayment);
 router.delete('/:id', (0, auth_1.requireRole)('Admin', 'Biller'), claimController_1.deleteClaim);
 exports.default = router;

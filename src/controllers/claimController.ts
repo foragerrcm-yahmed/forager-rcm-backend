@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient, DataSource } from '../../generated/prisma';
+import { applyClaimStatusRecalculation, recalculateClaimStatus } from '../services/claimStatusService';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, duplicate, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
 import { handlePrismaError } from '../utils/prismaErrors';
@@ -380,6 +381,77 @@ export const updateClaimStatus = async (req: Request, res: Response): Promise<vo
         submissionDate: claim.submissionDate ? Number(claim.submissionDate) : null,
         createdAt: Number(claim.createdAt),
         updatedAt: Number(claim.updatedAt),
+      },
+    });
+  } catch (error) {
+    handlePrismaError(res, error, 'CLAIM');
+  }
+};
+
+/**
+ * POST /claims/:id/payment
+ * Post a patient payment against a claim and recalculate its status.
+ * Body: { amount: number, paymentMethod?: string, notes?: string }
+ */
+export const postPatientPayment = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { amount, paymentMethod, notes } = req.body;
+    const now = Math.floor(Date.now() / 1000);
+
+    if (amount == null || isNaN(Number(amount)) || Number(amount) <= 0) {
+      sendError(res, 400, validationError('CLAIM'), 'A positive payment amount is required');
+      return;
+    }
+
+    const existingClaim = await prisma.claim.findUnique({
+      where: { id: id as string },
+      include: { payor: { select: { payorCategory: true } } },
+    });
+    if (!existingClaim || existingClaim.organizationId !== (req.user?.organizationId as string | undefined)) {
+      sendError(res, 403, forbidden('CLAIM'), 'Claim not found or outside your organization');
+      return;
+    }
+
+    // Create a PaymentPosting record for the patient payment
+    await prisma.paymentPosting.create({
+      data: {
+        claimId: id as string,
+        organizationId: req.user!.organizationId as string,
+        payerName: 'Patient',
+        billedAmount: existingClaim.billedAmount,
+        paidAmount: Number(amount),
+        isAutoPosted: false,
+        postedById: req.user!.userId,
+        postedAt: new Date(),
+      },
+    });
+
+    // Recalculate and persist the new claim status
+    const newStatus = await applyClaimStatusRecalculation(
+      id as string,
+      req.user!.userId,
+      now
+    );
+
+    // Add a timeline entry
+    await prisma.claimTimeline.create({
+      data: {
+        claimId: id as string,
+        action: 'Patient Payment Posted',
+        notes: `$${Number(amount).toFixed(2)} received from patient${notes ? ` — ${notes}` : ''}. Status updated to ${newStatus}.`,
+        status: newStatus,
+        createdAt: BigInt(now),
+        userId: req.user!.userId,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        claimId: id,
+        amountPosted: Number(amount),
+        newStatus,
       },
     });
   } catch (error) {

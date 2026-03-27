@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteClaim = exports.updateClaimStatus = exports.updateClaim = exports.createClaim = exports.getClaimById = exports.getClaims = void 0;
+exports.deleteClaim = exports.postPatientPayment = exports.updateClaimStatus = exports.updateClaim = exports.createClaim = exports.getClaimById = exports.getClaims = void 0;
 const prisma_1 = require("../../generated/prisma");
+const claimStatusService_1 = require("../services/claimStatusService");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
@@ -360,6 +361,68 @@ const updateClaimStatus = async (req, res) => {
     }
 };
 exports.updateClaimStatus = updateClaimStatus;
+/**
+ * POST /claims/:id/payment
+ * Post a patient payment against a claim and recalculate its status.
+ * Body: { amount: number, paymentMethod?: string, notes?: string }
+ */
+const postPatientPayment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { amount, paymentMethod, notes } = req.body;
+        const now = Math.floor(Date.now() / 1000);
+        if (amount == null || isNaN(Number(amount)) || Number(amount) <= 0) {
+            (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('CLAIM'), 'A positive payment amount is required');
+            return;
+        }
+        const existingClaim = await prisma.claim.findUnique({
+            where: { id: id },
+            include: { payor: { select: { payorCategory: true } } },
+        });
+        if (!existingClaim || existingClaim.organizationId !== req.user?.organizationId) {
+            (0, errors_1.sendError)(res, 403, (0, errors_1.forbidden)('CLAIM'), 'Claim not found or outside your organization');
+            return;
+        }
+        // Create a PaymentPosting record for the patient payment
+        await prisma.paymentPosting.create({
+            data: {
+                claimId: id,
+                organizationId: req.user.organizationId,
+                payerName: 'Patient',
+                billedAmount: existingClaim.billedAmount,
+                paidAmount: Number(amount),
+                isAutoPosted: false,
+                postedById: req.user.userId,
+                postedAt: new Date(),
+            },
+        });
+        // Recalculate and persist the new claim status
+        const newStatus = await (0, claimStatusService_1.applyClaimStatusRecalculation)(id, req.user.userId, now);
+        // Add a timeline entry
+        await prisma.claimTimeline.create({
+            data: {
+                claimId: id,
+                action: 'Patient Payment Posted',
+                notes: `$${Number(amount).toFixed(2)} received from patient${notes ? ` — ${notes}` : ''}. Status updated to ${newStatus}.`,
+                status: newStatus,
+                createdAt: BigInt(now),
+                userId: req.user.userId,
+            },
+        });
+        res.status(200).json({
+            success: true,
+            data: {
+                claimId: id,
+                amountPosted: Number(amount),
+                newStatus,
+            },
+        });
+    }
+    catch (error) {
+        (0, prismaErrors_1.handlePrismaError)(res, error, 'CLAIM');
+    }
+};
+exports.postPatientPayment = postPatientPayment;
 const deleteClaim = async (req, res) => {
     try {
         const { id } = req.params;

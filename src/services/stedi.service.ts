@@ -20,6 +20,7 @@
 
 import https from 'https';
 import { PrismaClient, ClaimStatus } from '../../generated/prisma';
+import { resolveClaimStatus } from './claimStatusService';
 
 const prisma = new PrismaClient();
 
@@ -566,19 +567,8 @@ export async function processEra835(payload: any, organizationId: string) {
     return null;
   }
 
-  // ── Helper: determine claim status from line-item totals ─────────────────────
-  function resolveStatus(
-    totalPaid: number,
-    totalContracted: number,
-    patientResponsibility: number
-  ): ClaimStatus {
-    if (totalPaid === 0) {
-      return patientResponsibility > 0 ? 'DeniedPatientResponsibility' : 'Denied';
-    }
-    if (totalPaid > totalContracted) return 'Overpaid';
-    if (totalPaid < totalContracted) return 'ShortPaid';
-    return 'Paid';
-  }
+  // resolveStatus delegates to the shared claimStatusService utility
+  const resolveStatus = resolveClaimStatus;
 
   // ── Process Stedi-format (nested) entries ────────────────────────────────────
   for (const { pi, financialInfo } of eraPaymentInfos) {
