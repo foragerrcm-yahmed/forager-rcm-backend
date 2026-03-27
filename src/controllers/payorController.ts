@@ -44,6 +44,9 @@ export const getPayors = async (req: Request, res: Response): Promise<void> => {
             select: { id: true, firstName: true, lastName: true }
           },
           plans: true,
+          masterPayor: {
+            select: { id: true, displayName: true, primaryPayorId: true, stediId: true }
+          },
         }
       }),
       prisma.payor.count({ where }),
