@@ -193,7 +193,7 @@ exports.createPayor = createPayor;
 const updatePayor = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, externalPayorId, payorCategory, billingTaxonomy, address, phone, portalUrl, plans } = req.body;
+        const { name, externalPayorId, payorCategory, billingTaxonomy, address, phone, portalUrl, stediPayorId, plans } = req.body;
         const now = Math.floor(Date.now() / 1000);
         // Ensure user is updating a payor within their own organization
         const existingPayor = await prisma.payor.findUnique({ where: { id } });
@@ -243,6 +243,7 @@ const updatePayor = async (req, res) => {
                 address,
                 phone,
                 portalUrl,
+                ...(stediPayorId !== undefined ? { stediPayorId } : {}),
                 updatedById: req.user.userId,
                 updatedAt: BigInt(now),
             },
