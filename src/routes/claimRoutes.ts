@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getClaims, getClaimById, createClaim, updateClaim, updateClaimStatus, deleteClaim, postPatientPayment } from '../controllers/claimController';
+import { getClaims, getClaimById, createClaim, updateClaim, updateClaimStatus, deleteClaim, postPatientPayment, deletePaymentPosting } from '../controllers/claimController';
 import { submitClaimToStedi, checkClaimStatusFromStedi } from '../controllers/claimsStediController';
 import { authenticateToken, requireRole } from '../middleware/auth';
 
@@ -14,6 +14,7 @@ router.post('/:id/submit', requireRole('Admin', 'Biller'), submitClaimToStedi);
 router.get('/:id/status-check', requireRole('Admin', 'Biller', 'Provider', 'FrontDesk'), checkClaimStatusFromStedi);
 router.put('/:id', requireRole('Admin', 'Biller'), updateClaim);
 router.post('/:id/payment', requireRole('Admin', 'Biller', 'FrontDesk'), postPatientPayment);
+router.delete('/:id/payment/:paymentId', requireRole('Admin', 'Biller'), deletePaymentPosting);
 router.delete('/:id', requireRole('Admin', 'Biller'), deleteClaim);
 
 export default router;

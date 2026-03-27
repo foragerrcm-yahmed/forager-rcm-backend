@@ -459,6 +459,54 @@ export const postPatientPayment = async (req: Request, res: Response): Promise<v
   }
 };
 
+/**
+ * DELETE /claims/:id/payment/:paymentId
+ * Delete a payment posting and recalculate the claim status.
+ */
+export const deletePaymentPosting = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id, paymentId } = req.params;
+    const now = Math.floor(Date.now() / 1000);
+
+    // Verify the posting belongs to this claim and org
+    const posting = await prisma.paymentPosting.findUnique({
+      where: { id: paymentId },
+    });
+    if (!posting || posting.claimId !== id || posting.organizationId !== (req.user?.organizationId as string | undefined)) {
+      sendError(res, 404, notFound('PAYMENT_POSTING'), 'Payment posting not found');
+      return;
+    }
+
+    await prisma.paymentPosting.delete({ where: { id: paymentId } });
+
+    // Recalculate claim status now that this payment is removed
+    const newStatus = await applyClaimStatusRecalculation(
+      id,
+      req.user!.userId,
+      now
+    );
+
+    // Timeline entry
+    await prisma.claimTimeline.create({
+      data: {
+        claimId: id,
+        action: 'Payment Deleted',
+        notes: `Payment of $${Number(posting.paidAmount).toFixed(2)} from ${posting.payerName ?? 'unknown'} was removed. Status recalculated to ${newStatus}.`,
+        status: newStatus ?? undefined,
+        createdAt: BigInt(now),
+        userId: req.user!.userId,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      data: { claimId: id, deletedPaymentId: paymentId, newStatus },
+    });
+  } catch (error) {
+    handlePrismaError(res, error, 'PAYMENT_POSTING');
+  }
+};
+
 export const deleteClaim = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
