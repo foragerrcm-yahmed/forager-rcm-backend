@@ -81,7 +81,23 @@ const getVisits = async (req, res) => {
                 skip,
                 take: limit,
                 include: {
-                    patient: { select: { id: true, firstName: true, lastName: true } },
+                    patient: {
+                        select: {
+                            id: true, firstName: true, lastName: true,
+                            insurancePolicies: {
+                                where: { isPrimary: true },
+                                take: 1,
+                                select: {
+                                    id: true,
+                                    eligibilityChecks: {
+                                        orderBy: { createdAt: 'desc' },
+                                        take: 1,
+                                        select: { isEligible: true, coverageActive: true, errorMessage: true, createdAt: true },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     provider: { select: { id: true, firstName: true, lastName: true } },
                     createdBy: { select: { id: true, firstName: true, lastName: true } },
                     updatedBy: { select: { id: true, firstName: true, lastName: true } },
@@ -92,13 +108,28 @@ const getVisits = async (req, res) => {
         ]);
         res.status(200).json({
             success: true,
-            data: visits.map(v => ({
-                ...v,
-                visitDate: Number(v.visitDate),
-                visitTime: Number(v.visitTime),
-                createdAt: Number(v.createdAt),
-                updatedAt: Number(v.updatedAt),
-            })),
+            data: visits.map(v => {
+                const primaryPolicy = v.patient?.insurancePolicies?.[0];
+                const latestCheck = primaryPolicy?.eligibilityChecks?.[0];
+                let eligibilityStatus = 'unchecked';
+                if (latestCheck) {
+                    if (latestCheck.errorMessage)
+                        eligibilityStatus = 'error';
+                    else if (latestCheck.isEligible === true && latestCheck.coverageActive !== false)
+                        eligibilityStatus = 'passed';
+                    else
+                        eligibilityStatus = 'failed';
+                }
+                return {
+                    ...v,
+                    visitDate: Number(v.visitDate),
+                    visitTime: Number(v.visitTime),
+                    createdAt: Number(v.createdAt),
+                    updatedAt: Number(v.updatedAt),
+                    eligibilityStatus,
+                    eligibilityCheckedAt: latestCheck ? Number(new Date(latestCheck.createdAt).getTime() / 1000) : null,
+                };
+            }),
             pagination: (0, pagination_1.getPaginationMeta)(page, limit, total),
         });
     }
