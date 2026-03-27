@@ -475,19 +475,179 @@ async function getClaimStatus(claimId) {
  * organizationId is passed explicitly — never inferred from env — for multi-tenant safety.
  */
 async function processEra835(payload, organizationId) {
-    const claimsInEra = payload.claimPayments ?? [];
-    for (const eraClaim of claimsInEra) {
-        // Match by patient control number (= our claimNumber), scoped to org
+    // ── Flatten Stedi nested format: transactions[].detailInfo[].paymentInfo[] ──
+    const eraPaymentInfos = [];
+    for (const txn of payload.transactions ?? []) {
+        for (const detail of txn.detailInfo ?? []) {
+            for (const pi of detail.paymentInfo ?? []) {
+                eraPaymentInfos.push({ pi, financialInfo: txn.financialInformation ?? {} });
+            }
+        }
+    }
+    // Also support legacy flat format (payload.claimPayments) for backwards compat
+    const legacyClaims = payload.claimPayments ?? [];
+    // ── Helper: resolve contracted rate for a ClaimService line ──────────────────
+    // Priority: ClaimService.contractedRate → CPTCode.basePrice → null
+    function resolveRate(svc) {
+        if (svc.contractedRate != null)
+            return Number(svc.contractedRate);
+        if (svc.cptCode?.basePrice != null)
+            return Number(svc.cptCode.basePrice);
+        return null;
+    }
+    // ── Helper: determine claim status from line-item totals ─────────────────────
+    function resolveStatus(totalPaid, totalContracted, patientResponsibility) {
+        if (totalPaid === 0) {
+            return patientResponsibility > 0 ? 'DeniedPatientResponsibility' : 'Denied';
+        }
+        if (totalPaid > totalContracted)
+            return 'Overpaid';
+        if (totalPaid < totalContracted)
+            return 'ShortPaid';
+        return 'Paid';
+    }
+    // ── Process Stedi-format (nested) entries ────────────────────────────────────
+    for (const { pi, financialInfo } of eraPaymentInfos) {
+        const cpi = pi.claimPaymentInfo ?? {};
+        const patientControlNumber = cpi.patientControlNumber ?? '';
+        if (!patientControlNumber)
+            continue;
         const claim = await prisma.claim.findFirst({
-            where: {
-                claimNumber: eraClaim.patientControlNumber,
-                organizationId,
+            where: { claimNumber: patientControlNumber, organizationId },
+            include: {
+                services: {
+                    include: { cptCode: { select: { basePrice: true } } },
+                },
             },
         });
         if (!claim) {
-            console.warn(`ERA 835: no matching claim for "${eraClaim.patientControlNumber}" in org ${organizationId}`);
+            console.warn(`ERA 835: no matching claim for "${patientControlNumber}" in org ${organizationId}`);
             continue;
         }
+        const claimPaymentAmount = Number(cpi.claimPaymentAmount ?? 0);
+        const patientResponsibilityAmount = Number(cpi.patientResponsibilityAmount ?? 0);
+        // coverageAmount from claimSupplementalInformation = EOB allowed at claim level
+        const coverageAmount = Number(pi.claimSupplementalInformation?.coverageAmount ?? 0);
+        // Build CPT code → ClaimService lookup map
+        const servicesByCode = new Map();
+        for (const svc of claim.services) {
+            if (svc.cptCodeCode)
+                servicesByCode.set(svc.cptCodeCode, svc);
+        }
+        // Per-service-line comparison: sum up contracted rates and paid amounts
+        const serviceLines = pi.serviceLines ?? [];
+        let totalContractedRate = 0;
+        let totalLinePaid = 0;
+        let hasServiceLines = false;
+        for (const sl of serviceLines) {
+            const spi = sl.servicePaymentInformation ?? {};
+            const cptCode = spi.adjudicatedProcedureCode ?? '';
+            const linePaid = Number(spi.lineItemProviderPaymentAmount ?? 0);
+            const lineCharge = Number(spi.lineItemChargeAmount ?? 0);
+            const matchedService = servicesByCode.get(cptCode);
+            const contractedRate = matchedService ? resolveRate(matchedService) : null;
+            // If no contracted rate on file, use the line charge as a proxy
+            totalContractedRate += contractedRate ?? lineCharge;
+            totalLinePaid += linePaid;
+            hasServiceLines = true;
+        }
+        // Determine status: prefer service-line comparison; fall back to claim-level amounts
+        let newStatus;
+        if (hasServiceLines && totalContractedRate > 0) {
+            newStatus = resolveStatus(totalLinePaid, totalContractedRate, patientResponsibilityAmount);
+        }
+        else {
+            // Fallback: use coverageAmount (EOB allowed) or totalClaimChargeAmount as benchmark
+            const benchmark = coverageAmount > 0 ? coverageAmount : Number(cpi.totalClaimChargeAmount ?? 0);
+            newStatus = resolveStatus(claimPaymentAmount, benchmark, patientResponsibilityAmount);
+        }
+        // Collect claim-level adjustments
+        const claimAdjs = (pi.claimAdjustments ?? []).map((adj) => ({
+            groupCode: adj.claimAdjustmentGroupCode ?? adj.groupCode,
+            reasonCode: adj.adjustmentReasonCode1 ?? adj.adjustmentReasonCode ?? adj.reasonCode,
+            amount: Number(adj.adjustmentAmount1 ?? adj.adjustmentAmount ?? 0),
+        }));
+        const primaryAdj = claimAdjs[0];
+        const totalAdjustment = claimAdjs.reduce((sum, a) => sum + (a.amount ?? 0), 0);
+        // Collect remark codes from service-line adjustments
+        const remarkCodes = [];
+        for (const sl of serviceLines) {
+            for (const sa of sl.serviceAdjustments ?? []) {
+                if (sa.adjustmentReasonCode1)
+                    remarkCodes.push(sa.adjustmentReasonCode1);
+                if (sa.adjustmentReasonCode2)
+                    remarkCodes.push(sa.adjustmentReasonCode2);
+            }
+        }
+        await prisma.paymentPosting.create({
+            data: {
+                claimId: claim.id,
+                organizationId,
+                checkNumber: financialInfo.checkNumber ?? payload.checkNumber ?? null,
+                checkDate: financialInfo.checkIssueOrEFTEffectiveDate
+                    ? new Date(financialInfo.checkIssueOrEFTEffectiveDate)
+                    : payload.checkDate ? new Date(payload.checkDate) : null,
+                payerName: payload.payerName ?? null,
+                payeeNpi: payload.payeeNpi ?? null,
+                billedAmount: claim.billedAmount,
+                allowedAmount: coverageAmount > 0 ? coverageAmount : null,
+                paidAmount: claimPaymentAmount,
+                patientResponsibility: patientResponsibilityAmount > 0 ? patientResponsibilityAmount : null,
+                adjustments: claimAdjs,
+                claimAdjustmentReason: primaryAdj
+                    ? `${primaryAdj.groupCode}-${primaryAdj.reasonCode}`
+                    : null,
+                remarkCodes: remarkCodes.join(','),
+                rawEraSegment: pi,
+                isAutoPosted: true,
+            },
+        });
+        await prisma.claim.update({
+            where: { id: claim.id },
+            data: {
+                status: newStatus,
+                paidAmount: claimPaymentAmount,
+                allowedAmount: coverageAmount > 0 ? coverageAmount : null,
+                patientResponsibility: patientResponsibilityAmount > 0 ? patientResponsibilityAmount : null,
+                adjustmentAmount: totalAdjustment,
+                denialCode: (newStatus === 'Denied' || newStatus === 'DeniedPatientResponsibility') && primaryAdj
+                    ? `${primaryAdj.groupCode}-${primaryAdj.reasonCode}`
+                    : claim.denialCode,
+            },
+        });
+    }
+    // ── Legacy flat format (payload.claimPayments) ───────────────────────────────
+    for (const eraClaim of legacyClaims) {
+        const claim = await prisma.claim.findFirst({
+            where: { claimNumber: eraClaim.patientControlNumber, organizationId },
+            include: {
+                services: {
+                    include: { cptCode: { select: { basePrice: true } } },
+                },
+            },
+        });
+        if (!claim) {
+            console.warn(`ERA 835 (legacy): no matching claim for "${eraClaim.patientControlNumber}" in org ${organizationId}`);
+            continue;
+        }
+        const claimPaymentAmount = Number(eraClaim.paymentAmount ?? 0);
+        const patientResponsibilityAmount = Number(eraClaim.patientResponsibility ?? 0);
+        // Sum contracted rates across all ClaimServices
+        let totalContractedRate = 0;
+        let hasRates = false;
+        for (const svc of claim.services) {
+            const rate = resolveRate(svc);
+            if (rate != null) {
+                totalContractedRate += rate;
+                hasRates = true;
+            }
+        }
+        const benchmark = hasRates && totalContractedRate > 0
+            ? totalContractedRate
+            : eraClaim.allowedAmount != null
+                ? Number(eraClaim.allowedAmount)
+                : Number(claim.billedAmount);
+        const newStatus = resolveStatus(claimPaymentAmount, benchmark, patientResponsibilityAmount);
         const adjustments = (eraClaim.claimAdjustments ?? []).map((adj) => ({
             groupCode: adj.adjustmentGroupCode,
             reasonCode: adj.adjustmentReasonCode,
@@ -504,8 +664,8 @@ async function processEra835(payload, organizationId) {
                 payeeNpi: payload.payeeNpi ?? null,
                 billedAmount: claim.billedAmount,
                 allowedAmount: eraClaim.allowedAmount ?? null,
-                paidAmount: eraClaim.paymentAmount ?? 0,
-                patientResponsibility: eraClaim.patientResponsibility ?? null,
+                paidAmount: claimPaymentAmount,
+                patientResponsibility: patientResponsibilityAmount > 0 ? patientResponsibilityAmount : null,
                 adjustments,
                 claimAdjustmentReason: primaryAdj
                     ? `${primaryAdj.groupCode}-${primaryAdj.reasonCode}`
@@ -515,29 +675,15 @@ async function processEra835(payload, organizationId) {
                 isAutoPosted: true,
             },
         });
-        // Use allowedAmount (EOB allowed) as the benchmark for Paid/ShortPaid/Overpaid.
-        // Fall back to billedAmount only if allowedAmount is not present in the 835.
-        const benchmarkAmount = eraClaim.allowedAmount != null
-            ? Number(eraClaim.allowedAmount)
-            : Number(claim.billedAmount);
-        const newStatus = eraClaim.paymentAmount > 0
-            ? eraClaim.paymentAmount > benchmarkAmount
-                ? 'Overpaid'
-                : eraClaim.paymentAmount < benchmarkAmount
-                    ? 'ShortPaid'
-                    : 'Paid'
-            : (eraClaim.patientResponsibility ?? 0) > 0
-                ? 'DeniedPatientResponsibility' // payer denied but patient owes a balance
-                : 'Denied';
         await prisma.claim.update({
             where: { id: claim.id },
             data: {
                 status: newStatus,
-                paidAmount: eraClaim.paymentAmount ?? 0,
+                paidAmount: claimPaymentAmount,
                 allowedAmount: eraClaim.allowedAmount ?? null,
-                patientResponsibility: eraClaim.patientResponsibility ?? null,
+                patientResponsibility: patientResponsibilityAmount > 0 ? patientResponsibilityAmount : null,
                 adjustmentAmount: adjustments.reduce((sum, a) => sum + (a.amount ?? 0), 0),
-                denialCode: newStatus === 'Denied' && primaryAdj
+                denialCode: (newStatus === 'Denied' || newStatus === 'DeniedPatientResponsibility') && primaryAdj
                     ? `${primaryAdj.groupCode}-${primaryAdj.reasonCode}`
                     : claim.denialCode,
             },
