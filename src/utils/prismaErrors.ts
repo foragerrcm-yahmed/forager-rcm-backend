@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '../../generated/prisma';
 import { Response } from 'express';
 import { sendError } from './errors';
 

@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteUser = exports.updateUser = exports.createUser = exports.getUserById = exports.getUsers = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const password_1 = require("../utils/password");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // Get all users
 const getUsers = async (req, res) => {
     try {

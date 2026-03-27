@@ -34,13 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAttachment = exports.downloadAttachment = exports.uploadAttachment = exports.getAttachments = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'xls', 'xlsx'];

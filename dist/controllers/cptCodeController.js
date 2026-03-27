@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCPTCodeRate = exports.updateCPTCodeRate = exports.createCPTCodeRate = exports.getCPTCodeRates = exports.deleteCPTCode = exports.updateCPTCode = exports.createCPTCode = exports.getCPTCodeById = exports.getCPTCodes = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // ─── CPT Codes (platform-level) ──────────────────────────────────────────────
 // CPT codes are platform-wide: any org can see and use them.
 // Rates (CPTCodeRate) are per-org so each org can override the CMS defaults.

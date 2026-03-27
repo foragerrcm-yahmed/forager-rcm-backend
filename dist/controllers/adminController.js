@@ -34,8 +34,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedIcd10CodesEndpoint = exports.seedTestDataEndpoint = exports.seedCmsRatesEndpoint = exports.seedMasterPayors = void 0;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../generated/prisma");
+const prisma = new prisma_1.PrismaClient();
 // ─── Transaction support presets ──────────────────────────────────────────────
 const FULL = {
     eligibilityCheck: 'SUPPORTED',
@@ -239,8 +239,8 @@ exports.seedCmsRatesEndpoint = seedCmsRatesEndpoint;
 /**
  * POST /api/admin/seed-test-data
  * Creates a complete set of test records for eligibility testing:
- *   - Aetna Payor + PPO Plan (linked to MasterPayor)
- *   - Test Patient "Jane Doe" with Aetna insurance (Stedi sandbox member W000000000)
+ *   - Aetna Payor + PPO Plan (linked to MasterPayor, tradingPartnerServiceId: 60054)
+ *   - Test Patient "John Doe" with Aetna insurance (Stedi sandbox member AETNA9wcSu)
  *   - Test Provider "Dr. Alex Test" (MD, NPI)
  *   - Test Visit (today, Upcoming)
  * Protected by x-admin-seed-secret header.

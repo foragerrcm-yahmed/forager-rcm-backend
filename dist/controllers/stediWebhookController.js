@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handleStediWebhook = handleStediWebhook;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const stedi_service_1 = require("../services/stedi.service");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 /**
  * POST /api/webhooks/stedi
  *

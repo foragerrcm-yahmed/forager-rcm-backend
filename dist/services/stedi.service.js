@@ -30,8 +30,8 @@ exports.processEra835 = processEra835;
 exports.fetchStediPayorList = fetchStediPayorList;
 exports.searchStediPayors = searchStediPayors;
 const https_1 = __importDefault(require("https"));
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../generated/prisma");
+const prisma = new prisma_1.PrismaClient();
 const STEDI_BASE_URL = 'https://healthcare.us.stedi.com/2024-04-01';
 const STEDI_API_KEY = process.env.STEDI_API_KEY || '';
 // ─── Error class ─────────────────────────────────────────────────────────────
@@ -67,8 +67,20 @@ async function stediRequest(method, path, body) {
             res.on('end', () => {
                 try {
                     const parsed = JSON.parse(data);
+                    // Stedi returns 200 even for some errors (e.g. eligibility AAA errors)
+                    // Check both HTTP status and response body for error indicators
                     if (res.statusCode && res.statusCode >= 400) {
-                        reject(new StediError(res.statusCode, parsed.error || 'STEDI_ERROR', parsed.message || 'Stedi API error', parsed));
+                        const errorMsg = parsed.message
+                            || (parsed.errors?.[0]?.description)
+                            || 'Stedi API error';
+                        const errorCode = parsed.error || parsed.errors?.[0]?.code || 'STEDI_ERROR';
+                        reject(new StediError(res.statusCode, errorCode, errorMsg, parsed));
+                    }
+                    else if (parsed.status === 'ERROR' && parsed.errors?.length) {
+                        // Stedi returned 200 but with error status in body
+                        const errorMsg = parsed.errors[0]?.description || 'Stedi returned an error';
+                        const errorCode = parsed.errors[0]?.code || 'STEDI_ERROR';
+                        reject(new StediError(400, errorCode, errorMsg, parsed));
                     }
                     else {
                         resolve(parsed);
@@ -128,11 +140,12 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
     if (!STEDI_API_KEY) {
         throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
     }
-    // Load the PatientInsurance record with patient, plan, payor, and masterPayor
+    // Load the PatientInsurance record with patient, plan, payor, masterPayor, and dependents
     const patientInsurance = await prisma.patientInsurance.findUniqueOrThrow({
         where: { id: patientInsuranceId },
         include: {
             patient: true,
+            dependents: { orderBy: { createdAt: 'asc' } },
             plan: {
                 include: {
                     payor: {
@@ -162,6 +175,21 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
     if (!org.npi) {
         throw new StediError(400, 'MISSING_BILLING_NPI', 'Organization billing NPI is required for eligibility checks. Set it in Configurations → Organization.');
     }
+    // Determine subscriber vs dependent
+    // If insuredType is Dependent, the subscriber info may differ from the patient
+    // subscriberName format: "FirstName LastName" or just use patient info
+    let subscriberFirstName = patient.firstName;
+    let subscriberLastName = patient.lastName;
+    let subscriberDob = formatDateForStedi(patient.dateOfBirth);
+    let subscriberGender = mapGender(patient.gender);
+    if (patientInsurance.insuredType === 'Dependent' && patientInsurance.subscriberName) {
+        const parts = patientInsurance.subscriberName.trim().split(/\s+/);
+        subscriberFirstName = parts[0] || patient.firstName;
+        subscriberLastName = parts.slice(1).join(' ') || patient.lastName;
+        if (patientInsurance.subscriberDob) {
+            subscriberDob = formatDateForStedi(patientInsurance.subscriberDob);
+        }
+    }
     const requestBody = {
         controlNumber: generateControlNumber(),
         tradingPartnerServiceId,
@@ -171,16 +199,42 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
         },
         subscriber: {
             memberId: patientInsurance.memberId,
-            dateOfBirth: formatDateForStedi(patient.dateOfBirth),
-            firstName: patient.firstName,
-            lastName: patient.lastName,
-            gender: mapGender(patient.gender),
+            firstName: subscriberFirstName,
+            lastName: subscriberLastName,
+            ...(subscriberDob ? { dateOfBirth: subscriberDob } : {}),
+            ...(subscriberGender !== 'U' ? { gender: subscriberGender } : {}),
         },
         encounter: {
             serviceTypeCodes: ['30'], // "Health Benefit Plan Coverage" — broad check
-            dateOfService: new Date().toISOString().split('T')[0].replace(/-/g, ''),
         },
     };
+    // Build dependents array for the 270 request.
+    //
+    // Priority logic:
+    //   1. If InsuranceDependent records exist on the policy, use them — these are
+    //      explicitly managed dependents (e.g. Jordan Doe, DOB 20010714).
+    //   2. If insuredType === 'Dependent' and no InsuranceDependent records exist,
+    //      fall back to the patient themselves as the single dependent (legacy behaviour).
+    //
+    // Stedi requires dateOfBirth in YYYYMMDD format for dependents.
+    const storedDependents = patientInsurance.dependents ?? [];
+    if (storedDependents.length > 0) {
+        // Use the explicitly stored dependent records
+        requestBody.dependents = storedDependents.map((dep) => ({
+            firstName: dep.firstName,
+            lastName: dep.lastName,
+            ...(dep.dateOfBirth ? { dateOfBirth: formatDateForStedi(dep.dateOfBirth) } : {}),
+        }));
+    }
+    else if (patientInsurance.insuredType === 'Dependent') {
+        // Legacy fallback: patient is the dependent
+        requestBody.dependents = [{
+                firstName: patient.firstName,
+                lastName: patient.lastName,
+                ...(patient.dateOfBirth ? { dateOfBirth: formatDateForStedi(patient.dateOfBirth) } : {}),
+                ...(patient.gender && mapGender(patient.gender) !== 'U' ? { gender: mapGender(patient.gender) } : {}),
+            }];
+    }
     // Create audit record before calling Stedi
     const eligibilityCheck = await prisma.eligibilityCheck.create({
         data: {
@@ -196,9 +250,16 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
         rawResponse = await stediRequest('POST', '/change/medicalnetwork/eligibility/v3', requestBody);
     }
     catch (e) {
+        // Store the error details for debugging
+        const errorMessage = e instanceof StediError
+            ? `${e.code}: ${e.message}`
+            : e.message;
         await prisma.eligibilityCheck.update({
             where: { id: eligibilityCheck.id },
-            data: { rawResponse: undefined, errorMessage: e.message },
+            data: {
+                rawResponse: e instanceof StediError && e.raw ? e.raw : undefined,
+                errorMessage,
+            },
         });
         throw e;
     }

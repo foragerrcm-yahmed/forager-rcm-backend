@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient, DataSource } from '@prisma/client';
+import { PrismaClient, DataSource } from '../../generated/prisma';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError, forbidden, deleteFailed, foreignKeyError } from '../utils/errors';
 import { handlePrismaError } from '../utils/prismaErrors';

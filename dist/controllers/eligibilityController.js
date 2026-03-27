@@ -3,10 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runEligibilityCheck = runEligibilityCheck;
 exports.getEligibilityChecks = getEligibilityChecks;
 exports.getEligibilityCheckById = getEligibilityCheckById;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const stedi_service_1 = require("../services/stedi.service");
 const stedi_service_2 = require("../services/stedi.service");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 /**
  * POST /api/eligibility/check
  * Trigger a real-time eligibility check (270/271) for a patient insurance record.

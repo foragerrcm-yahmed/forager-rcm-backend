@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.handlePrismaError = handlePrismaError;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const errors_1 = require("./errors");
 /**
  * Centralized Prisma error handler.
@@ -10,7 +10,7 @@ const errors_1 = require("./errors");
  */
 function handlePrismaError(res, error, entity) {
     // Prisma known request errors (P2xxx codes)
-    if (error instanceof client_1.Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof prisma_1.Prisma.PrismaClientKnownRequestError) {
         const code = error.code;
         const meta = error.meta;
         switch (code) {
@@ -80,20 +80,20 @@ function handlePrismaError(res, error, entity) {
         }
     }
     // Prisma validation errors (invalid query construction)
-    if (error instanceof client_1.Prisma.PrismaClientValidationError) {
+    if (error instanceof prisma_1.Prisma.PrismaClientValidationError) {
         console.error(`[Prisma Validation] ${entity}:`, error.message);
         // Return the full message for debugging
         (0, errors_1.sendError)(res, 400, `${entity.toUpperCase()}_VALIDATION_ERROR`, `Invalid request data: ${error.message}`);
         return;
     }
     // Prisma initialization errors
-    if (error instanceof client_1.Prisma.PrismaClientInitializationError) {
+    if (error instanceof prisma_1.Prisma.PrismaClientInitializationError) {
         console.error(`[Prisma Init] ${entity}:`, error.message);
         (0, errors_1.sendError)(res, 503, `DATABASE_UNAVAILABLE`, `The database is temporarily unavailable. Please try again shortly.`);
         return;
     }
     // Prisma connection errors
-    if (error instanceof client_1.Prisma.PrismaClientRustPanicError) {
+    if (error instanceof prisma_1.Prisma.PrismaClientRustPanicError) {
         console.error(`[Prisma Panic] ${entity}:`, error.message);
         (0, errors_1.sendError)(res, 503, `DATABASE_UNAVAILABLE`, `A critical database error occurred. Please try again shortly.`);
         return;

@@ -4,17 +4,19 @@
  *
  * Creates a complete set of test records for eligibility testing:
  *   1. Aetna Payor (linked to MasterPayor) + PPO Plan
- *   2. Test Patient "Jane Doe" with Aetna insurance (Stedi sandbox member ID)
- *   3. Test Provider "Dr. Test Provider" (MD, with NPI)
+ *   2. Test Patient "John Doe" with Aetna insurance (Stedi sandbox member AETNA9wcSu)
+ *   3. Test Provider "Dr. Alex Test" (MD, with NPI)
  *   4. Test Visit linking patient + provider (Upcoming, today)
  *
- * Uses Stedi's sandbox member ID W000000000 which always returns a valid 271.
+ * Uses Stedi's sandbox member ID AETNA9wcSu (subscriber: John Doe)
+ * which returns a valid Aetna 271 response with active coverage.
+ *
  * Idempotent — safe to run multiple times (upserts by name/externalId).
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedTestData = seedTestData;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../generated/prisma");
+const prisma = new prisma_1.PrismaClient();
 async function seedTestData(organizationId) {
     const now = BigInt(Math.floor(Date.now() / 1000));
     // ── Resolve target orgs ──────────────────────────────────────────────────────
@@ -46,7 +48,7 @@ async function seedTestData(organizationId) {
         if (!org.npi) {
             await prisma.organization.update({
                 where: { id: org.id },
-                data: { npi: '1234567890', updatedAt: now },
+                data: { npi: '1999999984', updatedAt: now },
             });
         }
         // ── 3. Upsert Aetna Payor for this org ────────────────────────────────────
@@ -69,15 +71,22 @@ async function seedTestData(organizationId) {
                 },
             });
         }
+        else if (!payor.masterPayorId) {
+            // Ensure masterPayorId is set on existing payor
+            payor = await prisma.payor.update({
+                where: { id: payor.id },
+                data: { masterPayorId: aetnaMaster.id, updatedAt: now },
+            });
+        }
         // ── 4. Upsert Aetna PPO Plan ──────────────────────────────────────────────
         let plan = await prisma.payorPlan.findFirst({
-            where: { payorId: payor.id, planName: 'Aetna PPO (Test)' },
+            where: { payorId: payor.id, planName: 'Aetna Choice POS II (Test)' },
         });
         if (!plan) {
             plan = await prisma.payorPlan.create({
                 data: {
                     payorId: payor.id,
-                    planName: 'Aetna PPO (Test)',
+                    planName: 'Aetna Choice POS II (Test)',
                     planType: 'PPO',
                     isInNetwork: true,
                     createdAt: now,
@@ -85,30 +94,33 @@ async function seedTestData(organizationId) {
                 },
             });
         }
-        // ── 5. Upsert Test Patient "Jane Doe" ─────────────────────────────────────
+        // ── 5. Upsert Test Patient "John Doe" ─────────────────────────────────────
+        // Stedi sandbox test case: subscriber John Doe, memberId AETNA9wcSu
+        // The dependent Jordan Doe (DOB 2001-07-14) is John's child
         let patient = await prisma.patient.findFirst({
             where: {
                 organizationId: org.id,
-                firstName: 'Jane',
+                firstName: 'John',
                 lastName: 'Doe',
+                email: 'john.doe.test@example.com',
             },
         });
         if (!patient) {
-            // DOB: 1990-01-15 as unix timestamp
-            const dob = BigInt(new Date('1990-01-15').getTime() / 1000);
+            // DOB: 1975-03-20 as unix timestamp (subscriber)
+            const dob = BigInt(Math.floor(new Date('1975-03-20').getTime() / 1000));
             patient = await prisma.patient.create({
                 data: {
-                    firstName: 'Jane',
+                    firstName: 'John',
                     lastName: 'Doe',
                     dateOfBirth: dob,
-                    gender: 'F',
+                    gender: 'M',
                     phone: '5555550100',
-                    email: 'jane.doe.test@example.com',
+                    email: 'john.doe.test@example.com',
                     address: {
-                        street: '123 Test Street',
-                        city: 'Hartford',
-                        state: 'CT',
-                        zip: '06101',
+                        street: '123 Sunnyvale Lane',
+                        city: 'South Godfreyview',
+                        state: 'NY',
+                        zip: '10144',
                     },
                     organizationId: org.id,
                     source: 'Forager',
@@ -118,8 +130,8 @@ async function seedTestData(organizationId) {
                 },
             });
         }
-        // ── 6. Upsert Aetna Insurance Policy for Jane ─────────────────────────────
-        // Stedi sandbox member ID: W000000000 — always returns a valid 271 response
+        // ── 6. Upsert Aetna Insurance Policy for John ─────────────────────────────
+        // Stedi sandbox member ID: AETNA9wcSu — returns valid Aetna 271 with active coverage
         let insurance = await prisma.patientInsurance.findFirst({
             where: { patientId: patient.id, planId: plan.id },
         });
@@ -130,10 +142,17 @@ async function seedTestData(organizationId) {
                     planId: plan.id,
                     isPrimary: true,
                     insuredType: 'Subscriber',
-                    memberId: 'W000000000', // Stedi sandbox test member ID
+                    memberId: 'AETNA9wcSu', // Stedi sandbox test member ID for Aetna
                     createdAt: now,
                     updatedAt: now,
                 },
+            });
+        }
+        else if (insurance.memberId !== 'AETNA9wcSu') {
+            // Update to correct member ID if it was previously wrong
+            insurance = await prisma.patientInsurance.update({
+                where: { id: insurance.id },
+                data: { memberId: 'AETNA9wcSu', updatedAt: now },
             });
         }
         // ── 7. Upsert Test Provider "Dr. Alex Test" ───────────────────────────────
@@ -199,6 +218,8 @@ async function seedTestData(organizationId) {
             patientId: patient.id,
             providerId: provider.id,
             visitId: visit.id,
+            insuranceId: insurance.id,
+            memberId: insurance.memberId,
         });
     }
     return results;

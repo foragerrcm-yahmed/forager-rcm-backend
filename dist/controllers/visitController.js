@@ -35,12 +35,12 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteVisit = exports.updateVisit = exports.createVisit = exports.getVisitById = exports.getVisits = void 0;
 exports.shouldRecheckEligibility = shouldRecheckEligibility;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
 const stediService = __importStar(require("../services/stedi.service"));
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 const getVisits = async (req, res) => {
     try {
         const { page, limit, skip } = (0, pagination_1.getPaginationParams)(req.query.page, req.query.limit);
@@ -120,9 +120,10 @@ const getVisitById = async (req, res) => {
                             include: {
                                 plan: {
                                     include: {
-                                        payor: { select: { id: true, name: true } },
+                                        payor: { select: { id: true, name: true, stediPayorId: true } },
                                     }
-                                }
+                                },
+                                dependents: { orderBy: { createdAt: 'asc' } },
                             }
                         }
                     }

@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getProfile = exports.login = exports.register = exports.setup = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const password_1 = require("../utils/password");
 const jwt_1 = require("../utils/jwt");
 const prismaErrors_1 = require("../utils/prismaErrors");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // One-time setup: creates the first organization and admin user together
 const setup = async (req, res) => {
     try {

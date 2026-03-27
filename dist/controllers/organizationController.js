@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteOrganization = exports.updateOrganization = exports.createOrganization = exports.getOrganizationById = exports.getOrganizations = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // Get all organizations
 const getOrganizations = async (req, res) => {
     try {

@@ -1,12 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteClaim = exports.updateClaimStatus = exports.updateClaim = exports.createClaim = exports.getClaimById = exports.getClaims = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
 const bigint_1 = require("../utils/bigint");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 const getClaims = async (req, res) => {
     try {
         const { page, limit, skip } = (0, pagination_1.getPaginationParams)(req.query.page, req.query.limit);

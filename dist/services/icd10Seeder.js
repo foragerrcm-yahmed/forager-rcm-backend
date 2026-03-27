@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedIcd10Codes = seedIcd10Codes;
-const client_1 = require("@prisma/client");
-const prisma = new client_1.PrismaClient();
+const prisma_1 = require("../../generated/prisma");
+const prisma = new prisma_1.PrismaClient();
 // Curated ICD-10-CM codes commonly used in behavioral health, PT/rehab, primary care, and orthopedics
 const COMMON_ICD10_CODES = [
     // ─── Mental Health / Behavioral Health ───

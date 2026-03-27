@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../../generated/prisma';
 import { processEra835 } from '../services/stedi.service';
 
 const prisma = new PrismaClient();

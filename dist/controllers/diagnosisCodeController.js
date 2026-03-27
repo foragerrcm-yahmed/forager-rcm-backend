@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.toggleCPTCodeActive = exports.removeVisitDiagnosis = exports.updateVisitDiagnosis = exports.addVisitDiagnosis = exports.getVisitDiagnoses = exports.toggleDiagnosisCodeActive = exports.deleteDiagnosisCode = exports.updateDiagnosisCode = exports.createDiagnosisCode = exports.getDiagnosisCodeById = exports.getDiagnosisCodes = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // ─── DiagnosisCode (org-scoped ICD-10 master list) ───────────────────────────
 const getDiagnosisCodes = async (req, res) => {
     try {

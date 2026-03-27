@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteProviderCredential = exports.createProviderCredential = exports.listProviderCredentials = exports.upsertMasterPayor = exports.disableMasterPayorForOrg = exports.enableMasterPayorForOrg = exports.getMasterPayor = exports.listMasterPayors = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 /**
  * Shape a raw MasterPayor DB row into the API response format.

@@ -1,11 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deletePayor = exports.updatePayor = exports.createPayor = exports.getPayorById = exports.getPayors = void 0;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const pagination_1 = require("../utils/pagination");
 const errors_1 = require("../utils/errors");
 const prismaErrors_1 = require("../utils/prismaErrors");
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // Get all payors
 const getPayors = async (req, res) => {
     try {
@@ -134,7 +134,7 @@ const createPayor = async (req, res) => {
                 (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('PAYOR_PLAN'), 'Missing required plan fields');
                 return;
             }
-            if (!Object.values(client_1.PlanType).includes(plan.planType)) {
+            if (!Object.values(prisma_1.PlanType).includes(plan.planType)) {
                 (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('PAYOR_PLAN'), `Invalid planType: ${plan.planType}`);
                 return;
             }
@@ -217,7 +217,7 @@ const updatePayor = async (req, res) => {
                     (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('PAYOR_PLAN'), 'Missing required plan fields');
                     return;
                 }
-                if (!Object.values(client_1.PlanType).includes(plan.planType)) {
+                if (!Object.values(prisma_1.PlanType).includes(plan.planType)) {
                     (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('PAYOR_PLAN'), `Invalid planType: ${plan.planType}`);
                     return;
                 }

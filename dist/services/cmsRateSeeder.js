@@ -56,11 +56,11 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedCmsRates = seedCmsRates;
-const client_1 = require("@prisma/client");
+const prisma_1 = require("../../generated/prisma");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const os = __importStar(require("os"));
-const prisma = new client_1.PrismaClient();
+const prisma = new prisma_1.PrismaClient();
 // 2026 CMS conversion factor (dollars per RVU)
 const CONVERSION_FACTOR_2026 = 33.4009;
 // Taxonomy tiers: [taxonomyCode, taxonomyLabel, multiplier]
