@@ -164,6 +164,7 @@ export const ClaimStatus: {
   Pended: 'Pended',
   Paid: 'Paid',
   Denied: 'Denied',
+  DeniedPatientResponsibility: 'DeniedPatientResponsibility',
   ShortPaid: 'ShortPaid',
   Overpaid: 'Overpaid'
 };

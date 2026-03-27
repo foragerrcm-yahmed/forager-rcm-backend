@@ -593,15 +593,21 @@ export async function processEra835(payload: any, organizationId: string) {
       },
     });
 
+    // Use allowedAmount (EOB allowed) as the benchmark for Paid/ShortPaid/Overpaid.
+    // Fall back to billedAmount only if allowedAmount is not present in the 835.
+    const benchmarkAmount = eraClaim.allowedAmount != null
+      ? Number(eraClaim.allowedAmount)
+      : Number(claim.billedAmount);
+
     const newStatus: ClaimStatus =
       eraClaim.paymentAmount > 0
-        ? eraClaim.paymentAmount > Number(claim.billedAmount)
+        ? eraClaim.paymentAmount > benchmarkAmount
           ? 'Overpaid'
-          : eraClaim.paymentAmount < Number(claim.billedAmount)
+          : eraClaim.paymentAmount < benchmarkAmount
             ? 'ShortPaid'
             : 'Paid'
         : (eraClaim.patientResponsibility ?? 0) > 0
-          ? 'ShortPaid'   // payer paid $0 but patient owes a balance — not a denial
+          ? 'DeniedPatientResponsibility'  // payer denied but patient owes a balance
           : 'Denied';
 
     await prisma.claim.update({

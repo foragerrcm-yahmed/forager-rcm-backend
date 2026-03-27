@@ -32,6 +32,7 @@ enum ClaimStatus {
   Pended
   Paid
   Denied
+  DeniedPatientResponsibility
   ShortPaid
   Overpaid
 }
