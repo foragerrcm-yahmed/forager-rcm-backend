@@ -516,10 +516,14 @@ async function processEra835(payload, organizationId) {
             },
         });
         const newStatus = eraClaim.paymentAmount > 0
-            ? eraClaim.paymentAmount < Number(claim.billedAmount)
-                ? 'ShortPaid'
-                : 'Paid'
-            : 'Denied';
+            ? eraClaim.paymentAmount > Number(claim.billedAmount)
+                ? 'Overpaid'
+                : eraClaim.paymentAmount < Number(claim.billedAmount)
+                    ? 'ShortPaid'
+                    : 'Paid'
+            : (eraClaim.patientResponsibility ?? 0) > 0
+                ? 'ShortPaid' // payer paid $0 but patient owes a balance — not a denial
+                : 'Denied';
         await prisma.claim.update({
             where: { id: claim.id },
             data: {

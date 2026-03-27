@@ -19,7 +19,7 @@
  */
 
 import https from 'https';
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient, ClaimStatus } from '../../generated/prisma';
 
 const prisma = new PrismaClient();
 
@@ -593,17 +593,21 @@ export async function processEra835(payload: any, organizationId: string) {
       },
     });
 
-    const newStatus =
+    const newStatus: ClaimStatus =
       eraClaim.paymentAmount > 0
-        ? eraClaim.paymentAmount < Number(claim.billedAmount)
-          ? 'ShortPaid'
-          : 'Paid'
-        : 'Denied';
+        ? eraClaim.paymentAmount > Number(claim.billedAmount)
+          ? 'Overpaid'
+          : eraClaim.paymentAmount < Number(claim.billedAmount)
+            ? 'ShortPaid'
+            : 'Paid'
+        : (eraClaim.patientResponsibility ?? 0) > 0
+          ? 'ShortPaid'   // payer paid $0 but patient owes a balance — not a denial
+          : 'Denied';
 
     await prisma.claim.update({
       where: { id: claim.id },
       data: {
-        status: newStatus as any,
+        status: newStatus,
         paidAmount: eraClaim.paymentAmount ?? 0,
         allowedAmount: eraClaim.allowedAmount ?? null,
         patientResponsibility: eraClaim.patientResponsibility ?? null,
