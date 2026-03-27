@@ -94,9 +94,10 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
               include: {
                 plan: {
                   include: {
-                    payor: { select: { id: true, name: true } },
+                    payor: { select: { id: true, name: true, stediPayorId: true } },
                   }
-                }
+                },
+                dependents: { orderBy: { createdAt: 'asc' as const } },
               }
             }
           }
