@@ -76,17 +76,23 @@ export const getProviderById = async (req: Request, res: Response): Promise<void
   try {
     const { id } = req.params;
 
-    const provider = await prisma.provider.findUnique({
-      where: { id, organizationId: req.user?.organizationId },
-      include: {
-        createdBy: {
-          select: { id: true, firstName: true, lastName: true }
+    const [provider, visitCount, claimCount] = await prisma.$transaction([
+      prisma.provider.findUnique({
+        where: { id, organizationId: req.user?.organizationId },
+        include: {
+          createdBy: { select: { id: true, firstName: true, lastName: true } },
+          updatedBy: { select: { id: true, firstName: true, lastName: true } },
+          providerCredentials: {
+            include: {
+              masterPayor: { select: { id: true, displayName: true, avatarUrl: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+          },
         },
-        updatedBy: {
-          select: { id: true, firstName: true, lastName: true }
-        },
-      }
-    });
+      }),
+      prisma.visit.count({ where: { providerId: id, organizationId: req.user?.organizationId } }),
+      prisma.claim.count({ where: { providerId: id, organizationId: req.user?.organizationId } }),
+    ]);
 
     if (!provider) {
       sendError(res, 404, notFound('PROVIDER'), 'Provider not found');
@@ -99,6 +105,14 @@ export const getProviderById = async (req: Request, res: Response): Promise<void
         ...provider,
         createdAt: Number(provider.createdAt),
         updatedAt: Number(provider.updatedAt),
+        providerCredentials: provider.providerCredentials.map((c: any) => ({
+          ...c,
+          effectiveDate: c.effectiveDate ? Number(c.effectiveDate) : null,
+          expirationDate: c.expirationDate ? Number(c.expirationDate) : null,
+          createdAt: Number(c.createdAt),
+          updatedAt: Number(c.updatedAt),
+        })),
+        _counts: { visits: visitCount, claims: claimCount },
       },
     });
   } catch (error) {
@@ -179,7 +193,7 @@ export const createProvider = async (req: Request, res: Response): Promise<void>
 export const updateProvider = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { firstName, middleName, lastName, npi, specialty, licenseType, source } = req.body;
+    const { firstName, middleName, lastName, npi, specialty, licenseType, source, taxonomyCode } = req.body;
     const now = Math.floor(Date.now() / 1000);
 
     // Ensure user is updating a provider within their own organization
@@ -208,6 +222,7 @@ export const updateProvider = async (req: Request, res: Response): Promise<void>
         specialty,
         licenseType,
         source,
+        taxonomyCode,
         updatedById: req.user!.userId,
         updatedAt: BigInt(now),
       },
