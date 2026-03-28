@@ -120,23 +120,34 @@ function parseDollar(s: string): number | null {
  * Returns null if not found.
  */
 function findAfterLabel(fullText: string, lines: string[], labelPattern: RegExp): string | null {
+  // ── Next-line path (checked FIRST) ───────────────────────────────────────
+  // Many insurance cards (especially BCBS) print the label on one line and
+  // the value on the next line.  We prefer this path because the same-line
+  // path can bleed into adjacent column labels on multi-column cards.
+  for (let i = 0; i < lines.length - 1; i++) {
+    if (labelPattern.test(lines[i]) && lines[i].length < 60) {
+      const next = lines[i + 1];
+      // Accept the next line as the value only if it doesn't look like a label
+      // itself (i.e. it doesn't end with a colon and isn't all title-case words)
+      if (next && /[A-Z0-9]/i.test(next) && !/^[A-Z][a-z]+(\s+[A-Z][a-z]+)*\s*:?$/.test(next)) {
+        return next;
+      }
+    }
+  }
+
+  // ── Same-line path (fallback) ─────────────────────────────────────────────
   // Wrap the label pattern in a non-capturing group so that alternations
   // (e.g. /a|b|c/) don't bleed into the separator + value part of the regex.
   const wrapped = new RegExp('(?:' + labelPattern.source + ')', 'i');
+  // Stop the value capture at the first run of 2+ spaces so that multi-label
+  // same-line cards (e.g. "Enrollee ID   RxBIN  004336") don't bleed.
   const combined = new RegExp(
-    wrapped.source + '[:\\s#\\.]+([A-Z0-9][\\w\\-/ ]{1,50})',
+    wrapped.source + '[:\\s#\\.]+([A-Z0-9][\\w\\-/]{0,30})',
     'i'
   );
   const m = combined.exec(fullText);
   if (m && m[1]) return m[1].trim();
 
-  // Next-line: label on one line, value on the next
-  for (let i = 0; i < lines.length - 1; i++) {
-    if (labelPattern.test(lines[i]) && lines[i].length < 40) {
-      const next = lines[i + 1];
-      if (next && /[A-Z0-9]/i.test(next)) return next;
-    }
-  }
   return null;
 }
 
@@ -190,7 +201,8 @@ export function extractFields(text: string): Record<string, any> {
 
   // ── Member ID ─────────────────────────────────────────────────────────────
   // Strict: must be alphanumeric, 6-20 chars, no spaces
-  const memberIdRaw = findAfterLabel(fullText, lines, /\bmember\s*id\b|\bsubscriber\s*id\b|\bid\s*number\b|\bmember\s*#\b/i);
+  // "Enrollee ID" is the BCBS label; also handle "Policy ID", "Insured ID"
+  const memberIdRaw = findAfterLabel(fullText, lines, /\benrollee\s*id\b|\bmember\s*id\b|\bsubscriber\s*id\b|\bpolicy\s*id\b|\binsured\s*id\b|\bid\s*number\b|\bmember\s*#\b/i);
   if (memberIdRaw) {
     const token = memberIdRaw.split(/\s+/)[0].replace(/[^A-Z0-9\-]/gi, '');
     if (token.length >= 4) result.memberId = token;
@@ -205,7 +217,8 @@ export function extractFields(text: string): Record<string, any> {
 
   // ── Member / Subscriber Name ──────────────────────────────────────────────
   // Only accept values that look like a real name (letters + spaces, no digits)
-  const nameRaw = findAfterLabel(fullText, lines, /\bmember\s*name\b|\bsubscriber\s*name\b|\binsured\s*name\b|\bpatient\s*name\b/i);
+  // "Enrollee Name" is the BCBS label; also handle "Insured Name", "Policy Holder"
+  const nameRaw = findAfterLabel(fullText, lines, /\benrollee\s*name\b|\bmember\s*name\b|\bsubscriber\s*name\b|\binsured\s*name\b|\bpatient\s*name\b|\bpolicy\s*holder\b/i);
   if (nameRaw) {
     const cleaned = nameRaw.replace(/[^A-Za-z\s\-'\.']/g, '').trim();
     if (cleaned.length >= 3 && /[A-Za-z]{2}/.test(cleaned)) {
@@ -265,13 +278,29 @@ export function extractFields(text: string): Record<string, any> {
   }
 
   // ── RX BIN ────────────────────────────────────────────────────────────────
-  // BIN is always exactly 6 digits
-  const rxBinMatch = /(?:rx[\s\-]*)?bin[:\s#]+(\d{6})/i.exec(fullText);
+  // BIN is always exactly 6 digits.
+  // BCBS prints it as "RxBIN" (no space) — the regex must handle that.
+  const rxBinMatch = /rx\s*bin[:\s#]*(\d{6})/i.exec(fullText);
   if (rxBinMatch) result.rxBin = rxBinMatch[1];
 
   // ── RX PCN ────────────────────────────────────────────────────────────────
   const rxPcnMatch = /\bpcn[:\s]+([A-Z0-9]{3,12})/i.exec(fullText);
   if (rxPcnMatch) result.rxPcn = rxPcnMatch[1];
+
+  // ── RX Group (RxGrp) ─────────────────────────────────────────────────────
+  // BCBS and some other carriers print "RxGrp" instead of "Group" for the
+  // pharmacy group number.  Capture it separately so it doesn't get confused
+  // with the medical group number.
+  if (!result.rxPcn) {
+    // Some cards use RxGrp as a PCN-equivalent
+    const rxGrpMatch = /rx\s*grp[:\s]+([A-Z0-9]{2,12})/i.exec(fullText);
+    if (rxGrpMatch) result.rxPcn = rxGrpMatch[1]; // store in rxPcn field (closest semantic match)
+  }
+  // Also capture as groupNumber if medical group not already found
+  if (!result.groupNumber) {
+    const rxGrpForGroup = /rx\s*grp[:\s]+([A-Z0-9]{2,12})/i.exec(fullText);
+    if (rxGrpForGroup) result.groupNumber = rxGrpForGroup[1];
+  }
 
   // ── Copays ────────────────────────────────────────────────────────────────
   result.copayPrimary = findDollarAmount(fullText, /\b(?:primary\s*care|pcp|office\s*visit)\b/i)
