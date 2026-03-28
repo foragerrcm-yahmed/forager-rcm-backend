@@ -131,20 +131,20 @@ export const createInsurancePolicy = async (req: Request, res: Response): Promis
 
     const now = BigInt(Math.floor(Date.now() / 1000));
 
-    if (!patientId || !planId || isPrimary === undefined || !insuredType || !memberId) {
+    if (!patientId || isPrimary === undefined || !insuredType || !memberId) {
       sendError(
         res, 400, validationError('INSURANCE_POLICY'),
-        'Missing required fields: patientId, planId, isPrimary, insuredType, memberId',
+        'Missing required fields: patientId, isPrimary, insuredType, memberId',
       );
       return;
     }
 
     const [patient, plan] = await Promise.all([
       prisma.patient.findUnique({ where: { id: patientId } }),
-      prisma.payorPlan.findUnique({ where: { id: planId } }),
+      planId ? prisma.payorPlan.findUnique({ where: { id: planId } }) : Promise.resolve(null),
     ]);
     if (!patient) { sendError(res, 404, notFound('PATIENT'), 'Patient not found'); return; }
-    if (!plan)    { sendError(res, 404, notFound('PAYOR_PLAN'), 'Payor plan not found'); return; }
+    if (planId && !plan) { sendError(res, 404, notFound('PAYOR_PLAN'), 'Payor plan not found'); return; }
 
     // Parse dependents array (ignore malformed entries)
     const parsedDependents = Array.isArray(rawDependents)
@@ -153,8 +153,8 @@ export const createInsurancePolicy = async (req: Request, res: Response): Promis
 
     const policy = await prisma.patientInsurance.create({
       data: {
-        patient:      { connect: { id: patientId } },
-        plan:         { connect: { id: planId } },
+        patientId,
+        planId: planId ?? null,
         isPrimary,
         insuredType,
         subscriberName:  subscriberName ?? null,

@@ -222,8 +222,8 @@ model PatientInsurance {
   id                String       @id @default(uuid())
   patient           Patient      @relation(fields: [patientId], references: [id])
   patientId         String
-  plan              PayorPlan    @relation(fields: [planId], references: [id])
-  planId            String
+  plan              PayorPlan?   @relation(fields: [planId], references: [id])
+  planId            String?
   isPrimary         Boolean
   insuredType       InsuredType
   subscriberName    String?
