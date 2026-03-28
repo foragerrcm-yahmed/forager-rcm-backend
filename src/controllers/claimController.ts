@@ -104,7 +104,7 @@ export const getClaimById = async (req: Request, res: Response): Promise<void> =
       where: { id: id as string, organizationId: req.user?.organizationId as string | undefined },
       include: {
         patient: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, phone: true, email: true } },
-        provider: { select: { id: true, firstName: true, lastName: true, specialty: true } },
+        provider: { select: { id: true, firstName: true, lastName: true, specialty: true, taxonomyCode: true } },
         payor: { select: { id: true, name: true } },
         visit: {
           select: {
@@ -229,16 +229,22 @@ export const createClaim = async (req: Request, res: Response): Promise<void> =>
         updatedAt: BigInt(now),
         ...(services && services.length > 0 ? {
           services: {
-            create: services.map((s: any) => ({
-              ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
-              description: s.description || null,
-              quantity: s.quantity,
-              unitPrice: s.unitPrice,
-              totalPrice: s.totalPrice,
-              createdAt: BigInt(now),
-            })),
+            create: services.map((s: any) => {
+              // Accept both cptCode and cptCodeCode from the frontend
+              const cptCodeVal = s.cptCode || s.cptCodeCode || null;
+              return {
+                ...(cptCodeVal ? { cptCode: { connect: { code: cptCodeVal } } } : {}),
+                description: s.description || null,
+                quantity: s.quantity,
+                unitPrice: s.unitPrice,
+                totalPrice: s.totalPrice,
+                contractedRate: s.contractedRate != null ? s.contractedRate : null,
+                createdAt: BigInt(now),
+              };
+            }),
           },
         } : {}),
+
         timeline: {
           create: [{
             action: 'Created',
@@ -300,14 +306,18 @@ export const updateClaim = async (req: Request, res: Response): Promise<void> =>
         updatedBy: { connect: { id: req.user!.userId } },
         updatedAt: BigInt(now),
         services: services ? {
-          create: services.map((s: any) => ({
-            ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
-            description: s.description || null,
-            quantity: s.quantity,
-            unitPrice: s.unitPrice,
-            totalPrice: s.totalPrice,
-            createdAt: BigInt(now),
-          })),
+          create: services.map((s: any) => {
+            const cptCodeVal = s.cptCode || s.cptCodeCode || null;
+            return {
+              ...(cptCodeVal ? { cptCode: { connect: { code: cptCodeVal } } } : {}),
+              description: s.description || null,
+              quantity: s.quantity,
+              unitPrice: s.unitPrice,
+              totalPrice: s.totalPrice,
+              contractedRate: s.contractedRate != null ? s.contractedRate : null,
+              createdAt: BigInt(now),
+            };
+          }),
         } : undefined,
       },
       include: {

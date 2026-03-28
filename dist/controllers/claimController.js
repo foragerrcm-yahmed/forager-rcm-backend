@@ -93,7 +93,7 @@ const getClaimById = async (req, res) => {
             where: { id: id, organizationId: req.user?.organizationId },
             include: {
                 patient: { select: { id: true, firstName: true, lastName: true, dateOfBirth: true, phone: true, email: true } },
-                provider: { select: { id: true, firstName: true, lastName: true, specialty: true } },
+                provider: { select: { id: true, firstName: true, lastName: true, specialty: true, taxonomyCode: true } },
                 payor: { select: { id: true, name: true } },
                 visit: {
                     select: {
@@ -208,14 +208,19 @@ const createClaim = async (req, res) => {
                 updatedAt: BigInt(now),
                 ...(services && services.length > 0 ? {
                     services: {
-                        create: services.map((s) => ({
-                            ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
-                            description: s.description || null,
-                            quantity: s.quantity,
-                            unitPrice: s.unitPrice,
-                            totalPrice: s.totalPrice,
-                            createdAt: BigInt(now),
-                        })),
+                        create: services.map((s) => {
+                            // Accept both cptCode and cptCodeCode from the frontend
+                            const cptCodeVal = s.cptCode || s.cptCodeCode || null;
+                            return {
+                                ...(cptCodeVal ? { cptCode: { connect: { code: cptCodeVal } } } : {}),
+                                description: s.description || null,
+                                quantity: s.quantity,
+                                unitPrice: s.unitPrice,
+                                totalPrice: s.totalPrice,
+                                contractedRate: s.contractedRate != null ? s.contractedRate : null,
+                                createdAt: BigInt(now),
+                            };
+                        }),
                     },
                 } : {}),
                 timeline: {
@@ -276,14 +281,18 @@ const updateClaim = async (req, res) => {
                 updatedBy: { connect: { id: req.user.userId } },
                 updatedAt: BigInt(now),
                 services: services ? {
-                    create: services.map((s) => ({
-                        ...(s.cptCode ? { cptCode: { connect: { code: s.cptCode } } } : {}),
-                        description: s.description || null,
-                        quantity: s.quantity,
-                        unitPrice: s.unitPrice,
-                        totalPrice: s.totalPrice,
-                        createdAt: BigInt(now),
-                    })),
+                    create: services.map((s) => {
+                        const cptCodeVal = s.cptCode || s.cptCodeCode || null;
+                        return {
+                            ...(cptCodeVal ? { cptCode: { connect: { code: cptCodeVal } } } : {}),
+                            description: s.description || null,
+                            quantity: s.quantity,
+                            unitPrice: s.unitPrice,
+                            totalPrice: s.totalPrice,
+                            contractedRate: s.contractedRate != null ? s.contractedRate : null,
+                            createdAt: BigInt(now),
+                        };
+                    }),
                 } : undefined,
             },
             include: {
