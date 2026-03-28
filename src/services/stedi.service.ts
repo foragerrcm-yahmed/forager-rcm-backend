@@ -163,6 +163,15 @@ export async function checkEligibility(
   });
 
   const patient = patientInsurance.patient;
+
+  if (!patientInsurance.plan) {
+    throw new StediError(
+      400,
+      'MISSING_PLAN',
+      'This insurance policy has no plan associated. Please assign a plan before running an eligibility check.'
+    );
+  }
+
   const payor = patientInsurance.plan.payor;
 
   // Resolve Stedi routing ID (priority order):
