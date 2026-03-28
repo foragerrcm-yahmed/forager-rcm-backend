@@ -125,6 +125,8 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
                     payor: { select: { id: true, name: true, stediPayorId: true } },
                   }
                 },
+                // Direct payor (used when no plan is selected)
+                payor: { select: { id: true, name: true, stediPayorId: true } },
                 dependents: { orderBy: { createdAt: 'asc' as const } },
               }
             }

@@ -14,6 +14,8 @@ const INSURANCE_INCLUDE = {
       payor: { select: { id: true, name: true, stediPayorId: true } },
     },
   },
+  // Direct payor (used when no plan is selected)
+  payor: { select: { id: true, name: true, stediPayorId: true } },
   dependents: {
     orderBy: { createdAt: 'asc' as const },
   },
@@ -161,14 +163,20 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
 
     if (insurances && insurances.length > 0) {
       for (const ins of insurances) {
-        if (!ins.planId || ins.isPrimary === undefined || !ins.insuredType || !ins.memberId) {
-          sendError(res, 400, validationError('PATIENT'), 'Missing required insurance fields');
+        if (ins.isPrimary === undefined || !ins.insuredType || !ins.memberId) {
+          sendError(res, 400, validationError('PATIENT'), 'Missing required insurance fields: isPrimary, insuredType, memberId');
           return;
         }
-        const plan = await prisma.payorPlan.findUnique({ where: { id: ins.planId } });
-        if (!plan) {
-          sendError(res, 404, foreignKeyError('PAYOR_PLAN'), `Insurance plan with ID ${ins.planId} not found`);
+        if (!ins.planId && !ins.payorId) {
+          sendError(res, 400, validationError('PATIENT'), 'Insurance must have either a planId or a payorId');
           return;
+        }
+        if (ins.planId) {
+          const plan = await prisma.payorPlan.findUnique({ where: { id: ins.planId } });
+          if (!plan) {
+            sendError(res, 404, foreignKeyError('PAYOR_PLAN'), `Insurance plan with ID ${ins.planId} not found`);
+            return;
+          }
         }
       }
     }
@@ -201,7 +209,8 @@ export const createPatient = async (req: Request, res: Response): Promise<void> 
         updatedAt: now,
         insurancePolicies: {
           create: (insurances ?? []).map((ins: any) => ({
-            plan: { connect: { id: ins.planId } },
+            ...(ins.planId ? { plan: { connect: { id: ins.planId } } } : {}),
+            ...(ins.payorId && !ins.planId ? { payor: { connect: { id: ins.payorId } } } : {}),
             isPrimary: ins.isPrimary,
             insuredType: ins.insuredType,
             subscriberName: ins.subscriberName ?? null,
