@@ -290,7 +290,7 @@ const createVisit = async (req, res) => {
                     const shouldRecheck = shouldRecheckEligibility({ visitDate: BigInt(visitDate), visitType }, lastCheckAdapted, primaryInsurance.planYearStartMonth ?? 1);
                     if (!shouldRecheck)
                         return;
-                    await stediService.checkEligibility(primaryInsurance.id, visit.id);
+                    await stediService.checkEligibility(primaryInsurance.id, organizationId, visit.id);
                 }
                 catch (e) {
                     // Log but do not fail — eligibility check is best-effort

@@ -278,7 +278,7 @@ export const createVisit = async (req: Request, res: Response): Promise<void> =>
 
           if (!shouldRecheck) return;
 
-          await stediService.checkEligibility(primaryInsurance.id, visit.id);
+          await stediService.checkEligibility(primaryInsurance.id, organizationId as string, visit.id);
         } catch (e) {
           // Log but do not fail — eligibility check is best-effort
           console.error('[auto-eligibility] Error during auto-check for visit', visit.id, e);

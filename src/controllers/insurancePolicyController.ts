@@ -3,6 +3,7 @@ import { PrismaClient } from '../../generated/prisma';
 import { getPaginationParams, getPaginationMeta } from '../utils/pagination';
 import { sendError, notFound, validationError } from '../utils/errors';
 import { handlePrismaError } from '../utils/prismaErrors';
+import * as stediService from '../services/stedi.service';
 
 const prisma = new PrismaClient();
 
@@ -189,6 +190,22 @@ export const createInsurancePolicy = async (req: Request, res: Response): Promis
     });
 
     res.status(201).json({ success: true, data: serializePolicy(policy) });
+
+    // ── Auto-eligibility check ────────────────────────────────────────────────
+    // Fire-and-forget: runs after the response is sent so the client is never
+    // blocked. Skipped for OCR draft policies (memberId === 'PENDING') which
+    // are temporary placeholders that will be updated before real use.
+    const orgId = req.user?.organizationId;
+    if (orgId && policy.memberId !== 'PENDING') {
+      setImmediate(async () => {
+        try {
+          await stediService.checkEligibility(policy.id, orgId);
+        } catch (e) {
+          // Best-effort — log but never surface to the client
+          console.error('[auto-eligibility] Error during auto-check for new policy', policy.id, e);
+        }
+      });
+    }
   } catch (error) {
     handlePrismaError(res, error, 'INSURANCE_POLICY');
   }
