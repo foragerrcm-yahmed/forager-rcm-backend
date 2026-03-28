@@ -154,6 +154,8 @@ const getVisitById = async (req, res) => {
                                         payor: { select: { id: true, name: true, stediPayorId: true } },
                                     }
                                 },
+                                // Direct payor (used when no plan is selected)
+                                payor: { select: { id: true, name: true, stediPayorId: true } },
                                 dependents: { orderBy: { createdAt: 'asc' } },
                             }
                         }

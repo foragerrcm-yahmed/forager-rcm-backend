@@ -13,6 +13,8 @@ const INSURANCE_INCLUDE = {
             payor: { select: { id: true, name: true, stediPayorId: true } },
         },
     },
+    // Direct payor (used when no plan is selected)
+    payor: { select: { id: true, name: true, stediPayorId: true } },
     dependents: {
         orderBy: { createdAt: 'asc' },
     },
@@ -137,14 +139,20 @@ const createPatient = async (req, res) => {
         }
         if (insurances && insurances.length > 0) {
             for (const ins of insurances) {
-                if (!ins.planId || ins.isPrimary === undefined || !ins.insuredType || !ins.memberId) {
-                    (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('PATIENT'), 'Missing required insurance fields');
+                if (ins.isPrimary === undefined || !ins.insuredType || !ins.memberId) {
+                    (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('PATIENT'), 'Missing required insurance fields: isPrimary, insuredType, memberId');
                     return;
                 }
-                const plan = await prisma.payorPlan.findUnique({ where: { id: ins.planId } });
-                if (!plan) {
-                    (0, errors_1.sendError)(res, 404, (0, errors_1.foreignKeyError)('PAYOR_PLAN'), `Insurance plan with ID ${ins.planId} not found`);
+                if (!ins.planId && !ins.payorId) {
+                    (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('PATIENT'), 'Insurance must have either a planId or a payorId');
                     return;
+                }
+                if (ins.planId) {
+                    const plan = await prisma.payorPlan.findUnique({ where: { id: ins.planId } });
+                    if (!plan) {
+                        (0, errors_1.sendError)(res, 404, (0, errors_1.foreignKeyError)('PAYOR_PLAN'), `Insurance plan with ID ${ins.planId} not found`);
+                        return;
+                    }
                 }
             }
         }
@@ -175,7 +183,8 @@ const createPatient = async (req, res) => {
                 updatedAt: now,
                 insurancePolicies: {
                     create: (insurances ?? []).map((ins) => ({
-                        plan: { connect: { id: ins.planId } },
+                        ...(ins.planId ? { plan: { connect: { id: ins.planId } } } : {}),
+                        ...(ins.payorId && !ins.planId ? { payor: { connect: { id: ins.payorId } } } : {}),
                         isPrimary: ins.isPrimary,
                         insuredType: ins.insuredType,
                         subscriberName: ins.subscriberName ?? null,

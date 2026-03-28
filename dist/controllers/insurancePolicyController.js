@@ -13,6 +13,8 @@ const POLICY_INCLUDE = {
             payor: { select: { id: true, name: true, stediPayorId: true } },
         },
     },
+    // Direct payor (used when no plan is selected)
+    payor: { select: { id: true, name: true, stediPayorId: true } },
     dependents: {
         orderBy: { createdAt: 'asc' },
     },
@@ -66,8 +68,13 @@ const getInsurancePolicies = async (req, res) => {
         const where = {};
         if (patientId && typeof patientId === 'string')
             where.patientId = patientId;
-        if (payorId && typeof payorId === 'string')
-            where.plan = { payor: { id: payorId } };
+        if (payorId && typeof payorId === 'string') {
+            // Match on direct payorId OR via plan
+            where.OR = [
+                { payorId },
+                { plan: { payor: { id: payorId } } },
+            ];
+        }
         if (isPrimary !== undefined)
             where.isPrimary = isPrimary === 'true';
         const [policies, total] = await prisma.$transaction([
@@ -107,32 +114,35 @@ exports.getInsurancePolicyById = getInsurancePolicyById;
 // ─── Create ───────────────────────────────────────────────────────────────────
 const createInsurancePolicy = async (req, res) => {
     try {
-        const { patientId, planId, isPrimary, insuredType, subscriberName, subscriberDob, memberId, dependents: rawDependents, } = req.body;
+        const { patientId, planId, payorId, isPrimary, insuredType, subscriberName, subscriberDob, memberId, dependents: rawDependents, } = req.body;
         const now = BigInt(Math.floor(Date.now() / 1000));
-        if (!patientId || !planId || isPrimary === undefined || !insuredType || !memberId) {
-            (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('INSURANCE_POLICY'), 'Missing required fields: patientId, planId, isPrimary, insuredType, memberId');
+        if (!patientId || isPrimary === undefined || !insuredType || !memberId) {
+            (0, errors_1.sendError)(res, 400, (0, errors_1.validationError)('INSURANCE_POLICY'), 'Missing required fields: patientId, isPrimary, insuredType, memberId');
             return;
         }
         const [patient, plan] = await Promise.all([
             prisma.patient.findUnique({ where: { id: patientId } }),
-            prisma.payorPlan.findUnique({ where: { id: planId } }),
+            planId ? prisma.payorPlan.findUnique({ where: { id: planId } }) : Promise.resolve(null),
         ]);
         if (!patient) {
             (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('PATIENT'), 'Patient not found');
             return;
         }
-        if (!plan) {
+        if (planId && !plan) {
             (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('PAYOR_PLAN'), 'Payor plan not found');
             return;
         }
+        // Derive payorId: explicit > from plan > null
+        const resolvedPayorId = payorId ?? plan?.payorId ?? null;
         // Parse dependents array (ignore malformed entries)
         const parsedDependents = Array.isArray(rawDependents)
             ? rawDependents.map(parseDependent).filter(Boolean)
             : [];
         const policy = await prisma.patientInsurance.create({
             data: {
-                patient: { connect: { id: patientId } },
-                plan: { connect: { id: planId } },
+                patientId,
+                planId: planId ?? null,
+                payorId: resolvedPayorId,
                 isPrimary,
                 insuredType,
                 subscriberName: subscriberName ?? null,
@@ -166,12 +176,26 @@ exports.createInsurancePolicy = createInsurancePolicy;
 const updateInsurancePolicy = async (req, res) => {
     try {
         const { id } = req.params;
-        const { isPrimary, insuredType, subscriberName, subscriberDob, memberId, planId, dependents: rawDependents, } = req.body;
+        const { isPrimary, insuredType, subscriberName, subscriberDob, memberId, planId, payorId, dependents: rawDependents, } = req.body;
         const now = BigInt(Math.floor(Date.now() / 1000));
         const existing = await prisma.patientInsurance.findUnique({ where: { id } });
         if (!existing) {
             (0, errors_1.sendError)(res, 404, (0, errors_1.notFound)('INSURANCE_POLICY'), 'Insurance policy not found');
             return;
+        }
+        // If planId is being set, resolve its payorId for the direct field too
+        let resolvedPayorId = undefined;
+        if (payorId !== undefined) {
+            resolvedPayorId = payorId ?? null;
+        }
+        else if (planId !== undefined) {
+            if (planId) {
+                const plan = await prisma.payorPlan.findUnique({ where: { id: planId } });
+                resolvedPayorId = plan?.payorId ?? null;
+            }
+            else {
+                resolvedPayorId = null;
+            }
         }
         // Build dependents mutation only if the key was explicitly sent
         let dependentsMutation = undefined;
@@ -195,7 +219,8 @@ const updateInsurancePolicy = async (req, res) => {
                     ? { subscriberDob: BigInt(Math.floor(Number(subscriberDob))) }
                     : subscriberDob === null ? { subscriberDob: null } : {}),
                 ...(memberId !== undefined ? { memberId } : {}),
-                ...(planId !== undefined ? { plan: { connect: { id: planId } } } : {}),
+                ...(planId !== undefined ? { planId: planId ?? null } : {}),
+                ...(resolvedPayorId !== undefined ? { payorId: resolvedPayorId } : {}),
                 ...(dependentsMutation ? { dependents: dependentsMutation } : {}),
                 updatedAt: now,
             },
