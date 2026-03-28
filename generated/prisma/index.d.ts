@@ -3676,11 +3676,13 @@ export namespace Prisma {
   export type PayorCountOutputType = {
     plans: number
     claims: number
+    insurancePolicies: number
   }
 
   export type PayorCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     plans?: boolean | PayorCountOutputTypeCountPlansArgs
     claims?: boolean | PayorCountOutputTypeCountClaimsArgs
+    insurancePolicies?: boolean | PayorCountOutputTypeCountInsurancePoliciesArgs
   }
 
   // Custom InputTypes
@@ -3706,6 +3708,13 @@ export namespace Prisma {
    */
   export type PayorCountOutputTypeCountClaimsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: ClaimWhereInput
+  }
+
+  /**
+   * PayorCountOutputType without action
+   */
+  export type PayorCountOutputTypeCountInsurancePoliciesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PatientInsuranceWhereInput
   }
 
 
@@ -8610,6 +8619,7 @@ export namespace Prisma {
     id: string | null
     patientId: string | null
     planId: string | null
+    payorId: string | null
     isPrimary: boolean | null
     insuredType: $Enums.InsuredType | null
     subscriberName: string | null
@@ -8625,6 +8635,7 @@ export namespace Prisma {
     id: string | null
     patientId: string | null
     planId: string | null
+    payorId: string | null
     isPrimary: boolean | null
     insuredType: $Enums.InsuredType | null
     subscriberName: string | null
@@ -8640,6 +8651,7 @@ export namespace Prisma {
     id: number
     patientId: number
     planId: number
+    payorId: number
     isPrimary: number
     insuredType: number
     subscriberName: number
@@ -8671,6 +8683,7 @@ export namespace Prisma {
     id?: true
     patientId?: true
     planId?: true
+    payorId?: true
     isPrimary?: true
     insuredType?: true
     subscriberName?: true
@@ -8686,6 +8699,7 @@ export namespace Prisma {
     id?: true
     patientId?: true
     planId?: true
+    payorId?: true
     isPrimary?: true
     insuredType?: true
     subscriberName?: true
@@ -8701,6 +8715,7 @@ export namespace Prisma {
     id?: true
     patientId?: true
     planId?: true
+    payorId?: true
     isPrimary?: true
     insuredType?: true
     subscriberName?: true
@@ -8802,7 +8817,8 @@ export namespace Prisma {
   export type PatientInsuranceGroupByOutputType = {
     id: string
     patientId: string
-    planId: string
+    planId: string | null
+    payorId: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName: string | null
@@ -8837,6 +8853,7 @@ export namespace Prisma {
     id?: boolean
     patientId?: boolean
     planId?: boolean
+    payorId?: boolean
     isPrimary?: boolean
     insuredType?: boolean
     subscriberName?: boolean
@@ -8847,7 +8864,8 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     patient?: boolean | PatientDefaultArgs<ExtArgs>
-    plan?: boolean | PayorPlanDefaultArgs<ExtArgs>
+    plan?: boolean | PatientInsurance$planArgs<ExtArgs>
+    payor?: boolean | PatientInsurance$payorArgs<ExtArgs>
     eligibilityChecks?: boolean | PatientInsurance$eligibilityChecksArgs<ExtArgs>
     dependents?: boolean | PatientInsurance$dependentsArgs<ExtArgs>
     _count?: boolean | PatientInsuranceCountOutputTypeDefaultArgs<ExtArgs>
@@ -8857,6 +8875,7 @@ export namespace Prisma {
     id?: boolean
     patientId?: boolean
     planId?: boolean
+    payorId?: boolean
     isPrimary?: boolean
     insuredType?: boolean
     subscriberName?: boolean
@@ -8867,13 +8886,15 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     patient?: boolean | PatientDefaultArgs<ExtArgs>
-    plan?: boolean | PayorPlanDefaultArgs<ExtArgs>
+    plan?: boolean | PatientInsurance$planArgs<ExtArgs>
+    payor?: boolean | PatientInsurance$payorArgs<ExtArgs>
   }, ExtArgs["result"]["patientInsurance"]>
 
   export type PatientInsuranceSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     patientId?: boolean
     planId?: boolean
+    payorId?: boolean
     isPrimary?: boolean
     insuredType?: boolean
     subscriberName?: boolean
@@ -8884,13 +8905,15 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     patient?: boolean | PatientDefaultArgs<ExtArgs>
-    plan?: boolean | PayorPlanDefaultArgs<ExtArgs>
+    plan?: boolean | PatientInsurance$planArgs<ExtArgs>
+    payor?: boolean | PatientInsurance$payorArgs<ExtArgs>
   }, ExtArgs["result"]["patientInsurance"]>
 
   export type PatientInsuranceSelectScalar = {
     id?: boolean
     patientId?: boolean
     planId?: boolean
+    payorId?: boolean
     isPrimary?: boolean
     insuredType?: boolean
     subscriberName?: boolean
@@ -8902,35 +8925,40 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type PatientInsuranceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "patientId" | "planId" | "isPrimary" | "insuredType" | "subscriberName" | "subscriberDob" | "memberId" | "insuranceCardPath" | "planYearStartMonth" | "createdAt" | "updatedAt", ExtArgs["result"]["patientInsurance"]>
+  export type PatientInsuranceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "patientId" | "planId" | "payorId" | "isPrimary" | "insuredType" | "subscriberName" | "subscriberDob" | "memberId" | "insuranceCardPath" | "planYearStartMonth" | "createdAt" | "updatedAt", ExtArgs["result"]["patientInsurance"]>
   export type PatientInsuranceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     patient?: boolean | PatientDefaultArgs<ExtArgs>
-    plan?: boolean | PayorPlanDefaultArgs<ExtArgs>
+    plan?: boolean | PatientInsurance$planArgs<ExtArgs>
+    payor?: boolean | PatientInsurance$payorArgs<ExtArgs>
     eligibilityChecks?: boolean | PatientInsurance$eligibilityChecksArgs<ExtArgs>
     dependents?: boolean | PatientInsurance$dependentsArgs<ExtArgs>
     _count?: boolean | PatientInsuranceCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PatientInsuranceIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     patient?: boolean | PatientDefaultArgs<ExtArgs>
-    plan?: boolean | PayorPlanDefaultArgs<ExtArgs>
+    plan?: boolean | PatientInsurance$planArgs<ExtArgs>
+    payor?: boolean | PatientInsurance$payorArgs<ExtArgs>
   }
   export type PatientInsuranceIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     patient?: boolean | PatientDefaultArgs<ExtArgs>
-    plan?: boolean | PayorPlanDefaultArgs<ExtArgs>
+    plan?: boolean | PatientInsurance$planArgs<ExtArgs>
+    payor?: boolean | PatientInsurance$payorArgs<ExtArgs>
   }
 
   export type $PatientInsurancePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "PatientInsurance"
     objects: {
       patient: Prisma.$PatientPayload<ExtArgs>
-      plan: Prisma.$PayorPlanPayload<ExtArgs>
+      plan: Prisma.$PayorPlanPayload<ExtArgs> | null
+      payor: Prisma.$PayorPayload<ExtArgs> | null
       eligibilityChecks: Prisma.$EligibilityCheckPayload<ExtArgs>[]
       dependents: Prisma.$InsuranceDependentPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       patientId: string
-      planId: string
+      planId: string | null
+      payorId: string | null
       isPrimary: boolean
       insuredType: $Enums.InsuredType
       subscriberName: string | null
@@ -9335,7 +9363,8 @@ export namespace Prisma {
   export interface Prisma__PatientInsuranceClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     patient<T extends PatientDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PatientDefaultArgs<ExtArgs>>): Prisma__PatientClient<$Result.GetResult<Prisma.$PatientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    plan<T extends PayorPlanDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PayorPlanDefaultArgs<ExtArgs>>): Prisma__PayorPlanClient<$Result.GetResult<Prisma.$PayorPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    plan<T extends PatientInsurance$planArgs<ExtArgs> = {}>(args?: Subset<T, PatientInsurance$planArgs<ExtArgs>>): Prisma__PayorPlanClient<$Result.GetResult<Prisma.$PayorPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    payor<T extends PatientInsurance$payorArgs<ExtArgs> = {}>(args?: Subset<T, PatientInsurance$payorArgs<ExtArgs>>): Prisma__PayorClient<$Result.GetResult<Prisma.$PayorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     eligibilityChecks<T extends PatientInsurance$eligibilityChecksArgs<ExtArgs> = {}>(args?: Subset<T, PatientInsurance$eligibilityChecksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EligibilityCheckPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     dependents<T extends PatientInsurance$dependentsArgs<ExtArgs> = {}>(args?: Subset<T, PatientInsurance$dependentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$InsuranceDependentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -9370,6 +9399,7 @@ export namespace Prisma {
     readonly id: FieldRef<"PatientInsurance", 'String'>
     readonly patientId: FieldRef<"PatientInsurance", 'String'>
     readonly planId: FieldRef<"PatientInsurance", 'String'>
+    readonly payorId: FieldRef<"PatientInsurance", 'String'>
     readonly isPrimary: FieldRef<"PatientInsurance", 'Boolean'>
     readonly insuredType: FieldRef<"PatientInsurance", 'InsuredType'>
     readonly subscriberName: FieldRef<"PatientInsurance", 'String'>
@@ -9772,6 +9802,44 @@ export namespace Prisma {
      * Limit how many PatientInsurances to delete.
      */
     limit?: number
+  }
+
+  /**
+   * PatientInsurance.plan
+   */
+  export type PatientInsurance$planArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PayorPlan
+     */
+    select?: PayorPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PayorPlan
+     */
+    omit?: PayorPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PayorPlanInclude<ExtArgs> | null
+    where?: PayorPlanWhereInput
+  }
+
+  /**
+   * PatientInsurance.payor
+   */
+  export type PatientInsurance$payorArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Payor
+     */
+    select?: PayorSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Payor
+     */
+    omit?: PayorOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PayorInclude<ExtArgs> | null
+    where?: PayorWhereInput
   }
 
   /**
@@ -15103,6 +15171,7 @@ export namespace Prisma {
     updatedBy?: boolean | Payor$updatedByArgs<ExtArgs>
     plans?: boolean | Payor$plansArgs<ExtArgs>
     claims?: boolean | Payor$claimsArgs<ExtArgs>
+    insurancePolicies?: boolean | Payor$insurancePoliciesArgs<ExtArgs>
     _count?: boolean | PayorCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["payor"]>
 
@@ -15176,6 +15245,7 @@ export namespace Prisma {
     updatedBy?: boolean | Payor$updatedByArgs<ExtArgs>
     plans?: boolean | Payor$plansArgs<ExtArgs>
     claims?: boolean | Payor$claimsArgs<ExtArgs>
+    insurancePolicies?: boolean | Payor$insurancePoliciesArgs<ExtArgs>
     _count?: boolean | PayorCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type PayorIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -15200,6 +15270,7 @@ export namespace Prisma {
       updatedBy: Prisma.$UserPayload<ExtArgs> | null
       plans: Prisma.$PayorPlanPayload<ExtArgs>[]
       claims: Prisma.$ClaimPayload<ExtArgs>[]
+      insurancePolicies: Prisma.$PatientInsurancePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -15617,6 +15688,7 @@ export namespace Prisma {
     updatedBy<T extends Payor$updatedByArgs<ExtArgs> = {}>(args?: Subset<T, Payor$updatedByArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     plans<T extends Payor$plansArgs<ExtArgs> = {}>(args?: Subset<T, Payor$plansArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PayorPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     claims<T extends Payor$claimsArgs<ExtArgs> = {}>(args?: Subset<T, Payor$claimsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ClaimPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    insurancePolicies<T extends Payor$insurancePoliciesArgs<ExtArgs> = {}>(args?: Subset<T, Payor$insurancePoliciesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PatientInsurancePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -16140,6 +16212,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: ClaimScalarFieldEnum | ClaimScalarFieldEnum[]
+  }
+
+  /**
+   * Payor.insurancePolicies
+   */
+  export type Payor$insurancePoliciesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PatientInsurance
+     */
+    select?: PatientInsuranceSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the PatientInsurance
+     */
+    omit?: PatientInsuranceOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PatientInsuranceInclude<ExtArgs> | null
+    where?: PatientInsuranceWhereInput
+    orderBy?: PatientInsuranceOrderByWithRelationInput | PatientInsuranceOrderByWithRelationInput[]
+    cursor?: PatientInsuranceWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PatientInsuranceScalarFieldEnum | PatientInsuranceScalarFieldEnum[]
   }
 
   /**
@@ -34993,6 +35089,7 @@ export namespace Prisma {
     id: 'id',
     patientId: 'patientId',
     planId: 'planId',
+    payorId: 'payorId',
     isPrimary: 'isPrimary',
     insuredType: 'insuredType',
     subscriberName: 'subscriberName',
@@ -36075,7 +36172,8 @@ export namespace Prisma {
     NOT?: PatientInsuranceWhereInput | PatientInsuranceWhereInput[]
     id?: StringFilter<"PatientInsurance"> | string
     patientId?: StringFilter<"PatientInsurance"> | string
-    planId?: StringFilter<"PatientInsurance"> | string
+    planId?: StringNullableFilter<"PatientInsurance"> | string | null
+    payorId?: StringNullableFilter<"PatientInsurance"> | string | null
     isPrimary?: BoolFilter<"PatientInsurance"> | boolean
     insuredType?: EnumInsuredTypeFilter<"PatientInsurance"> | $Enums.InsuredType
     subscriberName?: StringNullableFilter<"PatientInsurance"> | string | null
@@ -36086,7 +36184,8 @@ export namespace Prisma {
     createdAt?: BigIntFilter<"PatientInsurance"> | bigint | number
     updatedAt?: BigIntFilter<"PatientInsurance"> | bigint | number
     patient?: XOR<PatientScalarRelationFilter, PatientWhereInput>
-    plan?: XOR<PayorPlanScalarRelationFilter, PayorPlanWhereInput>
+    plan?: XOR<PayorPlanNullableScalarRelationFilter, PayorPlanWhereInput> | null
+    payor?: XOR<PayorNullableScalarRelationFilter, PayorWhereInput> | null
     eligibilityChecks?: EligibilityCheckListRelationFilter
     dependents?: InsuranceDependentListRelationFilter
   }
@@ -36094,7 +36193,8 @@ export namespace Prisma {
   export type PatientInsuranceOrderByWithRelationInput = {
     id?: SortOrder
     patientId?: SortOrder
-    planId?: SortOrder
+    planId?: SortOrderInput | SortOrder
+    payorId?: SortOrderInput | SortOrder
     isPrimary?: SortOrder
     insuredType?: SortOrder
     subscriberName?: SortOrderInput | SortOrder
@@ -36106,6 +36206,7 @@ export namespace Prisma {
     updatedAt?: SortOrder
     patient?: PatientOrderByWithRelationInput
     plan?: PayorPlanOrderByWithRelationInput
+    payor?: PayorOrderByWithRelationInput
     eligibilityChecks?: EligibilityCheckOrderByRelationAggregateInput
     dependents?: InsuranceDependentOrderByRelationAggregateInput
   }
@@ -36116,7 +36217,8 @@ export namespace Prisma {
     OR?: PatientInsuranceWhereInput[]
     NOT?: PatientInsuranceWhereInput | PatientInsuranceWhereInput[]
     patientId?: StringFilter<"PatientInsurance"> | string
-    planId?: StringFilter<"PatientInsurance"> | string
+    planId?: StringNullableFilter<"PatientInsurance"> | string | null
+    payorId?: StringNullableFilter<"PatientInsurance"> | string | null
     isPrimary?: BoolFilter<"PatientInsurance"> | boolean
     insuredType?: EnumInsuredTypeFilter<"PatientInsurance"> | $Enums.InsuredType
     subscriberName?: StringNullableFilter<"PatientInsurance"> | string | null
@@ -36127,7 +36229,8 @@ export namespace Prisma {
     createdAt?: BigIntFilter<"PatientInsurance"> | bigint | number
     updatedAt?: BigIntFilter<"PatientInsurance"> | bigint | number
     patient?: XOR<PatientScalarRelationFilter, PatientWhereInput>
-    plan?: XOR<PayorPlanScalarRelationFilter, PayorPlanWhereInput>
+    plan?: XOR<PayorPlanNullableScalarRelationFilter, PayorPlanWhereInput> | null
+    payor?: XOR<PayorNullableScalarRelationFilter, PayorWhereInput> | null
     eligibilityChecks?: EligibilityCheckListRelationFilter
     dependents?: InsuranceDependentListRelationFilter
   }, "id">
@@ -36135,7 +36238,8 @@ export namespace Prisma {
   export type PatientInsuranceOrderByWithAggregationInput = {
     id?: SortOrder
     patientId?: SortOrder
-    planId?: SortOrder
+    planId?: SortOrderInput | SortOrder
+    payorId?: SortOrderInput | SortOrder
     isPrimary?: SortOrder
     insuredType?: SortOrder
     subscriberName?: SortOrderInput | SortOrder
@@ -36158,7 +36262,8 @@ export namespace Prisma {
     NOT?: PatientInsuranceScalarWhereWithAggregatesInput | PatientInsuranceScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"PatientInsurance"> | string
     patientId?: StringWithAggregatesFilter<"PatientInsurance"> | string
-    planId?: StringWithAggregatesFilter<"PatientInsurance"> | string
+    planId?: StringNullableWithAggregatesFilter<"PatientInsurance"> | string | null
+    payorId?: StringNullableWithAggregatesFilter<"PatientInsurance"> | string | null
     isPrimary?: BoolWithAggregatesFilter<"PatientInsurance"> | boolean
     insuredType?: EnumInsuredTypeWithAggregatesFilter<"PatientInsurance"> | $Enums.InsuredType
     subscriberName?: StringNullableWithAggregatesFilter<"PatientInsurance"> | string | null
@@ -36582,6 +36687,7 @@ export namespace Prisma {
     updatedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     plans?: PayorPlanListRelationFilter
     claims?: ClaimListRelationFilter
+    insurancePolicies?: PatientInsuranceListRelationFilter
   }
 
   export type PayorOrderByWithRelationInput = {
@@ -36606,6 +36712,7 @@ export namespace Prisma {
     updatedBy?: UserOrderByWithRelationInput
     plans?: PayorPlanOrderByRelationAggregateInput
     claims?: ClaimOrderByRelationAggregateInput
+    insurancePolicies?: PatientInsuranceOrderByRelationAggregateInput
   }
 
   export type PayorWhereUniqueInput = Prisma.AtLeast<{
@@ -36633,6 +36740,7 @@ export namespace Prisma {
     updatedBy?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
     plans?: PayorPlanListRelationFilter
     claims?: ClaimListRelationFilter
+    insurancePolicies?: PatientInsuranceListRelationFilter
   }, "id" | "externalPayorId">
 
   export type PayorOrderByWithAggregationInput = {
@@ -38697,7 +38805,8 @@ export namespace Prisma {
     createdAt?: bigint | number
     updatedAt?: bigint | number
     patient: PatientCreateNestedOneWithoutInsurancePoliciesInput
-    plan: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    plan?: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    payor?: PayorCreateNestedOneWithoutInsurancePoliciesInput
     eligibilityChecks?: EligibilityCheckCreateNestedManyWithoutPatientInsuranceInput
     dependents?: InsuranceDependentCreateNestedManyWithoutPatientInsuranceInput
   }
@@ -38705,7 +38814,8 @@ export namespace Prisma {
   export type PatientInsuranceUncheckedCreateInput = {
     id?: string
     patientId: string
-    planId: string
+    planId?: string | null
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -38731,7 +38841,8 @@ export namespace Prisma {
     createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     patient?: PatientUpdateOneRequiredWithoutInsurancePoliciesNestedInput
-    plan?: PayorPlanUpdateOneRequiredWithoutPatientInsurancesNestedInput
+    plan?: PayorPlanUpdateOneWithoutPatientInsurancesNestedInput
+    payor?: PayorUpdateOneWithoutInsurancePoliciesNestedInput
     eligibilityChecks?: EligibilityCheckUpdateManyWithoutPatientInsuranceNestedInput
     dependents?: InsuranceDependentUpdateManyWithoutPatientInsuranceNestedInput
   }
@@ -38739,7 +38850,8 @@ export namespace Prisma {
   export type PatientInsuranceUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     patientId?: StringFieldUpdateOperationsInput | string
-    planId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -38756,7 +38868,8 @@ export namespace Prisma {
   export type PatientInsuranceCreateManyInput = {
     id?: string
     patientId: string
-    planId: string
+    planId?: string | null
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -38784,7 +38897,8 @@ export namespace Prisma {
   export type PatientInsuranceUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     patientId?: StringFieldUpdateOperationsInput | string
-    planId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -39228,6 +39342,7 @@ export namespace Prisma {
     updatedBy?: UserCreateNestedOneWithoutUpdatedPayorsInput
     plans?: PayorPlanCreateNestedManyWithoutPayorInput
     claims?: ClaimCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUncheckedCreateInput = {
@@ -39248,6 +39363,7 @@ export namespace Prisma {
     updatedAt?: bigint | number
     plans?: PayorPlanUncheckedCreateNestedManyWithoutPayorInput
     claims?: ClaimUncheckedCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUpdateInput = {
@@ -39268,6 +39384,7 @@ export namespace Prisma {
     updatedBy?: UserUpdateOneWithoutUpdatedPayorsNestedInput
     plans?: PayorPlanUpdateManyWithoutPayorNestedInput
     claims?: ClaimUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateInput = {
@@ -39288,6 +39405,7 @@ export namespace Prisma {
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     plans?: PayorPlanUncheckedUpdateManyWithoutPayorNestedInput
     claims?: ClaimUncheckedUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorCreateManyInput = {
@@ -41603,9 +41721,14 @@ export namespace Prisma {
     isNot?: PatientWhereInput
   }
 
-  export type PayorPlanScalarRelationFilter = {
-    is?: PayorPlanWhereInput
-    isNot?: PayorPlanWhereInput
+  export type PayorPlanNullableScalarRelationFilter = {
+    is?: PayorPlanWhereInput | null
+    isNot?: PayorPlanWhereInput | null
+  }
+
+  export type PayorNullableScalarRelationFilter = {
+    is?: PayorWhereInput | null
+    isNot?: PayorWhereInput | null
   }
 
   export type InsuranceDependentListRelationFilter = {
@@ -41622,6 +41745,7 @@ export namespace Prisma {
     id?: SortOrder
     patientId?: SortOrder
     planId?: SortOrder
+    payorId?: SortOrder
     isPrimary?: SortOrder
     insuredType?: SortOrder
     subscriberName?: SortOrder
@@ -41644,6 +41768,7 @@ export namespace Prisma {
     id?: SortOrder
     patientId?: SortOrder
     planId?: SortOrder
+    payorId?: SortOrder
     isPrimary?: SortOrder
     insuredType?: SortOrder
     subscriberName?: SortOrder
@@ -41659,6 +41784,7 @@ export namespace Prisma {
     id?: SortOrder
     patientId?: SortOrder
     planId?: SortOrder
+    payorId?: SortOrder
     isPrimary?: SortOrder
     insuredType?: SortOrder
     subscriberName?: SortOrder
@@ -44896,6 +45022,12 @@ export namespace Prisma {
     connect?: PayorPlanWhereUniqueInput
   }
 
+  export type PayorCreateNestedOneWithoutInsurancePoliciesInput = {
+    create?: XOR<PayorCreateWithoutInsurancePoliciesInput, PayorUncheckedCreateWithoutInsurancePoliciesInput>
+    connectOrCreate?: PayorCreateOrConnectWithoutInsurancePoliciesInput
+    connect?: PayorWhereUniqueInput
+  }
+
   export type EligibilityCheckCreateNestedManyWithoutPatientInsuranceInput = {
     create?: XOR<EligibilityCheckCreateWithoutPatientInsuranceInput, EligibilityCheckUncheckedCreateWithoutPatientInsuranceInput> | EligibilityCheckCreateWithoutPatientInsuranceInput[] | EligibilityCheckUncheckedCreateWithoutPatientInsuranceInput[]
     connectOrCreate?: EligibilityCheckCreateOrConnectWithoutPatientInsuranceInput | EligibilityCheckCreateOrConnectWithoutPatientInsuranceInput[]
@@ -44956,12 +45088,24 @@ export namespace Prisma {
     update?: XOR<XOR<PatientUpdateToOneWithWhereWithoutInsurancePoliciesInput, PatientUpdateWithoutInsurancePoliciesInput>, PatientUncheckedUpdateWithoutInsurancePoliciesInput>
   }
 
-  export type PayorPlanUpdateOneRequiredWithoutPatientInsurancesNestedInput = {
+  export type PayorPlanUpdateOneWithoutPatientInsurancesNestedInput = {
     create?: XOR<PayorPlanCreateWithoutPatientInsurancesInput, PayorPlanUncheckedCreateWithoutPatientInsurancesInput>
     connectOrCreate?: PayorPlanCreateOrConnectWithoutPatientInsurancesInput
     upsert?: PayorPlanUpsertWithoutPatientInsurancesInput
+    disconnect?: PayorPlanWhereInput | boolean
+    delete?: PayorPlanWhereInput | boolean
     connect?: PayorPlanWhereUniqueInput
     update?: XOR<XOR<PayorPlanUpdateToOneWithWhereWithoutPatientInsurancesInput, PayorPlanUpdateWithoutPatientInsurancesInput>, PayorPlanUncheckedUpdateWithoutPatientInsurancesInput>
+  }
+
+  export type PayorUpdateOneWithoutInsurancePoliciesNestedInput = {
+    create?: XOR<PayorCreateWithoutInsurancePoliciesInput, PayorUncheckedCreateWithoutInsurancePoliciesInput>
+    connectOrCreate?: PayorCreateOrConnectWithoutInsurancePoliciesInput
+    upsert?: PayorUpsertWithoutInsurancePoliciesInput
+    disconnect?: PayorWhereInput | boolean
+    delete?: PayorWhereInput | boolean
+    connect?: PayorWhereUniqueInput
+    update?: XOR<XOR<PayorUpdateToOneWithWhereWithoutInsurancePoliciesInput, PayorUpdateWithoutInsurancePoliciesInput>, PayorUncheckedUpdateWithoutInsurancePoliciesInput>
   }
 
   export type EligibilityCheckUpdateManyWithoutPatientInsuranceNestedInput = {
@@ -45446,6 +45590,13 @@ export namespace Prisma {
     connect?: ClaimWhereUniqueInput | ClaimWhereUniqueInput[]
   }
 
+  export type PatientInsuranceCreateNestedManyWithoutPayorInput = {
+    create?: XOR<PatientInsuranceCreateWithoutPayorInput, PatientInsuranceUncheckedCreateWithoutPayorInput> | PatientInsuranceCreateWithoutPayorInput[] | PatientInsuranceUncheckedCreateWithoutPayorInput[]
+    connectOrCreate?: PatientInsuranceCreateOrConnectWithoutPayorInput | PatientInsuranceCreateOrConnectWithoutPayorInput[]
+    createMany?: PatientInsuranceCreateManyPayorInputEnvelope
+    connect?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+  }
+
   export type PayorPlanUncheckedCreateNestedManyWithoutPayorInput = {
     create?: XOR<PayorPlanCreateWithoutPayorInput, PayorPlanUncheckedCreateWithoutPayorInput> | PayorPlanCreateWithoutPayorInput[] | PayorPlanUncheckedCreateWithoutPayorInput[]
     connectOrCreate?: PayorPlanCreateOrConnectWithoutPayorInput | PayorPlanCreateOrConnectWithoutPayorInput[]
@@ -45458,6 +45609,13 @@ export namespace Prisma {
     connectOrCreate?: ClaimCreateOrConnectWithoutPayorInput | ClaimCreateOrConnectWithoutPayorInput[]
     createMany?: ClaimCreateManyPayorInputEnvelope
     connect?: ClaimWhereUniqueInput | ClaimWhereUniqueInput[]
+  }
+
+  export type PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput = {
+    create?: XOR<PatientInsuranceCreateWithoutPayorInput, PatientInsuranceUncheckedCreateWithoutPayorInput> | PatientInsuranceCreateWithoutPayorInput[] | PatientInsuranceUncheckedCreateWithoutPayorInput[]
+    connectOrCreate?: PatientInsuranceCreateOrConnectWithoutPayorInput | PatientInsuranceCreateOrConnectWithoutPayorInput[]
+    createMany?: PatientInsuranceCreateManyPayorInputEnvelope
+    connect?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
   }
 
   export type MasterPayorUpdateOneWithoutPayorsNestedInput = {
@@ -45524,6 +45682,20 @@ export namespace Prisma {
     deleteMany?: ClaimScalarWhereInput | ClaimScalarWhereInput[]
   }
 
+  export type PatientInsuranceUpdateManyWithoutPayorNestedInput = {
+    create?: XOR<PatientInsuranceCreateWithoutPayorInput, PatientInsuranceUncheckedCreateWithoutPayorInput> | PatientInsuranceCreateWithoutPayorInput[] | PatientInsuranceUncheckedCreateWithoutPayorInput[]
+    connectOrCreate?: PatientInsuranceCreateOrConnectWithoutPayorInput | PatientInsuranceCreateOrConnectWithoutPayorInput[]
+    upsert?: PatientInsuranceUpsertWithWhereUniqueWithoutPayorInput | PatientInsuranceUpsertWithWhereUniqueWithoutPayorInput[]
+    createMany?: PatientInsuranceCreateManyPayorInputEnvelope
+    set?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    disconnect?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    delete?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    connect?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    update?: PatientInsuranceUpdateWithWhereUniqueWithoutPayorInput | PatientInsuranceUpdateWithWhereUniqueWithoutPayorInput[]
+    updateMany?: PatientInsuranceUpdateManyWithWhereWithoutPayorInput | PatientInsuranceUpdateManyWithWhereWithoutPayorInput[]
+    deleteMany?: PatientInsuranceScalarWhereInput | PatientInsuranceScalarWhereInput[]
+  }
+
   export type PayorPlanUncheckedUpdateManyWithoutPayorNestedInput = {
     create?: XOR<PayorPlanCreateWithoutPayorInput, PayorPlanUncheckedCreateWithoutPayorInput> | PayorPlanCreateWithoutPayorInput[] | PayorPlanUncheckedCreateWithoutPayorInput[]
     connectOrCreate?: PayorPlanCreateOrConnectWithoutPayorInput | PayorPlanCreateOrConnectWithoutPayorInput[]
@@ -45550,6 +45722,20 @@ export namespace Prisma {
     update?: ClaimUpdateWithWhereUniqueWithoutPayorInput | ClaimUpdateWithWhereUniqueWithoutPayorInput[]
     updateMany?: ClaimUpdateManyWithWhereWithoutPayorInput | ClaimUpdateManyWithWhereWithoutPayorInput[]
     deleteMany?: ClaimScalarWhereInput | ClaimScalarWhereInput[]
+  }
+
+  export type PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput = {
+    create?: XOR<PatientInsuranceCreateWithoutPayorInput, PatientInsuranceUncheckedCreateWithoutPayorInput> | PatientInsuranceCreateWithoutPayorInput[] | PatientInsuranceUncheckedCreateWithoutPayorInput[]
+    connectOrCreate?: PatientInsuranceCreateOrConnectWithoutPayorInput | PatientInsuranceCreateOrConnectWithoutPayorInput[]
+    upsert?: PatientInsuranceUpsertWithWhereUniqueWithoutPayorInput | PatientInsuranceUpsertWithWhereUniqueWithoutPayorInput[]
+    createMany?: PatientInsuranceCreateManyPayorInputEnvelope
+    set?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    disconnect?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    delete?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    connect?: PatientInsuranceWhereUniqueInput | PatientInsuranceWhereUniqueInput[]
+    update?: PatientInsuranceUpdateWithWhereUniqueWithoutPayorInput | PatientInsuranceUpdateWithWhereUniqueWithoutPayorInput[]
+    updateMany?: PatientInsuranceUpdateManyWithWhereWithoutPayorInput | PatientInsuranceUpdateManyWithWhereWithoutPayorInput[]
+    deleteMany?: PatientInsuranceScalarWhereInput | PatientInsuranceScalarWhereInput[]
   }
 
   export type PayorCreateNestedOneWithoutPlansInput = {
@@ -47745,6 +47931,7 @@ export namespace Prisma {
     updatedBy?: UserCreateNestedOneWithoutUpdatedPayorsInput
     plans?: PayorPlanCreateNestedManyWithoutPayorInput
     claims?: ClaimCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUncheckedCreateWithoutOrganizationInput = {
@@ -47764,6 +47951,7 @@ export namespace Prisma {
     updatedAt?: bigint | number
     plans?: PayorPlanUncheckedCreateNestedManyWithoutPayorInput
     claims?: ClaimUncheckedCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput
   }
 
   export type PayorCreateOrConnectWithoutOrganizationInput = {
@@ -49008,6 +49196,7 @@ export namespace Prisma {
     updatedBy?: UserCreateNestedOneWithoutUpdatedPayorsInput
     plans?: PayorPlanCreateNestedManyWithoutPayorInput
     claims?: ClaimCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUncheckedCreateWithoutCreatedByInput = {
@@ -49027,6 +49216,7 @@ export namespace Prisma {
     updatedAt?: bigint | number
     plans?: PayorPlanUncheckedCreateNestedManyWithoutPayorInput
     claims?: ClaimUncheckedCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput
   }
 
   export type PayorCreateOrConnectWithoutCreatedByInput = {
@@ -49056,6 +49246,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedPayorsInput
     plans?: PayorPlanCreateNestedManyWithoutPayorInput
     claims?: ClaimCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUncheckedCreateWithoutUpdatedByInput = {
@@ -49075,6 +49266,7 @@ export namespace Prisma {
     updatedAt?: bigint | number
     plans?: PayorPlanUncheckedCreateNestedManyWithoutPayorInput
     claims?: ClaimUncheckedCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput
   }
 
   export type PayorCreateOrConnectWithoutUpdatedByInput = {
@@ -50165,14 +50357,16 @@ export namespace Prisma {
     planYearStartMonth?: number | null
     createdAt?: bigint | number
     updatedAt?: bigint | number
-    plan: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    plan?: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    payor?: PayorCreateNestedOneWithoutInsurancePoliciesInput
     eligibilityChecks?: EligibilityCheckCreateNestedManyWithoutPatientInsuranceInput
     dependents?: InsuranceDependentCreateNestedManyWithoutPatientInsuranceInput
   }
 
   export type PatientInsuranceUncheckedCreateWithoutPatientInput = {
     id?: string
-    planId: string
+    planId?: string | null
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -50555,7 +50749,8 @@ export namespace Prisma {
     NOT?: PatientInsuranceScalarWhereInput | PatientInsuranceScalarWhereInput[]
     id?: StringFilter<"PatientInsurance"> | string
     patientId?: StringFilter<"PatientInsurance"> | string
-    planId?: StringFilter<"PatientInsurance"> | string
+    planId?: StringNullableFilter<"PatientInsurance"> | string | null
+    payorId?: StringNullableFilter<"PatientInsurance"> | string | null
     isPrimary?: BoolFilter<"PatientInsurance"> | boolean
     insuredType?: EnumInsuredTypeFilter<"PatientInsurance"> | $Enums.InsuredType
     subscriberName?: StringNullableFilter<"PatientInsurance"> | string | null
@@ -50714,6 +50909,51 @@ export namespace Prisma {
   export type PayorPlanCreateOrConnectWithoutPatientInsurancesInput = {
     where: PayorPlanWhereUniqueInput
     create: XOR<PayorPlanCreateWithoutPatientInsurancesInput, PayorPlanUncheckedCreateWithoutPatientInsurancesInput>
+  }
+
+  export type PayorCreateWithoutInsurancePoliciesInput = {
+    id?: string
+    name: string
+    externalPayorId: string
+    payorCategory: string
+    billingTaxonomy: string
+    address?: NullableJsonNullValueInput | InputJsonValue
+    phone?: string | null
+    portalUrl?: string | null
+    stediPayorId?: string | null
+    createdAt?: bigint | number
+    updatedAt?: bigint | number
+    masterPayor?: MasterPayorCreateNestedOneWithoutPayorsInput
+    organization: OrganizationCreateNestedOneWithoutPayorsInput
+    createdBy: UserCreateNestedOneWithoutCreatedPayorsInput
+    updatedBy?: UserCreateNestedOneWithoutUpdatedPayorsInput
+    plans?: PayorPlanCreateNestedManyWithoutPayorInput
+    claims?: ClaimCreateNestedManyWithoutPayorInput
+  }
+
+  export type PayorUncheckedCreateWithoutInsurancePoliciesInput = {
+    id?: string
+    name: string
+    externalPayorId: string
+    payorCategory: string
+    billingTaxonomy: string
+    address?: NullableJsonNullValueInput | InputJsonValue
+    phone?: string | null
+    portalUrl?: string | null
+    masterPayorId?: string | null
+    stediPayorId?: string | null
+    organizationId: string
+    createdById: string
+    updatedById?: string | null
+    createdAt?: bigint | number
+    updatedAt?: bigint | number
+    plans?: PayorPlanUncheckedCreateNestedManyWithoutPayorInput
+    claims?: ClaimUncheckedCreateNestedManyWithoutPayorInput
+  }
+
+  export type PayorCreateOrConnectWithoutInsurancePoliciesInput = {
+    where: PayorWhereUniqueInput
+    create: XOR<PayorCreateWithoutInsurancePoliciesInput, PayorUncheckedCreateWithoutInsurancePoliciesInput>
   }
 
   export type EligibilityCheckCreateWithoutPatientInsuranceInput = {
@@ -50914,6 +51154,57 @@ export namespace Prisma {
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
   }
 
+  export type PayorUpsertWithoutInsurancePoliciesInput = {
+    update: XOR<PayorUpdateWithoutInsurancePoliciesInput, PayorUncheckedUpdateWithoutInsurancePoliciesInput>
+    create: XOR<PayorCreateWithoutInsurancePoliciesInput, PayorUncheckedCreateWithoutInsurancePoliciesInput>
+    where?: PayorWhereInput
+  }
+
+  export type PayorUpdateToOneWithWhereWithoutInsurancePoliciesInput = {
+    where?: PayorWhereInput
+    data: XOR<PayorUpdateWithoutInsurancePoliciesInput, PayorUncheckedUpdateWithoutInsurancePoliciesInput>
+  }
+
+  export type PayorUpdateWithoutInsurancePoliciesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    externalPayorId?: StringFieldUpdateOperationsInput | string
+    payorCategory?: StringFieldUpdateOperationsInput | string
+    billingTaxonomy?: StringFieldUpdateOperationsInput | string
+    address?: NullableJsonNullValueInput | InputJsonValue
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    portalUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    stediPayorId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    masterPayor?: MasterPayorUpdateOneWithoutPayorsNestedInput
+    organization?: OrganizationUpdateOneRequiredWithoutPayorsNestedInput
+    createdBy?: UserUpdateOneRequiredWithoutCreatedPayorsNestedInput
+    updatedBy?: UserUpdateOneWithoutUpdatedPayorsNestedInput
+    plans?: PayorPlanUpdateManyWithoutPayorNestedInput
+    claims?: ClaimUpdateManyWithoutPayorNestedInput
+  }
+
+  export type PayorUncheckedUpdateWithoutInsurancePoliciesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    externalPayorId?: StringFieldUpdateOperationsInput | string
+    payorCategory?: StringFieldUpdateOperationsInput | string
+    billingTaxonomy?: StringFieldUpdateOperationsInput | string
+    address?: NullableJsonNullValueInput | InputJsonValue
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    portalUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    masterPayorId?: NullableStringFieldUpdateOperationsInput | string | null
+    stediPayorId?: NullableStringFieldUpdateOperationsInput | string | null
+    organizationId?: StringFieldUpdateOperationsInput | string
+    createdById?: StringFieldUpdateOperationsInput | string
+    updatedById?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    plans?: PayorPlanUncheckedUpdateManyWithoutPayorNestedInput
+    claims?: ClaimUncheckedUpdateManyWithoutPayorNestedInput
+  }
+
   export type EligibilityCheckUpsertWithWhereUniqueWithoutPatientInsuranceInput = {
     where: EligibilityCheckWhereUniqueInput
     update: XOR<EligibilityCheckUpdateWithoutPatientInsuranceInput, EligibilityCheckUncheckedUpdateWithoutPatientInsuranceInput>
@@ -50972,14 +51263,16 @@ export namespace Prisma {
     createdAt?: bigint | number
     updatedAt?: bigint | number
     patient: PatientCreateNestedOneWithoutInsurancePoliciesInput
-    plan: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    plan?: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    payor?: PayorCreateNestedOneWithoutInsurancePoliciesInput
     eligibilityChecks?: EligibilityCheckCreateNestedManyWithoutPatientInsuranceInput
   }
 
   export type PatientInsuranceUncheckedCreateWithoutDependentsInput = {
     id?: string
     patientId: string
-    planId: string
+    planId?: string | null
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -51020,14 +51313,16 @@ export namespace Prisma {
     createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     patient?: PatientUpdateOneRequiredWithoutInsurancePoliciesNestedInput
-    plan?: PayorPlanUpdateOneRequiredWithoutPatientInsurancesNestedInput
+    plan?: PayorPlanUpdateOneWithoutPatientInsurancesNestedInput
+    payor?: PayorUpdateOneWithoutInsurancePoliciesNestedInput
     eligibilityChecks?: EligibilityCheckUpdateManyWithoutPatientInsuranceNestedInput
   }
 
   export type PatientInsuranceUncheckedUpdateWithoutDependentsInput = {
     id?: StringFieldUpdateOperationsInput | string
     patientId?: StringFieldUpdateOperationsInput | string
-    planId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -51732,6 +52027,7 @@ export namespace Prisma {
     updatedBy?: UserCreateNestedOneWithoutUpdatedPayorsInput
     plans?: PayorPlanCreateNestedManyWithoutPayorInput
     claims?: ClaimCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUncheckedCreateWithoutMasterPayorInput = {
@@ -51751,6 +52047,7 @@ export namespace Prisma {
     updatedAt?: bigint | number
     plans?: PayorPlanUncheckedCreateNestedManyWithoutPayorInput
     claims?: ClaimUncheckedCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput
   }
 
   export type PayorCreateOrConnectWithoutMasterPayorInput = {
@@ -52654,6 +52951,50 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type PatientInsuranceCreateWithoutPayorInput = {
+    id?: string
+    isPrimary: boolean
+    insuredType: $Enums.InsuredType
+    subscriberName?: string | null
+    subscriberDob?: bigint | number | null
+    memberId: string
+    insuranceCardPath?: string | null
+    planYearStartMonth?: number | null
+    createdAt?: bigint | number
+    updatedAt?: bigint | number
+    patient: PatientCreateNestedOneWithoutInsurancePoliciesInput
+    plan?: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    eligibilityChecks?: EligibilityCheckCreateNestedManyWithoutPatientInsuranceInput
+    dependents?: InsuranceDependentCreateNestedManyWithoutPatientInsuranceInput
+  }
+
+  export type PatientInsuranceUncheckedCreateWithoutPayorInput = {
+    id?: string
+    patientId: string
+    planId?: string | null
+    isPrimary: boolean
+    insuredType: $Enums.InsuredType
+    subscriberName?: string | null
+    subscriberDob?: bigint | number | null
+    memberId: string
+    insuranceCardPath?: string | null
+    planYearStartMonth?: number | null
+    createdAt?: bigint | number
+    updatedAt?: bigint | number
+    eligibilityChecks?: EligibilityCheckUncheckedCreateNestedManyWithoutPatientInsuranceInput
+    dependents?: InsuranceDependentUncheckedCreateNestedManyWithoutPatientInsuranceInput
+  }
+
+  export type PatientInsuranceCreateOrConnectWithoutPayorInput = {
+    where: PatientInsuranceWhereUniqueInput
+    create: XOR<PatientInsuranceCreateWithoutPayorInput, PatientInsuranceUncheckedCreateWithoutPayorInput>
+  }
+
+  export type PatientInsuranceCreateManyPayorInputEnvelope = {
+    data: PatientInsuranceCreateManyPayorInput | PatientInsuranceCreateManyPayorInput[]
+    skipDuplicates?: boolean
+  }
+
   export type MasterPayorUpsertWithoutPayorsInput = {
     update: XOR<MasterPayorUpdateWithoutPayorsInput, MasterPayorUncheckedUpdateWithoutPayorsInput>
     create: XOR<MasterPayorCreateWithoutPayorsInput, MasterPayorUncheckedCreateWithoutPayorsInput>
@@ -52939,6 +53280,22 @@ export namespace Prisma {
     data: XOR<ClaimUpdateManyMutationInput, ClaimUncheckedUpdateManyWithoutPayorInput>
   }
 
+  export type PatientInsuranceUpsertWithWhereUniqueWithoutPayorInput = {
+    where: PatientInsuranceWhereUniqueInput
+    update: XOR<PatientInsuranceUpdateWithoutPayorInput, PatientInsuranceUncheckedUpdateWithoutPayorInput>
+    create: XOR<PatientInsuranceCreateWithoutPayorInput, PatientInsuranceUncheckedCreateWithoutPayorInput>
+  }
+
+  export type PatientInsuranceUpdateWithWhereUniqueWithoutPayorInput = {
+    where: PatientInsuranceWhereUniqueInput
+    data: XOR<PatientInsuranceUpdateWithoutPayorInput, PatientInsuranceUncheckedUpdateWithoutPayorInput>
+  }
+
+  export type PatientInsuranceUpdateManyWithWhereWithoutPayorInput = {
+    where: PatientInsuranceScalarWhereInput
+    data: XOR<PatientInsuranceUpdateManyMutationInput, PatientInsuranceUncheckedUpdateManyWithoutPayorInput>
+  }
+
   export type PayorCreateWithoutPlansInput = {
     id?: string
     name: string
@@ -52956,6 +53313,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedPayorsInput
     updatedBy?: UserCreateNestedOneWithoutUpdatedPayorsInput
     claims?: ClaimCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUncheckedCreateWithoutPlansInput = {
@@ -52975,6 +53333,7 @@ export namespace Prisma {
     createdAt?: bigint | number
     updatedAt?: bigint | number
     claims?: ClaimUncheckedCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput
   }
 
   export type PayorCreateOrConnectWithoutPlansInput = {
@@ -52994,6 +53353,7 @@ export namespace Prisma {
     createdAt?: bigint | number
     updatedAt?: bigint | number
     patient: PatientCreateNestedOneWithoutInsurancePoliciesInput
+    payor?: PayorCreateNestedOneWithoutInsurancePoliciesInput
     eligibilityChecks?: EligibilityCheckCreateNestedManyWithoutPatientInsuranceInput
     dependents?: InsuranceDependentCreateNestedManyWithoutPatientInsuranceInput
   }
@@ -53001,6 +53361,7 @@ export namespace Prisma {
   export type PatientInsuranceUncheckedCreateWithoutPlanInput = {
     id?: string
     patientId: string
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -53052,6 +53413,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedPayorsNestedInput
     updatedBy?: UserUpdateOneWithoutUpdatedPayorsNestedInput
     claims?: ClaimUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateWithoutPlansInput = {
@@ -53071,6 +53433,7 @@ export namespace Prisma {
     createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     claims?: ClaimUncheckedUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput
   }
 
   export type PatientInsuranceUpsertWithWhereUniqueWithoutPlanInput = {
@@ -54041,6 +54404,7 @@ export namespace Prisma {
     createdBy: UserCreateNestedOneWithoutCreatedPayorsInput
     updatedBy?: UserCreateNestedOneWithoutUpdatedPayorsInput
     plans?: PayorPlanCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceCreateNestedManyWithoutPayorInput
   }
 
   export type PayorUncheckedCreateWithoutClaimsInput = {
@@ -54060,6 +54424,7 @@ export namespace Prisma {
     createdAt?: bigint | number
     updatedAt?: bigint | number
     plans?: PayorPlanUncheckedCreateNestedManyWithoutPayorInput
+    insurancePolicies?: PatientInsuranceUncheckedCreateNestedManyWithoutPayorInput
   }
 
   export type PayorCreateOrConnectWithoutClaimsInput = {
@@ -54621,6 +54986,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedPayorsNestedInput
     updatedBy?: UserUpdateOneWithoutUpdatedPayorsNestedInput
     plans?: PayorPlanUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateWithoutClaimsInput = {
@@ -54640,6 +55006,7 @@ export namespace Prisma {
     createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     plans?: PayorPlanUncheckedUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput
   }
 
   export type OrganizationUpsertWithoutClaimsInput = {
@@ -57328,14 +57695,16 @@ export namespace Prisma {
     createdAt?: bigint | number
     updatedAt?: bigint | number
     patient: PatientCreateNestedOneWithoutInsurancePoliciesInput
-    plan: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    plan?: PayorPlanCreateNestedOneWithoutPatientInsurancesInput
+    payor?: PayorCreateNestedOneWithoutInsurancePoliciesInput
     dependents?: InsuranceDependentCreateNestedManyWithoutPatientInsuranceInput
   }
 
   export type PatientInsuranceUncheckedCreateWithoutEligibilityChecksInput = {
     id?: string
     patientId: string
-    planId: string
+    planId?: string | null
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -57437,14 +57806,16 @@ export namespace Prisma {
     createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     patient?: PatientUpdateOneRequiredWithoutInsurancePoliciesNestedInput
-    plan?: PayorPlanUpdateOneRequiredWithoutPatientInsurancesNestedInput
+    plan?: PayorPlanUpdateOneWithoutPatientInsurancesNestedInput
+    payor?: PayorUpdateOneWithoutInsurancePoliciesNestedInput
     dependents?: InsuranceDependentUpdateManyWithoutPatientInsuranceNestedInput
   }
 
   export type PatientInsuranceUncheckedUpdateWithoutEligibilityChecksInput = {
     id?: StringFieldUpdateOperationsInput | string
     patientId?: StringFieldUpdateOperationsInput | string
-    planId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -58282,6 +58653,7 @@ export namespace Prisma {
     updatedBy?: UserUpdateOneWithoutUpdatedPayorsNestedInput
     plans?: PayorPlanUpdateManyWithoutPayorNestedInput
     claims?: ClaimUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateWithoutOrganizationInput = {
@@ -58301,6 +58673,7 @@ export namespace Prisma {
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     plans?: PayorPlanUncheckedUpdateManyWithoutPayorNestedInput
     claims?: ClaimUncheckedUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateManyWithoutOrganizationInput = {
@@ -59215,6 +59588,7 @@ export namespace Prisma {
     updatedBy?: UserUpdateOneWithoutUpdatedPayorsNestedInput
     plans?: PayorPlanUpdateManyWithoutPayorNestedInput
     claims?: ClaimUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateWithoutCreatedByInput = {
@@ -59234,6 +59608,7 @@ export namespace Prisma {
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     plans?: PayorPlanUncheckedUpdateManyWithoutPayorNestedInput
     claims?: ClaimUncheckedUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateManyWithoutCreatedByInput = {
@@ -59270,6 +59645,7 @@ export namespace Prisma {
     createdBy?: UserUpdateOneRequiredWithoutCreatedPayorsNestedInput
     plans?: PayorPlanUpdateManyWithoutPayorNestedInput
     claims?: ClaimUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateWithoutUpdatedByInput = {
@@ -59289,6 +59665,7 @@ export namespace Prisma {
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     plans?: PayorPlanUncheckedUpdateManyWithoutPayorNestedInput
     claims?: ClaimUncheckedUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateManyWithoutUpdatedByInput = {
@@ -59825,7 +60202,8 @@ export namespace Prisma {
 
   export type PatientInsuranceCreateManyPatientInput = {
     id?: string
-    planId: string
+    planId?: string | null
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -60059,14 +60437,16 @@ export namespace Prisma {
     planYearStartMonth?: NullableIntFieldUpdateOperationsInput | number | null
     createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
-    plan?: PayorPlanUpdateOneRequiredWithoutPatientInsurancesNestedInput
+    plan?: PayorPlanUpdateOneWithoutPatientInsurancesNestedInput
+    payor?: PayorUpdateOneWithoutInsurancePoliciesNestedInput
     eligibilityChecks?: EligibilityCheckUpdateManyWithoutPatientInsuranceNestedInput
     dependents?: InsuranceDependentUpdateManyWithoutPatientInsuranceNestedInput
   }
 
   export type PatientInsuranceUncheckedUpdateWithoutPatientInput = {
     id?: StringFieldUpdateOperationsInput | string
-    planId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -60082,7 +60462,8 @@ export namespace Prisma {
 
   export type PatientInsuranceUncheckedUpdateManyWithoutPatientInput = {
     id?: StringFieldUpdateOperationsInput | string
-    planId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -60778,6 +61159,7 @@ export namespace Prisma {
     updatedBy?: UserUpdateOneWithoutUpdatedPayorsNestedInput
     plans?: PayorPlanUpdateManyWithoutPayorNestedInput
     claims?: ClaimUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateWithoutMasterPayorInput = {
@@ -60797,6 +61179,7 @@ export namespace Prisma {
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     plans?: PayorPlanUncheckedUpdateManyWithoutPayorNestedInput
     claims?: ClaimUncheckedUpdateManyWithoutPayorNestedInput
+    insurancePolicies?: PatientInsuranceUncheckedUpdateManyWithoutPayorNestedInput
   }
 
   export type PayorUncheckedUpdateManyWithoutMasterPayorInput = {
@@ -60891,6 +61274,21 @@ export namespace Prisma {
     stediTransactionId?: string | null
     stediStatus?: string | null
     submittedToStediAt?: Date | string | null
+  }
+
+  export type PatientInsuranceCreateManyPayorInput = {
+    id?: string
+    patientId: string
+    planId?: string | null
+    isPrimary: boolean
+    insuredType: $Enums.InsuredType
+    subscriberName?: string | null
+    subscriberDob?: bigint | number | null
+    memberId: string
+    insuranceCardPath?: string | null
+    planYearStartMonth?: number | null
+    createdAt?: bigint | number
+    updatedAt?: bigint | number
   }
 
   export type PayorPlanUpdateWithoutPayorInput = {
@@ -61019,9 +61417,59 @@ export namespace Prisma {
     submittedToStediAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
+  export type PatientInsuranceUpdateWithoutPayorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
+    subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriberDob?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    memberId?: StringFieldUpdateOperationsInput | string
+    insuranceCardPath?: NullableStringFieldUpdateOperationsInput | string | null
+    planYearStartMonth?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    patient?: PatientUpdateOneRequiredWithoutInsurancePoliciesNestedInput
+    plan?: PayorPlanUpdateOneWithoutPatientInsurancesNestedInput
+    eligibilityChecks?: EligibilityCheckUpdateManyWithoutPatientInsuranceNestedInput
+    dependents?: InsuranceDependentUpdateManyWithoutPatientInsuranceNestedInput
+  }
+
+  export type PatientInsuranceUncheckedUpdateWithoutPayorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    patientId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
+    subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriberDob?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    memberId?: StringFieldUpdateOperationsInput | string
+    insuranceCardPath?: NullableStringFieldUpdateOperationsInput | string | null
+    planYearStartMonth?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    eligibilityChecks?: EligibilityCheckUncheckedUpdateManyWithoutPatientInsuranceNestedInput
+    dependents?: InsuranceDependentUncheckedUpdateManyWithoutPatientInsuranceNestedInput
+  }
+
+  export type PatientInsuranceUncheckedUpdateManyWithoutPayorInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    patientId?: StringFieldUpdateOperationsInput | string
+    planId?: NullableStringFieldUpdateOperationsInput | string | null
+    isPrimary?: BoolFieldUpdateOperationsInput | boolean
+    insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
+    subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
+    subscriberDob?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    memberId?: StringFieldUpdateOperationsInput | string
+    insuranceCardPath?: NullableStringFieldUpdateOperationsInput | string | null
+    planYearStartMonth?: NullableIntFieldUpdateOperationsInput | number | null
+    createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
+    updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
+  }
+
   export type PatientInsuranceCreateManyPlanInput = {
     id?: string
     patientId: string
+    payorId?: string | null
     isPrimary: boolean
     insuredType: $Enums.InsuredType
     subscriberName?: string | null
@@ -61045,6 +61493,7 @@ export namespace Prisma {
     createdAt?: BigIntFieldUpdateOperationsInput | bigint | number
     updatedAt?: BigIntFieldUpdateOperationsInput | bigint | number
     patient?: PatientUpdateOneRequiredWithoutInsurancePoliciesNestedInput
+    payor?: PayorUpdateOneWithoutInsurancePoliciesNestedInput
     eligibilityChecks?: EligibilityCheckUpdateManyWithoutPatientInsuranceNestedInput
     dependents?: InsuranceDependentUpdateManyWithoutPatientInsuranceNestedInput
   }
@@ -61052,6 +61501,7 @@ export namespace Prisma {
   export type PatientInsuranceUncheckedUpdateWithoutPlanInput = {
     id?: StringFieldUpdateOperationsInput | string
     patientId?: StringFieldUpdateOperationsInput | string
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null
@@ -61068,6 +61518,7 @@ export namespace Prisma {
   export type PatientInsuranceUncheckedUpdateManyWithoutPlanInput = {
     id?: StringFieldUpdateOperationsInput | string
     patientId?: StringFieldUpdateOperationsInput | string
+    payorId?: NullableStringFieldUpdateOperationsInput | string | null
     isPrimary?: BoolFieldUpdateOperationsInput | boolean
     insuredType?: EnumInsuredTypeFieldUpdateOperationsInput | $Enums.InsuredType
     subscriberName?: NullableStringFieldUpdateOperationsInput | string | null

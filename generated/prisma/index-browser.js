@@ -171,6 +171,7 @@ exports.Prisma.PatientInsuranceScalarFieldEnum = {
   id: 'id',
   patientId: 'patientId',
   planId: 'planId',
+  payorId: 'payorId',
   isPrimary: 'isPrimary',
   insuredType: 'insuredType',
   subscriberName: 'subscriberName',

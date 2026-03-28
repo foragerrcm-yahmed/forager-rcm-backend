@@ -14,6 +14,8 @@ const POLICY_INCLUDE = {
       payor: { select: { id: true, name: true, stediPayorId: true } },
     },
   },
+  // Direct payor (used when no plan is selected)
+  payor: { select: { id: true, name: true, stediPayorId: true } },
   dependents: {
     orderBy: { createdAt: 'asc' as const },
   },
@@ -80,7 +82,13 @@ export const getInsurancePolicies = async (req: Request, res: Response): Promise
 
     const where: any = {};
     if (patientId && typeof patientId === 'string') where.patientId = patientId;
-    if (payorId   && typeof payorId   === 'string') where.plan = { payor: { id: payorId } };
+    if (payorId   && typeof payorId   === 'string') {
+      // Match on direct payorId OR via plan
+      where.OR = [
+        { payorId },
+        { plan: { payor: { id: payorId } } },
+      ];
+    }
     if (isPrimary !== undefined) where.isPrimary = isPrimary === 'true';
 
     const [policies, total] = await prisma.$transaction([
@@ -124,7 +132,7 @@ export const getInsurancePolicyById = async (req: Request, res: Response): Promi
 export const createInsurancePolicy = async (req: Request, res: Response): Promise<void> => {
   try {
     const {
-      patientId, planId, isPrimary, insuredType,
+      patientId, planId, payorId, isPrimary, insuredType,
       subscriberName, subscriberDob, memberId,
       dependents: rawDependents,
     } = req.body;
@@ -146,6 +154,10 @@ export const createInsurancePolicy = async (req: Request, res: Response): Promis
     if (!patient) { sendError(res, 404, notFound('PATIENT'), 'Patient not found'); return; }
     if (planId && !plan) { sendError(res, 404, notFound('PAYOR_PLAN'), 'Payor plan not found'); return; }
 
+    // Derive payorId: explicit > from plan > null
+    const resolvedPayorId: string | null =
+      payorId ?? (plan as any)?.payorId ?? null;
+
     // Parse dependents array (ignore malformed entries)
     const parsedDependents = Array.isArray(rawDependents)
       ? rawDependents.map(parseDependent).filter(Boolean) as any[]
@@ -154,7 +166,8 @@ export const createInsurancePolicy = async (req: Request, res: Response): Promis
     const policy = await prisma.patientInsurance.create({
       data: {
         patientId,
-        planId: planId ?? null,
+        planId:   planId   ?? null,
+        payorId:  resolvedPayorId,
         isPrimary,
         insuredType,
         subscriberName:  subscriberName ?? null,
@@ -191,7 +204,7 @@ export const updateInsurancePolicy = async (req: Request, res: Response): Promis
     const { id } = req.params;
     const {
       isPrimary, insuredType, subscriberName, subscriberDob,
-      memberId, planId, dependents: rawDependents,
+      memberId, planId, payorId, dependents: rawDependents,
     } = req.body;
 
     const now = BigInt(Math.floor(Date.now() / 1000));
@@ -200,6 +213,19 @@ export const updateInsurancePolicy = async (req: Request, res: Response): Promis
     if (!existing) {
       sendError(res, 404, notFound('INSURANCE_POLICY'), 'Insurance policy not found');
       return;
+    }
+
+    // If planId is being set, resolve its payorId for the direct field too
+    let resolvedPayorId: string | null | undefined = undefined;
+    if (payorId !== undefined) {
+      resolvedPayorId = payorId ?? null;
+    } else if (planId !== undefined) {
+      if (planId) {
+        const plan = await prisma.payorPlan.findUnique({ where: { id: planId } });
+        resolvedPayorId = (plan as any)?.payorId ?? null;
+      } else {
+        resolvedPayorId = null;
+      }
     }
 
     // Build dependents mutation only if the key was explicitly sent
@@ -226,7 +252,8 @@ export const updateInsurancePolicy = async (req: Request, res: Response): Promis
           ? { subscriberDob: BigInt(Math.floor(Number(subscriberDob))) }
           : subscriberDob === null ? { subscriberDob: null } : {}),
         ...(memberId !== undefined ? { memberId } : {}),
-        ...(planId   !== undefined ? { plan: { connect: { id: planId } } } : {}),
+        ...(planId   !== undefined ? { planId: planId ?? null } : {}),
+        ...(resolvedPayorId !== undefined ? { payorId: resolvedPayorId } : {}),
         ...(dependentsMutation ? { dependents: dependentsMutation } : {}),
         updatedAt: now,
       },

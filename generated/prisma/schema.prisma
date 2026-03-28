@@ -222,8 +222,10 @@ model PatientInsurance {
   id                 String      @id @default(uuid())
   patient            Patient     @relation(fields: [patientId], references: [id])
   patientId          String
-  plan               PayorPlan   @relation(fields: [planId], references: [id])
-  planId             String
+  plan               PayorPlan?  @relation(fields: [planId], references: [id])
+  planId             String?
+  payor              Payor?      @relation(fields: [payorId], references: [id])
+  payorId            String?
   isPrimary          Boolean
   insuredType        InsuredType
   subscriberName     String?
@@ -333,27 +335,28 @@ model ProviderCredential {
 }
 
 model Payor {
-  id              String       @id @default(uuid())
-  name            String
-  externalPayorId String       @unique
-  payorCategory   String
-  billingTaxonomy String
-  address         Json?
-  phone           String?
-  portalUrl       String?
-  masterPayor     MasterPayor? @relation(fields: [masterPayorId], references: [id])
-  masterPayorId   String? // FK to MasterPayor — set when org enables a master payor
-  stediPayorId    String? // Stedi routing ID — separate from masterPayor.primaryPayorId for flexibility
-  organization    Organization @relation(fields: [organizationId], references: [id])
-  organizationId  String
-  createdById     String
-  createdBy       User         @relation("PayorCreatedBy", fields: [createdById], references: [id])
-  updatedById     String?
-  updatedBy       User?        @relation("PayorUpdatedBy", fields: [updatedById], references: [id])
-  createdAt       BigInt       @default(0)
-  updatedAt       BigInt       @default(0)
-  plans           PayorPlan[]
-  claims          Claim[]
+  id                String             @id @default(uuid())
+  name              String
+  externalPayorId   String             @unique
+  payorCategory     String
+  billingTaxonomy   String
+  address           Json?
+  phone             String?
+  portalUrl         String?
+  masterPayor       MasterPayor?       @relation(fields: [masterPayorId], references: [id])
+  masterPayorId     String? // FK to MasterPayor — set when org enables a master payor
+  stediPayorId      String? // Stedi routing ID — separate from masterPayor.primaryPayorId for flexibility
+  organization      Organization       @relation(fields: [organizationId], references: [id])
+  organizationId    String
+  createdById       String
+  createdBy         User               @relation("PayorCreatedBy", fields: [createdById], references: [id])
+  updatedById       String?
+  updatedBy         User?              @relation("PayorUpdatedBy", fields: [updatedById], references: [id])
+  createdAt         BigInt             @default(0)
+  updatedAt         BigInt             @default(0)
+  plans             PayorPlan[]
+  claims            Claim[]
+  insurancePolicies PatientInsurance[]
 
   @@map("payors")
 }

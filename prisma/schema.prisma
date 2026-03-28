@@ -224,6 +224,8 @@ model PatientInsurance {
   patientId         String
   plan              PayorPlan?   @relation(fields: [planId], references: [id])
   planId            String?
+  payor             Payor?       @relation(fields: [payorId], references: [id])
+  payorId           String?
   isPrimary         Boolean
   insuredType       InsuredType
   subscriberName    String?
@@ -352,6 +354,7 @@ model Payor {
   updatedAt         BigInt         @default(0)
   plans             PayorPlan[]
   claims            Claim[]
+  insurancePolicies PatientInsurance[]
   @@map("payors")
 }
 

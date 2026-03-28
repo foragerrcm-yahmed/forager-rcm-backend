@@ -159,20 +159,25 @@ export async function checkEligibility(
           },
         },
       },
+      // Direct payor — used when no plan is selected
+      payor: {
+        include: { masterPayor: true },
+      },
     },
   });
 
   const patient = patientInsurance.patient;
 
-  if (!patientInsurance.plan) {
+  // Resolve payor: plan.payor takes precedence, fall back to direct payor field
+  const payor = patientInsurance.plan?.payor ?? patientInsurance.payor;
+
+  if (!payor) {
     throw new StediError(
       400,
-      'MISSING_PLAN',
-      'This insurance policy has no plan associated. Please assign a plan before running an eligibility check.'
+      'MISSING_PAYOR',
+      'This insurance policy has no payor associated. Please select an insurance company before running an eligibility check.'
     );
   }
-
-  const payor = patientInsurance.plan.payor;
 
   // Resolve Stedi routing ID (priority order):
   // 1. payor.stediPayorId — org-level override
