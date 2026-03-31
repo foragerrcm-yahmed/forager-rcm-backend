@@ -346,7 +346,12 @@ async function submitClaim(claimId) {
             payor: true,
             services: true,
             diagnoses: { orderBy: { sequence: 'asc' } },
-            visit: { select: { location: true } },
+            visit: {
+                select: {
+                    location: true,
+                    diagnoses: { orderBy: { sequence: 'asc' } },
+                },
+            },
             organization: { select: { name: true, npi: true, addresses: true } },
         },
     });
@@ -356,8 +361,14 @@ async function submitClaim(claimId) {
     if (!claim.organization?.npi) {
         throw new StediError(400, 'MISSING_BILLING_NPI', 'Organization billing NPI is required. Set it in Configurations → Organization.');
     }
-    if (!claim.diagnoses || claim.diagnoses.length === 0) {
-        throw new StediError(400, 'MISSING_DIAGNOSES', 'At least one diagnosis (ICD-10 code) is required for claim submission. Add diagnoses to the claim first.');
+    // Prefer diagnoses attached directly to the claim; fall back to visit diagnoses.
+    // This handles the common case where diagnoses are entered on the visit and the
+    // claim is auto-created from it without copying diagnoses to the claim record.
+    const effectiveDiagnoses = claim.diagnoses && claim.diagnoses.length > 0
+        ? claim.diagnoses
+        : claim.visit?.diagnoses ?? [];
+    if (effectiveDiagnoses.length === 0) {
+        throw new StediError(400, 'MISSING_DIAGNOSES', 'At least one diagnosis (ICD-10 code) is required for claim submission. Add diagnoses to the visit or claim first.');
     }
     // Query primary insurance separately via Patient → PatientInsurance
     const primaryInsurance = await prisma.patientInsurance.findFirst({
@@ -418,7 +429,7 @@ async function submitClaim(claimId) {
             claimFrequencyCode: '1',
             signatureIndicator: 'Y',
             planParticipationCode: 'A',
-            healthCareCodeInformation: claim.diagnoses.map((d, i) => ({
+            healthCareCodeInformation: effectiveDiagnoses.map((d, i) => ({
                 diagnosisTypeCode: i === 0 ? 'ABK' : 'ABF',
                 diagnosisCode: d.icdCode.replace('.', ''),
             })),

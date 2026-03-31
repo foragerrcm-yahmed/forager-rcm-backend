@@ -104,8 +104,9 @@ const getClaimById = async (req, res) => {
                 createdBy: { select: { id: true, firstName: true, lastName: true } },
                 updatedBy: { select: { id: true, firstName: true, lastName: true } },
                 services: true,
-                timeline: true,
+                timeline: { orderBy: { createdAt: 'asc' } },
                 diagnoses: { orderBy: { sequence: 'asc' } },
+                paymentPostings: { orderBy: { postedAt: 'asc' } },
             }
         });
         if (!claim) {
@@ -144,6 +145,13 @@ const getClaimById = async (req, res) => {
                 timeline: claim.timeline?.map((t) => ({
                     ...t,
                     createdAt: Number(t.createdAt),
+                })),
+                paymentPostings: claim.paymentPostings?.map((p) => ({
+                    ...p,
+                    billedAmount: p.billedAmount ? Number(p.billedAmount) : null,
+                    allowedAmount: p.allowedAmount ? Number(p.allowedAmount) : null,
+                    paidAmount: p.paidAmount ? Number(p.paidAmount) : null,
+                    patientResponsibility: p.patientResponsibility ? Number(p.patientResponsibility) : null,
                 })),
             },
         });
