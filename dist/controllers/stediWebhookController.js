@@ -50,7 +50,7 @@ async function handleStediWebhook(req, res) {
             await handle999Ack(payload, log.id);
         }
         else {
-            console.log(`Stedi webhook: unhandled event type "${eventType}"`, transactionId);
+            console.log(`[webhook] unhandled event type "${eventType}"`, transactionId);
         }
         // Mark as processed
         await prisma.stediWebhookLog.update({
@@ -60,12 +60,12 @@ async function handleStediWebhook(req, res) {
         res.status(200).json({ received: true });
     }
     catch (e) {
-        console.error('Stedi webhook processing error:', e);
+        console.error('[webhook] processing error:', e);
         await prisma.stediWebhookLog.update({
             where: { id: log.id },
             data: { error: e.message },
         });
-        // Always return 200 to Stedi to prevent retries for logic errors
+        // Always return 200 to prevent retries for logic errors
         // (retries are only useful for transient network failures)
         res.status(200).json({ received: true, processingError: e.message });
     }
@@ -87,7 +87,7 @@ async function addTimelineEvent(claimId, action, notes, status) {
 async function handle835Era(payload, logId) {
     const claimPayments = payload.claimPayments ?? payload.claims ?? [];
     if (claimPayments.length === 0) {
-        console.log('Stedi 835: no claim payments in payload');
+        console.log('[webhook] 835: no claim payments in payload');
         return;
     }
     // Resolve organizationId from the first claim's patientControlNumber
@@ -173,7 +173,7 @@ async function handle277Status(payload, logId) {
             where: { claimNumber: patientControlNumber },
         });
         if (!claim) {
-            console.warn(`Stedi 277: no claim found for control number "${patientControlNumber}"`);
+            console.warn(`[webhook] 277: no claim found for control number "${patientControlNumber}"`);
             continue;
         }
         // Update webhook log with resolved org and claim

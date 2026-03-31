@@ -86,14 +86,14 @@ async function stediRequestTo(baseUrl, method, path, body) {
                     if (res.statusCode && res.statusCode >= 400) {
                         const errorMsg = parsed.message
                             || (parsed.errors?.[0]?.description)
-                            || 'Stedi API error';
-                        const errorCode = parsed.error || parsed.errors?.[0]?.code || 'STEDI_ERROR';
+                            || 'Clearinghouse API error';
+                        const errorCode = parsed.error || parsed.errors?.[0]?.code || 'CLEARINGHOUSE_ERROR';
                         reject(new StediError(res.statusCode, errorCode, errorMsg, parsed));
                     }
                     else if (parsed.status === 'ERROR' && parsed.errors?.length) {
                         // Stedi returned 200 but with error status in body
-                        const errorMsg = parsed.errors[0]?.description || 'Stedi returned an error';
-                        const errorCode = parsed.errors[0]?.code || 'STEDI_ERROR';
+                        const errorMsg = parsed.errors[0]?.description || 'Clearinghouse returned an error';
+                        const errorCode = parsed.errors[0]?.code || 'CLEARINGHOUSE_ERROR';
                         reject(new StediError(400, errorCode, errorMsg, parsed));
                     }
                     else {
@@ -164,7 +164,7 @@ function mapPlaceOfService(location) {
  */
 async function checkEligibility(patientInsuranceId, organizationId, visitId) {
     if (!STEDI_API_KEY) {
-        throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
+        throw new StediError(500, 'CLEARINGHOUSE_NOT_CONFIGURED', 'Clearinghouse API key is not configured. Contact your administrator.');
     }
     // Load the PatientInsurance record with patient, plan, payor, masterPayor, and dependents
     const patientInsurance = await prisma.patientInsurance.findUniqueOrThrow({
@@ -199,7 +199,7 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
         (payor.masterPayor?.primaryPayorId) ??
         payor.externalPayorId;
     if (!tradingPartnerServiceId) {
-        throw new StediError(400, 'MISSING_STEDI_PAYOR_ID', `Payor "${payor.name}" has no Stedi routing ID. Set stediPayorId on the Payor record or link it to a Master Payor.`);
+        throw new StediError(400, 'MISSING_STEDI_PAYOR_ID', `Payor "${payor.name}" has no clearinghouse routing ID. Link it to a Master Payor in Configurations.`);
     }
     // Load the org's billing NPI
     const org = await prisma.organization.findUniqueOrThrow({
@@ -336,7 +336,7 @@ async function checkEligibility(patientInsuranceId, organizationId, visitId) {
  */
 async function submitClaim(claimId) {
     if (!STEDI_API_KEY) {
-        throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
+        throw new StediError(500, 'CLEARINGHOUSE_NOT_CONFIGURED', 'Clearinghouse API key is not configured. Contact your administrator.');
     }
     const claim = await prisma.claim.findUniqueOrThrow({
         where: { id: claimId },
@@ -389,7 +389,7 @@ async function submitClaim(claimId) {
         claimPayorWithMaster?.masterPayor?.primaryPayorId ??
         claim.payor.externalPayorId;
     if (!tradingPartnerServiceId) {
-        throw new StediError(400, 'MISSING_STEDI_PAYOR_ID', `Payor "${claim.payor.name}" has no Stedi routing ID. Set stediPayorId on the Payor record.`);
+        throw new StediError(400, 'MISSING_STEDI_PAYOR_ID', `Payor "${claim.payor.name}" has no clearinghouse routing ID. Link it to a Master Payor in Configurations.`);
     }
     // Extract billing address from org's addresses JSON array
     const orgAddresses = claim.organization.addresses ?? [];
@@ -485,14 +485,14 @@ async function submitClaim(claimId) {
 // ─── Claim Status — 276/277 ───────────────────────────────────────────────────
 async function getClaimStatus(claimId) {
     if (!STEDI_API_KEY) {
-        throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
+        throw new StediError(500, 'CLEARINGHOUSE_NOT_CONFIGURED', 'Clearinghouse API key is not configured. Contact your administrator.');
     }
     const claim = await prisma.claim.findUniqueOrThrow({
         where: { id: claimId },
         include: { provider: true, payor: true },
     });
     if (!claim.stediTransactionId) {
-        throw new StediError(400, 'NOT_SUBMITTED', 'Claim has not been submitted to Stedi yet');
+        throw new StediError(400, 'NOT_SUBMITTED', 'Claim has not been submitted to the clearinghouse yet.');
     }
     const tradingPartnerServiceId = claim.payor.stediPayorId ?? claim.payor.externalPayorId;
     // Uses STEDI_CLAIMS_URL so it can be pointed at the mock independently of eligibility.
@@ -736,7 +736,7 @@ async function processEra835(payload, organizationId) {
 // ─── MasterPayor sync from Stedi payer list ───────────────────────────────────
 async function fetchStediPayorList(pageToken) {
     if (!STEDI_API_KEY) {
-        throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
+        throw new StediError(500, 'CLEARINGHOUSE_NOT_CONFIGURED', 'Clearinghouse API key is not configured. Contact your administrator.');
     }
     const qs = new URLSearchParams();
     if (pageToken)
@@ -746,7 +746,7 @@ async function fetchStediPayorList(pageToken) {
 }
 async function searchStediPayors(query) {
     if (!STEDI_API_KEY) {
-        throw new StediError(500, 'STEDI_NOT_CONFIGURED', 'STEDI_API_KEY environment variable is not set');
+        throw new StediError(500, 'CLEARINGHOUSE_NOT_CONFIGURED', 'Clearinghouse API key is not configured. Contact your administrator.');
     }
     const qs = new URLSearchParams({ search: query });
     const result = await stediRequest('GET', `/payers?${qs.toString()}`);
