@@ -115,8 +115,9 @@ export const getClaimById = async (req: Request, res: Response): Promise<void> =
         createdBy: { select: { id: true, firstName: true, lastName: true } },
         updatedBy: { select: { id: true, firstName: true, lastName: true } },
         services: true,
-        timeline: true,
+        timeline: { orderBy: { createdAt: 'asc' } },
         diagnoses: { orderBy: { sequence: 'asc' } },
+        paymentPostings: { orderBy: { postedAt: 'asc' } },
       }
     });
 
@@ -157,6 +158,13 @@ export const getClaimById = async (req: Request, res: Response): Promise<void> =
         timeline: (claim as any).timeline?.map((t: any) => ({
           ...t,
           createdAt: Number(t.createdAt),
+        })),
+        paymentPostings: (claim as any).paymentPostings?.map((p: any) => ({
+          ...p,
+          billedAmount: p.billedAmount ? Number(p.billedAmount) : null,
+          allowedAmount: p.allowedAmount ? Number(p.allowedAmount) : null,
+          paidAmount: p.paidAmount ? Number(p.paidAmount) : null,
+          patientResponsibility: p.patientResponsibility ? Number(p.patientResponsibility) : null,
         })),
       },
     });
