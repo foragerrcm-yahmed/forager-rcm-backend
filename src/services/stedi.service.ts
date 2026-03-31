@@ -524,7 +524,12 @@ export async function submitClaim(claimId: string) {
   let rawResponse: any;
 
   try {
-    rawResponse = await stediClaimsRequest<any>('POST', '/change/medicalnetwork/claims/professional/v1', requestBody);
+    // Real Stedi uses /change/medicalnetwork/claims/professional/v1
+    // The mock uses /claims/professional — we normalise by checking the base URL.
+    const claimsPath = STEDI_CLAIMS_URL.includes('stedi.com')
+      ? '/change/medicalnetwork/claims/professional/v1'
+      : '/claims/professional';
+    rawResponse = await stediClaimsRequest<any>('POST', claimsPath, requestBody);
   } catch (e: any) {
     await prisma.claim.update({
       where: { id: claimId },
@@ -566,6 +571,7 @@ export async function getClaimStatus(claimId: string) {
   const tradingPartnerServiceId = claim.payor.stediPayorId ?? claim.payor.externalPayorId;
 
   // Uses STEDI_CLAIMS_URL so it can be pointed at the mock independently of eligibility.
+  // Both real Stedi and the mock share the same path for claim status (277).
   const response = await stediClaimsRequest<any>('POST', '/change/medicalnetwork/claimstatus/v1', {
     controlNumber: generateControlNumber(),
     tradingPartnerServiceId,
