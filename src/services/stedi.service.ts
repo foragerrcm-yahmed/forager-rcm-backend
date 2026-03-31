@@ -24,10 +24,16 @@ import { resolveClaimStatus } from './claimStatusService';
 
 const prisma = new PrismaClient();
 
-// Allow overriding base URL via env so the mock service can be used in dev/staging.
-// Set STEDI_BASE_URL=https://your-stedi-mock.up.railway.app to use the mock.
-const STEDI_BASE_URL =
-  process.env.STEDI_BASE_URL || 'https://healthcare.us.stedi.com/2024-04-01';
+// Two separate base URLs so eligibility (real Stedi) and claims/status (mock or real)
+// can be configured independently.
+//
+//   STEDI_ELIGIBILITY_URL — always points to real Stedi (270/271 eligibility checks)
+//   STEDI_CLAIMS_URL      — points to mock in dev/staging, real Stedi in production
+//
+// Both fall back to the real Stedi endpoint if not set.
+const REAL_STEDI_BASE = 'https://healthcare.us.stedi.com/2024-04-01';
+const STEDI_ELIGIBILITY_URL = process.env.STEDI_ELIGIBILITY_URL || REAL_STEDI_BASE;
+const STEDI_CLAIMS_URL      = process.env.STEDI_CLAIMS_URL      || REAL_STEDI_BASE;
 const STEDI_API_KEY = process.env.STEDI_API_KEY || '';
 
 // ─── Error class ─────────────────────────────────────────────────────────────
@@ -44,15 +50,20 @@ export class StediError extends Error {
   }
 }
 
-// ─── HTTP helper ──────────────────────────────────────────────────────────────
+// ─── HTTP helpers ────────────────────────────────────────────────────────────
 
-async function stediRequest<T>(
+/**
+ * Core HTTP helper — takes an explicit base URL so callers can route
+ * eligibility calls to the real Stedi and claims calls to the mock (or real).
+ */
+async function stediRequestTo<T>(
+  baseUrl: string,
   method: 'GET' | 'POST' | 'PUT',
   path: string,
   body?: object
 ): Promise<T> {
   return new Promise((resolve, reject) => {
-    const url = new URL(`${STEDI_BASE_URL}${path}`);
+    const url = new URL(`${baseUrl}${path}`);
     const payload = body ? JSON.stringify(body) : undefined;
 
     const options: https.RequestOptions = {
@@ -101,7 +112,22 @@ async function stediRequest<T>(
   });
 }
 
-// ─── Helper functions ─────────────────────────────────────────────────────────
+/** Eligibility requests — always uses real Stedi (STEDI_ELIGIBILITY_URL). */
+function stediEligibilityRequest<T>(method: 'GET' | 'POST' | 'PUT', path: string, body?: object): Promise<T> {
+  return stediRequestTo<T>(STEDI_ELIGIBILITY_URL, method, path, body);
+}
+
+/** Claims / status requests — uses STEDI_CLAIMS_URL (mock in dev, real in prod). */
+function stediClaimsRequest<T>(method: 'GET' | 'POST' | 'PUT', path: string, body?: object): Promise<T> {
+  return stediRequestTo<T>(STEDI_CLAIMS_URL, method, path, body);
+}
+
+/** Payer search and misc — always uses real Stedi. */
+function stediRequest<T>(method: 'GET' | 'POST' | 'PUT', path: string, body?: object): Promise<T> {
+  return stediRequestTo<T>(STEDI_ELIGIBILITY_URL, method, path, body);
+}
+
+// ─── Helper functions ──────────────────────────────────────────────────────────────
 
 function generateControlNumber(): string {
   return Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -291,7 +317,7 @@ export async function checkEligibility(
   let rawResponse: any;
 
   try {
-    rawResponse = await stediRequest<any>('POST', '/change/medicalnetwork/eligibility/v3', requestBody);
+    rawResponse = await stediEligibilityRequest<any>('POST', '/change/medicalnetwork/eligibility/v3', requestBody);
   } catch (e: any) {
     // Store the error details for debugging
     const errorMessage = e instanceof StediError
@@ -485,7 +511,7 @@ export async function submitClaim(claimId: string) {
   let rawResponse: any;
 
   try {
-    rawResponse = await stediRequest<any>('POST', '/claims/professional', requestBody);
+    rawResponse = await stediClaimsRequest<any>('POST', '/change/medicalnetwork/claims/professional/v1', requestBody);
   } catch (e: any) {
     await prisma.claim.update({
       where: { id: claimId },
@@ -526,8 +552,8 @@ export async function getClaimStatus(claimId: string) {
 
   const tradingPartnerServiceId = claim.payor.stediPayorId ?? claim.payor.externalPayorId;
 
-  // Correct Stedi path: /change/medicalnetwork/claimstatus/v1
-  const response = await stediRequest<any>('POST', '/change/medicalnetwork/claimstatus/v1', {
+  // Uses STEDI_CLAIMS_URL so it can be pointed at the mock independently of eligibility.
+  const response = await stediClaimsRequest<any>('POST', '/change/medicalnetwork/claimstatus/v1', {
     controlNumber: generateControlNumber(),
     tradingPartnerServiceId,
     providers: [{ npi: claim.provider.npi }],
