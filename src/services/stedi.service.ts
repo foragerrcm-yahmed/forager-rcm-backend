@@ -387,7 +387,12 @@ export async function submitClaim(claimId: string) {
       payor: true,
       services: true,
       diagnoses: { orderBy: { sequence: 'asc' } },
-      visit: { select: { location: true } },
+      visit: {
+        select: {
+          location: true,
+          diagnoses: { orderBy: { sequence: 'asc' } },
+        },
+      },
       organization: { select: { name: true, npi: true, addresses: true } },
     },
   });
@@ -404,11 +409,19 @@ export async function submitClaim(claimId: string) {
     );
   }
 
-  if (!claim.diagnoses || claim.diagnoses.length === 0) {
+  // Prefer diagnoses attached directly to the claim; fall back to visit diagnoses.
+  // This handles the common case where diagnoses are entered on the visit and the
+  // claim is auto-created from it without copying diagnoses to the claim record.
+  const effectiveDiagnoses =
+    claim.diagnoses && claim.diagnoses.length > 0
+      ? claim.diagnoses
+      : (claim.visit as any)?.diagnoses ?? [];
+
+  if (effectiveDiagnoses.length === 0) {
     throw new StediError(
       400,
       'MISSING_DIAGNOSES',
-      'At least one diagnosis (ICD-10 code) is required for claim submission. Add diagnoses to the claim first.'
+      'At least one diagnosis (ICD-10 code) is required for claim submission. Add diagnoses to the visit or claim first.'
     );
   }
 
@@ -481,7 +494,7 @@ export async function submitClaim(claimId: string) {
       claimFrequencyCode: '1',
       signatureIndicator: 'Y',
       planParticipationCode: 'A',
-      healthCareCodeInformation: claim.diagnoses.map((d, i) => ({
+      healthCareCodeInformation: effectiveDiagnoses.map((d: any, i: number) => ({
         diagnosisTypeCode: i === 0 ? 'ABK' : 'ABF',
         diagnosisCode: d.icdCode.replace('.', ''),
       })),
