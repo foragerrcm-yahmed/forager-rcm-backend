@@ -33,7 +33,9 @@ const https_1 = __importDefault(require("https"));
 const prisma_1 = require("../../generated/prisma");
 const claimStatusService_1 = require("./claimStatusService");
 const prisma = new prisma_1.PrismaClient();
-const STEDI_BASE_URL = 'https://healthcare.us.stedi.com/2024-04-01';
+// Allow overriding base URL via env so the mock service can be used in dev/staging.
+// Set STEDI_BASE_URL=https://your-stedi-mock.up.railway.app to use the mock.
+const STEDI_BASE_URL = process.env.STEDI_BASE_URL || 'https://healthcare.us.stedi.com/2024-04-01';
 const STEDI_API_KEY = process.env.STEDI_API_KEY || '';
 // ─── Error class ─────────────────────────────────────────────────────────────
 class StediError extends Error {
@@ -454,7 +456,8 @@ async function getClaimStatus(claimId) {
         throw new StediError(400, 'NOT_SUBMITTED', 'Claim has not been submitted to Stedi yet');
     }
     const tradingPartnerServiceId = claim.payor.stediPayorId ?? claim.payor.externalPayorId;
-    const response = await stediRequest('POST', '/claim-status/professional', {
+    // Correct Stedi path: /change/medicalnetwork/claimstatus/v1
+    const response = await stediRequest('POST', '/change/medicalnetwork/claimstatus/v1', {
         controlNumber: generateControlNumber(),
         tradingPartnerServiceId,
         providers: [{ npi: claim.provider.npi }],

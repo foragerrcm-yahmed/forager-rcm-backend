@@ -13,6 +13,7 @@ const prisma = new PrismaClient();
  *   - The organizationId is resolved from the claim's patientControlNumber (= claimNumber)
  *   - No DEFAULT_ORGANIZATION_ID env var is used — we always look up the org from the data
  *   - All events are logged to StediWebhookLog for audit and replay
+ *   - Each event writes a ClaimTimeline entry so the UI timeline stays current
  *
  * Stedi sends a shared secret in the Authorization header.
  * Set STEDI_WEBHOOK_SECRET in Railway env to validate it.
@@ -74,6 +75,21 @@ export async function handleStediWebhook(req: Request, res: Response): Promise<v
   }
 }
 
+// ─── Timeline helper ──────────────────────────────────────────────────────────
+
+async function addTimelineEvent(claimId: string, action: string, notes?: string, status?: string) {
+  await prisma.claimTimeline.create({
+    data: {
+      claimId,
+      action,
+      notes: notes ?? null,
+      status: status ?? null,
+      createdAt: BigInt(Math.floor(Date.now() / 1000)),
+      // userId is null for system-generated events
+    },
+  });
+}
+
 // ─── 835 ERA handler ──────────────────────────────────────────────────────────
 
 async function handle835Era(payload: any, logId: string) {
@@ -85,7 +101,6 @@ async function handle835Era(payload: any, logId: string) {
   }
 
   // Resolve organizationId from the first claim's patientControlNumber
-  // Each ERA should only contain claims from one org (Stedi routes by NPI/TIN)
   const firstControlNumber = claimPayments[0]?.patientControlNumber;
   let organizationId: string | null = null;
 
@@ -98,7 +113,6 @@ async function handle835Era(payload: any, logId: string) {
   }
 
   if (!organizationId) {
-    // Fall back: try to match any claim in the ERA
     for (const eraClaim of claimPayments) {
       const match = await prisma.claim.findFirst({
         where: { claimNumber: eraClaim.patientControlNumber },
@@ -124,7 +138,49 @@ async function handle835Era(payload: any, logId: string) {
     data: { organizationId },
   });
 
+  // processEra835 updates claim status and creates PaymentPosting records.
+  // After it runs, write timeline events for each claim in the ERA.
   await processEra835(payload, organizationId);
+
+  // Write timeline events for each claim payment
+  for (const eraClaim of claimPayments) {
+    const claim = await prisma.claim.findFirst({
+      where: { claimNumber: eraClaim.patientControlNumber, organizationId },
+      select: { id: true, status: true },
+    });
+    if (!claim) continue;
+
+    const paid = Number(eraClaim.paymentAmount ?? 0);
+    const allowed = Number(eraClaim.allowedAmount ?? 0);
+    const patientResp = Number(eraClaim.patientResponsibility ?? 0);
+    const adjustments: any[] = eraClaim.claimAdjustments ?? [];
+    const remarkCodes: string[] = eraClaim.remarkCodes ?? [];
+
+    // Build a human-readable summary
+    const adjSummary = adjustments.length > 0
+      ? adjustments.map((a: any) => `${a.adjustmentGroupCode}-${a.adjustmentReasonCode} ($${Number(a.adjustmentAmount).toFixed(2)})`).join(', ')
+      : null;
+
+    const remarkSummary = remarkCodes.length > 0
+      ? `Remark codes: ${remarkCodes.join(', ')}`
+      : null;
+
+    const lines: string[] = [];
+    if (allowed > 0) lines.push(`Allowed: $${allowed.toFixed(2)}`);
+    if (paid > 0) lines.push(`Paid: $${paid.toFixed(2)}`);
+    if (patientResp > 0) lines.push(`Patient responsibility: $${patientResp.toFixed(2)}`);
+    if (adjSummary) lines.push(`Adjustments: ${adjSummary}`);
+    if (remarkSummary) lines.push(remarkSummary);
+    if (payload.checkNumber) lines.push(`Check #${payload.checkNumber}`);
+    if (payload.payerName) lines.push(`Payer: ${payload.payerName}`);
+
+    await addTimelineEvent(
+      claim.id,
+      '835 ERA Received',
+      lines.join(' · '),
+      claim.status as string
+    );
+  }
 }
 
 // ─── 277 status handler ───────────────────────────────────────────────────────
@@ -175,6 +231,21 @@ async function handle277Status(payload: any, logId: string) {
         },
       });
     }
+
+    // Write timeline event
+    const statusLabel = newStatus ?? `Status ${statusCode}`;
+    const tradingPartnerClaimNumber = statusEntry.tradingPartnerClaimNumber;
+    const notes = [
+      statusEntry.statusInformation,
+      tradingPartnerClaimNumber ? `Payer claim #: ${tradingPartnerClaimNumber}` : null,
+    ].filter(Boolean).join(' · ');
+
+    await addTimelineEvent(
+      claim.id,
+      '277 Status Update',
+      notes || `Status code ${statusCode}`,
+      statusLabel
+    );
   }
 }
 
@@ -184,7 +255,7 @@ async function handle999Ack(payload: any, logId: string) {
   const transactionSetAcks: any[] = payload.transactionSetAcknowledgments ?? [];
 
   for (const ack of transactionSetAcks) {
-    const transactionId = ack.transactionSetControlNumber ?? ack.transactionId;
+    const transactionId = ack.transactionSetControlNumber ?? payload.transactionId;
     const accepted = ack.acknowledgmentCode === 'A' || ack.acknowledgmentCode === 'E';
 
     if (!transactionId) continue;
@@ -201,19 +272,32 @@ async function handle999Ack(payload: any, logId: string) {
     });
 
     if (!accepted) {
+      const rejectionReason = `999 rejection: ${ack.acknowledgmentCode} — ${ack.implementationTransactionSetSyntaxError ?? 'Unknown error'}`;
       await prisma.claim.update({
         where: { id: claim.id },
         data: {
           stediStatus: 'rejected_999',
           status: 'Denied',
-          denialReason: `999 rejection: ${ack.acknowledgmentCode} — ${ack.implementationTransactionSetSyntaxError ?? 'Unknown error'}`,
+          denialReason: rejectionReason,
         },
       });
+      await addTimelineEvent(
+        claim.id,
+        '999 Acknowledgement — Rejected',
+        rejectionReason,
+        'Denied'
+      );
     } else {
       await prisma.claim.update({
         where: { id: claim.id },
         data: { stediStatus: 'acknowledged_999' },
       });
+      await addTimelineEvent(
+        claim.id,
+        '999 Acknowledgement — Accepted',
+        'EDI accepted by clearinghouse. Forwarding to payer.',
+        'Submitted'
+      );
     }
   }
 }

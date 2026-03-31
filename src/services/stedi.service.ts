@@ -24,7 +24,10 @@ import { resolveClaimStatus } from './claimStatusService';
 
 const prisma = new PrismaClient();
 
-const STEDI_BASE_URL = 'https://healthcare.us.stedi.com/2024-04-01';
+// Allow overriding base URL via env so the mock service can be used in dev/staging.
+// Set STEDI_BASE_URL=https://your-stedi-mock.up.railway.app to use the mock.
+const STEDI_BASE_URL =
+  process.env.STEDI_BASE_URL || 'https://healthcare.us.stedi.com/2024-04-01';
 const STEDI_API_KEY = process.env.STEDI_API_KEY || '';
 
 // ─── Error class ─────────────────────────────────────────────────────────────
@@ -523,7 +526,8 @@ export async function getClaimStatus(claimId: string) {
 
   const tradingPartnerServiceId = claim.payor.stediPayorId ?? claim.payor.externalPayorId;
 
-  const response = await stediRequest<any>('POST', '/claim-status/professional', {
+  // Correct Stedi path: /change/medicalnetwork/claimstatus/v1
+  const response = await stediRequest<any>('POST', '/change/medicalnetwork/claimstatus/v1', {
     controlNumber: generateControlNumber(),
     tradingPartnerServiceId,
     providers: [{ npi: claim.provider.npi }],
