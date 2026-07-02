@@ -182,7 +182,7 @@ export const getVisitById = async (req: Request, res: Response): Promise<void> =
 
 export const createVisit = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { patientId, providerId, organizationId, visitDate, visitTime, duration, visitType, location, status, notes, source } = req.body;
+    const { patientId, providerId, organizationId, visitDate, visitTime, duration, visitType, location, status, notes, clinicalNotes, followUpPlan, source } = req.body;
 
     if (!patientId || !providerId || !organizationId || !visitDate || !visitTime || duration === undefined || !visitType || !status || !source) {
       sendError(res, 400, validationError('VISIT'), 'Missing required visit fields');
@@ -223,6 +223,8 @@ export const createVisit = async (req: Request, res: Response): Promise<void> =>
         location,
         status,
         notes,
+        clinicalNotes,
+        followUpPlan,
         source,
         createdBy: { connect: { id: req.user!.userId } },
         updatedBy: { connect: { id: req.user!.userId } },
@@ -293,7 +295,7 @@ export const createVisit = async (req: Request, res: Response): Promise<void> =>
 export const updateVisit = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { visitDate, visitType, location, status, notes, source } = req.body;
+    const { visitDate, visitType, location, status, notes, clinicalNotes, followUpPlan, source } = req.body;
     const now = Math.floor(Date.now() / 1000);
 
     const existingVisit = await prisma.visit.findUnique({ where: { id: id as string } });
@@ -310,6 +312,8 @@ export const updateVisit = async (req: Request, res: Response): Promise<void> =>
         location,
         status,
         notes,
+        clinicalNotes,
+        followUpPlan,
         source,
         updatedBy: { connect: { id: req.user!.userId } },
         updatedAt: BigInt(now),
